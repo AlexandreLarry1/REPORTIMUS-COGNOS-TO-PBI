@@ -1,8 +1,18 @@
 .env
-output/
 *.qvf
 *.qvd
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Données source SAP (volumineuses, confidentielles)
+inputs/
+data/
+
+# Outputs générés
+output/
+sql/generated.sql
+
+# Anciens chemins
+outputs/
