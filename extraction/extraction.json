@@ -1,0 +1,109 @@
+{
+  "script": "///$tab Main\r\nSET ThousandSep=' ';\r\nSET DecimalSep=',';\r\nSET MoneyThousandSep=' ';\r\nSET MoneyDecimalSep='.';\r\nSET MoneyFormat='# ##0.00 CHF;-# ##0.00 CHF';\r\nSET TimeFormat='hh:mm:ss';\r\nSET DateFormat='DD.MM.YYYY';\r\nSET TimestampFormat='DD.MM.YYYY hh:mm:ss[.fff]';\r\nSET FirstWeekDay=0;\r\nSET BrokenWeeks=0;\r\nSET ReferenceDay=4;\r\nSET FirstMonthOfYear=1;\r\nSET CollationLocale='fr-CH';\r\nSET CreateSearchIndexOnReload=1;\r\nSET MonthNames='janv.;févr.;mars;avr.;mai;juin;juil.;août;sept.;oct.;nov.;déc.';\r\nSET LongMonthNames='janvier;février;mars;avril;mai;juin;juillet;août;septembre;octobre;novembre;décembre';\r\nSET DayNames='lun.;mar.;mer.;jeu.;ven.;sam.;dim.';\r\nSET LongDayNames='lundi;mardi;mercredi;jeudi;vendredi;samedi;dimanche';\r\nSET NumericalAbbreviation='3:k;6:M;9:G;12:T;15:P;18:E;21:Z;24:Y;-3:m;-6:μ;-9:n;-12:p;-15:f;-18:a;-21:z;-24:y';\r\n\r\n///$tab variables\r\n// //01.06.2023 Thomas AUGUET gestion de l'historique des données\r\n\r\nlet vNumWeekDay=num(weekday(today()));\r\n// let vNumWeekDay=6;//pour tester 30 min\r\n\r\nlet vNumWeekdayFullReloadSurLesChamps=6;//dimanche full reload des champs et année pour l'app de recherche de données\r\n\r\nlet vChargement='R3';\r\n// let vChargement='S4';\r\n\r\n$(Include=lib://QVD_SAP/config.txt);\r\n\r\n/*\r\n    0 pour lundi\r\n    1 pour mardi\r\n    2 pour mercredi\r\n    3 pour jeudi\r\n    4 pour vendredi\r\n    5 pour samedi\r\n    6 pour dimanche\r\n*/\r\n\r\nif vNumWeekDay=vNumWeekdayFullReloadSurLesChamps then //si on est sur le jour du full reload (pour la partie DEV - fouille de données dans les tables SAP)\r\n    trace 'On s''occupe de l''historique';\r\n    let vAnneeDeb='1990';\r\n    if '$(vChargement)'='R3' then\r\n      let vDossier='lib://QVD_SAP/DFIN/fullReload';\r\n      let vDossierSave='DataModelFullReload';\r\n    elseif '$(vChargement)'='S4' then\r\n      let vDossier='lib://QVD_SAP/DFIN_S4/fullReload';\r\n      let vDossierSave='DataModelFullReload';\r\n    end if;\r\nElse \r\n    trace 'On s''occupe seulement des 3 dernières années';\r\n    let vAnneeDeb=Year(Today())-3;\r\n    if '$(vChargement)'='R3' then\r\n      let vDossier='lib://QVD_SAP/DFIN';\r\n      let vDossierSave='DataModel';\r\n    elseif '$(vChargement)'='S4' then\r\n      let vDossier='lib://QVD_SAP/DFIN_S4';\r\n      let vDossierSave='DataModel';\r\n    end if;\r\nend if;\r\n\r\nlet vAnneeFin=Year(Today())+1;//pour le calendrier\r\n///$tab Mapping\r\n// MapEKKN_45_46:\r\n// MApping LOAD distinct\r\n// \tEKKN.EBELN as KEY,\r\n//     EKKN.FKBER//domaine fonctionnel\r\n// FROM [$(vDossier)/EKKN.qvd]\r\n// (qvd);\r\n\r\nMapEKKN:\r\nMApping LOAD distinct\r\n\tEKKN.EBELN&'-'&right(EKKN.EBELP,5)&'-'&EKKN.ZEKKN as KEY_EKKN_COOI_PORD,//Correction_code du 23.07.2024 par DavidC, remplacement de KBLNR par EBELN\r\n    EKKN.FKBER\r\nFROM [$(vDossier)/EKKN.qvd]\r\n(qvd);\r\n\r\n// MapEKKN_2:\r\n// MApping LOAD distinct\r\n// \tEKKN.EBELN&'-'&EKKN.ZEKKN as KEY_EKKN_COOI_PORD,//Correction_code du 23.07.2024 par DavidC, remplacement de KBLNR par EBELN\r\n//     EKKN.FKBER\r\n// FROM [$(vDossier)/EKKN.qvd]\r\n// (qvd);\r\n\r\nMapFMIOI_tmp:\r\nLOAD\r\n\tFMIOI.REFBN&'-'&FMIOI.RFPOS as KEY_FMIOI_COOI_FMRESorZCMC,\r\n    FMIOI.FAREA as DF,\r\n    FMIOI.ZHLDT as DateClé\r\nFROM [$(vDossier)/FMIOI.qvd]\r\n// (qvd) WHERE left(FMIOI.WRTTP,2)<>'51';//Correction_code du 23.07.2024 par DavidC\r\n(qvd)\r\nWHERE wildmatch(left(FMIOI.WRTTP,2),'65','81','82')>0\r\nAND len(trim(replace(FMIOI.FAREA,' \t','')))>0;//NEW correction du 06.08.2024 sur demande de DavidC --- Correction_code du 23.07.2024 par DavidC\r\nleft join(MapFMIOI_tmp)\r\nLOAD\r\n\tFMIOI.REFBN&'-'&FMIOI.RFPOS as KEY_FMIOI_COOI_FMRESorZCMC,\r\n    MAX(FMIOI.ZHLDT) as DateCléMax\r\nFROM [$(vDossier)/FMIOI.qvd]\r\n// (qvd) WHERE left(FMIOI.WRTTP,2)<>'51';//Correction_code du 23.07.2024 par DavidC\r\n(qvd) \r\nWHERE wildmatch(left(FMIOI.WRTTP,2),'65','81','82')>0\r\nAND len(trim(replace(FMIOI.FAREA,' \t','')))>0\r\nGROUP BY (FMIOI.REFBN&'-'&FMIOI.RFPOS);\r\n\r\nMapFMIOI:\r\nMapping LOAD \r\nKEY_FMIOI_COOI_FMRESorZCMC,DF\r\nResident MapFMIOI_tmp WHERE DateClé=DateCléMax;\r\ndrop table MapFMIOI_tmp;\r\n\r\nMapOTP_OTP1:\r\nMapping Load Distinct\r\n    PRPS.OBJNR as [OTP],\r\n\tMAXSTRING([PRPS.FKSTL]) as [Centre de coûts OTP 1]\r\nFROM [$(vDossier)/PRPS.qvd](qvd)\r\nWHERE left(PRPS.OBJNR,2)='PR'\r\n  group by PRPS.OBJNR\r\n;\r\n\r\nMapOTP_OTP2:\r\nMapping Load Distinct\r\n    PRPS.OBJNR as [OTP],\r\n    MAXSTRING([PRPS.AKSTL]) as [Centre de coûts OTP 2]\r\nFROM [$(vDossier)/PRPS.qvd](qvd)\r\nWHERE left(PRPS.OBJNR,2)='PR'\r\n  group by PRPS.OBJNR\r\n;\r\n\r\n// qualify *;\r\nMapEKKN:\r\nNoConcatenate\r\nLOAD distinct\r\n\tEKKN.EBELN&'-'&right(EKKN.EBELP,5)&'-'&EKKN.ZEKKN as KEY_EKKN_COOI_PORD,//Correction_code du 23.07.2024 par DavidC, remplacement de KBLNR par EBELN\r\n    EKKN.FKBER as value\r\nFROM [$(vDossier)/EKKN.qvd]\r\n(qvd);\r\n// MapEKKN_2:\r\n// NoConcatenate\r\n// LOAD distinct\r\n// \tEKKN.EBELN&'-'&EKKN.ZEKKN as KEY_EKKN_COOI_PORD,//Correction_code du 23.07.2024 par DavidC, remplacement de KBLNR par EBELN\r\n//     EKKN.FKBER as value\r\n// FROM [$(vDossier)/EKKN.qvd]\r\n// (qvd);\r\n// MapEKKN_45_46:\r\n// LOAD distinct\r\n// \tEKKN.EBELN as KEY,\r\n//     EKKN.FKBER as value\r\n// ;\r\n// LOAD *\r\n// FROM [$(vDossier)/EKKN.qvd]\r\n// (qvd);\r\nMapFMIOI:\r\nNoConcatenate\r\nLOAD\r\n\tFMIOI.REFBN&'-'&FMIOI.RFPOS as KEY_FMIOI_COOI_FMRESorZCMC,\r\n    FMIOI.FAREA\r\nFROM [$(vDossier)/FMIOI.qvd]\r\n// (qvd) WHERE left(FMIOI.WRTTP,2)<>'51';//Correction_code du 23.07.2024 par DavidC\r\n(qvd) WHERE wildmatch(left(FMIOI.WRTTP,2),'65','81','82')>0\r\nAND len(trim(replace(FMIOI.FAREA,' \t','')))>0;//NEW correction du 06.08.2024 sur demande de DavidC --- Correction_code du 23.07.2024 par DavidC\r\n\r\n// COOI_tmp:\r\n// LOAD *\r\n// FROM [$(vDossier)/COOI.qvd]\r\n// (qvd);\r\n\r\n// unqualify *;\r\n///$tab Engagement R/3 & S/4\r\nEngagement:\r\nLOAD \r\n\t*,\r\n    ApplyMap('MapOTP_OTP1',OTP) as [Centre de coûts OTP 1],\r\n    ApplyMap('MapOTP_OTP2',OTP) as [Centre de coûts OTP 2]\r\n;\r\nLOAD\r\n\tRowno() as %keyEngagement,\r\n\tCOOI.OBJNR as REF_LIGNE,\r\n\tCOOI.BUDAT as [Date comptable],\r\n\tif(left([COOI.OBJNR],2)='OR',1,0) as [Est un Ordre Interne],\r\n\tif(left([COOI.OBJNR],2)='KS','Centre de coûts',if(left([COOI.OBJNR],2)='PR','OTP','Ordre interne')) as [Type d'analyse],\r\n    [COOI.GJAHR]&'-'&right([COOI.PERIO],2) as AnnéeMois,\r\n    [COOI.SAKTO] \tas [Num Nature comptable],\r\n    [COOI.WKGBTR] \tas Engagement,\r\n    [COOI.REFBN] \tas [Numéro de pièce],\r\n    COOI.RFPOS \t\tas [Numéro de poste de la pièce de référence],\r\n    COOI.RFKNT \t\tas [Numéro d'imputation de la pièce de référence],\r\n//     COOI.REFBN&'-'&COOI.RFPOS as [Numéro de pièce, Rattachement par ligne],//pour la fusion\r\n    COOI.REFBN&'-'&COOI.RFPOS&'-'&[COOI.WKGBTR]&'-'&COOI.RFKNT \r\n    \t\t\t\tas [Numéro de pièce, Rattachement par ligne],//update le 25.01.2024 pour gérer les ORCM négatifs -- update le 15.02.2024 en ajoutant COOI.RFKNT pour éviter la ségrégation prévue des OI CM\r\n    [COOI.REFBN]&'-'&[COOI.RFPOS]&'-'&COOI.RFKNT //24.10.2024 : TA sur demande de David on ajoute COOI.RFKNT pour être suffisament précis dans la clé SAP CO\r\n    \t\t\t\tas [N° pièce, Ligne d'écriture (LgE)],//utilisé comme clé SAP CO\r\n    COOI.GJAHR&'-'&COOI.REFBN \r\n    \t\t\t\tas [Année-Numéro de pièce],\r\n/*17.07.2024 : David C : \r\nA mon avis, tu vires le premier mapping, tu modifies le deuxième mapping en rajoutant ZEKKN, ce qui fait que la clé nouvelle utilise \r\nles champs: KBLNR, VBELP, ZEKKN (N° d'imputation), tu gardes le 3ème mapping.\r\nJe profite pour te donner une version actualisée de Finding_022.xlsx (seulement au niveau de l'onglet Analyse 1), qui devient Finding_022.b. \r\nC'est ton doc. de procédure qui est à l'origine de cette actualisation.\r\n*/\r\n//     if(wildmatch(COOI.REFBN,'45*','46*')>0,\r\n//     \tApplyMap('MapEKKN_45_46',COOI.REFBN,'NC MapEKKN_45_46'),\r\n        if(COOI.RFTYP = 'PORD',\r\n          ApplyMap('MapEKKN',COOI.REFBN&'-'&COOI.RFPOS&'-'&right(COOI.RFKNT,2),'NC MapEKKN'),\r\n//           \tApplyMap('MapEKKN_2',COOI.REFBN&'-'&right(COOI.RFKNT,2), 'NC MapEKKN et MapEKKN_2')),\r\n          if((COOI.RFTYP = 'FMRES' OR COOI.RFTYP = 'ZCMC') AND [COOI.WRTTP]<>'22',\r\n              ApplyMap('MapFMIOI',COOI.REFBN&'-'&COOI.RFPOS, 'NC MapFMIOI'),\r\n              'NC AUTRE'\r\n          )\r\n        )\r\n    //)\r\n    \t\t\t\t\t\t\t\t\t\t\t\t\t\tas [ID Domaine Fonctionnel Engagement],\r\n    COOI.WRTTP \t\t\t\t\t\t\t\t\t\t\t\tas [Type de valeur],\r\n    if(match([COOI.WRTTP], '2A','2B'),COOI.REFBN,null()) \tas [Numéro de réservation de Fonds],\r\n    if([COOI.WRTTP]='22',COOI.REFBN,null()) \t\t\t\tas [Numéro de commande],\r\n    //text(RIGHT([COOI.RFPOS],3)) \t\t\t\t\t\t\tas [Poste de la Commande], //exemple 00010\r\n    [COOI.LIFNR] \t\t\t\t\t\t\t\t\t\t\tas [ID Fournisseur Engagement],//ici on a le lien direct vers le fournisseur\r\n    COOI.SGTXT \t\t\t\t\t\t\t\t\t\t\t\tas [Libellé],\r\n    COOI.RFTYP \t\t\t\t\t\t\t\t\t\t\t\tas [Type de pièce d'origine - engagement],\r\n    COOI.KOKRS \t\t\t\t\t\t\t\t\t\t\t\tas [Périmètre analytique],\r\n    'Engagement' \t\t\t\t\t\t\t\t\t\t\tas Classe,\r\n    if(match([COOI.WRTTP], '22','24','60'),0,if(match([COOI.WRTTP], '2A','2B'),1,2)) as [Est un engagement avec réservé],  //0 : sans réservé ; 1 : avec réservé ; 2 : autre\r\n    //spécifique centre de coûts\r\n    if(left([COOI.OBJNR],2)='KS',replace([COOI.OBJNR],left([COOI.OBJNR],6),''),null()) as [Num Centre de coûts],\r\n    //spécifique OTP\r\n// \ttext(if(left([COOI.OBJNR],2)='PR',[COOI.OBJNR],null())) as [OTP], \r\n    if(left([COOI.OBJNR],2)='PR',[COOI.OBJNR],null()) as [OTP],//29.02.2024 on retire le text qui peut provoquer un probleme sur la jointure CC responsable et demandeur\r\n    //spécifique CM\r\n\tif(left([COOI.OBJNR],2)='OR',[COOI.OBJNR],null()) as [OR],\r\n\tif(left([COOI.OBJNR],2)='OR',mid([COOI.OBJNR],3),null()) as [Ordre interne],\r\n//     if(left([COOI.OBJNR],2)='OR',COOI.GJAHR&'-'&COOI.REFBN,null()) as [Année-Numéro de pièce OR]\r\n    if(left([COOI.OBJNR],2)='OR',COOI.REFBN,null()) as [Année-Numéro de pièce OR]\r\nFROM [$(vDossier)/COOI.qvd]\r\n(qvd)\r\nWHERE (left([COOI.OBJNR],2)='KS' OR left([COOI.OBJNR],2)='PR' OR left([COOI.OBJNR],2)='OR')\r\n  AND (COOI.GJAHR)>='$(vAnneeDeb)'\r\n//   AND left(COOI.OBJNR,4)<>'ORCM'//Règle énoncée par David le 17.04.2023 car ces écritures s'annulent //supprimé sur demande de David le 25.01.2024 car il nous manque justement les OI de type CM\r\n;\r\n\r\n//Récupération des CM\r\nleft join\r\nLOAD distinct\r\n    COOI.REFBN as [Numéro de pièce],\r\n    MAXSTRING(replace(COOI.OBJNR,'OR','')) as [Contrat Engagement]\r\nFROM [$(vDossier)/COOI.qvd](qvd)\r\nWHERE (left(COOI.OBJNR,4)='ORCM')\r\n  AND (COOI.GJAHR)>='$(vAnneeDeb)'\r\n  group by COOI.REFBN\r\n;\r\n\r\n//récupération des CC pour les ordres internes\r\nleft join\r\nload distinct \r\n\tCOOI.REFBN as [Année-Numéro de pièce OR], \r\n    MAXSTRING(COOI.OBJNR) as [Centre de coûts Ordre interne Engagement]\r\nFROM [$(vDossier)/COOI.qvd](qvd)\r\nWHERE left(COOI.OBJNR,2)='KS'\r\n  group by COOI.REFBN\r\n;\r\n\r\n// Pierre\r\n// left join\r\n// LOAD distinct\r\n//     EKKN.EBELN \t\t\tas [Numéro de commande],\r\n//     EKKN.KBLNR \t\t\tas [Numéro de réservation de Fonds de la Commande],\r\n//    \tEKKN.KBLPOS \t    as [Poste de la Commande]\r\n//     //,\r\n//     //text(EKKN.PAOBJNR) \tas [OTP]\r\n// FROM [$(vDossier)/EKKN.qvd]\r\n// (qvd);\r\n\r\n\r\n// Fix du 16.03.2023 pour retirer les doublons générés plus haut\r\nleft join\r\nLOAD distinct\r\n    EKKN.EBELN&'-'&EKKN.EBELP \tas [N° pièce, Ligne d'écriture (LgE)],//15.05.2023 Thomas AUGUET update clé //04.07.2023 Update de la clé\r\n    EKKN.KBLNR \t\t\t\t\tas [Numéro de réservation de Fonds de la Commande],\r\n    EKKN.KBLPOS \t\t\t\tas [Poste de la Commande]\r\n//     MAXSTRING(EKKN.KBLNR) \t\t\tas [Numéro de réservation de Fonds de la Commande], // 15.05.2023 plus besoin d'aggrég car on a la bonne clé\r\n//     MAXSTRING(EKKN.KBLPOS) \t\t\tas [Poste de la Commande]\r\n    //,\r\n    //text(EKKN.PAOBJNR) \tas [OTP]\r\nFROM [$(vDossier)/EKKN.qvd]\r\n(qvd)\r\n//   group by EKKN.EBELN,EKKN.EBELP\r\n;\r\n\r\nQualify *;\r\nV1_Engagement:\r\nLOAD * RESIDENT Engagement;\r\nUnqualify *;\r\n\r\n///$tab //début fusion\r\n\r\n///$tab Engagement fusion  - Si on a un CC \r\nEngagementFusionCC: //Centre de coûts\r\nLOAD\r\n    REF_LIGNE&'-CC-Engagement-'&AnnéeMois as REF_LIGNE,\r\n    [Type de valeur],\r\n    [Date comptable],\r\n\t[Numéro de pièce, Rattachement par ligne],\r\n\t[Numéro de pièce, Rattachement par ligne] as KeyCC,\r\n    \"Numéro de commande\",\r\n//     \"Année-Numéro de pièce OR\",\r\n    [Numéro de pièce],\r\n    [Numéro de poste de la pièce de référence],\r\n    [Numéro d'imputation de la pièce de référence],\r\n    \"Type d'analyse\",\r\n//     \"Est un Ordre Interne\",\r\n    AnnéeMois,\r\n    \"Num Nature comptable\",\r\n    Engagement,\r\n    \"N° pièce, Ligne d'écriture (LgE)\",\r\n    \"Année-Numéro de pièce\",\r\n    \"ID Domaine Fonctionnel Engagement\",\r\n    \"Numéro de réservation de Fonds\",\r\n    \"ID Fournisseur Engagement\",\r\n    Libellé,\r\n    \"Type de pièce d'origine - engagement\",\r\n    \"Périmètre analytique\",\r\n    Classe,\r\n    \"Est un engagement avec réservé\",\r\n    \"Num Centre de coûts\",\r\n//     OTP,\r\n//     \"OR\",\r\n//     \"Ordre interne\",\r\n    \"Contrat Engagement\",\r\n//     \"Centre de coûts Ordre interne Engagement\",\r\n    \"Numéro de réservation de Fonds de la Commande\",\r\n    \"Poste de la Commande\",\r\n    1 as AUneEcritureCentreDeCouts,\r\n    1 as fieldEngagementFusionCC\r\nResident Engagement WHERE [Type d'analyse]='Centre de coûts';\r\n\r\nleft join \r\nLOAD distinct\r\n    [Numéro de pièce, Rattachement par ligne],\r\n    [Année-Numéro de pièce OR],\r\n    [Est un Ordre Interne],\r\n    [Ordre interne],\r\n    [OR],\r\n    [Centre de coûts Ordre interne Engagement],\r\n\t1 as AUneEcritureOrdreInterne\r\nResident Engagement WHERE [Type d'analyse]='Ordre interne';\r\n\r\nleft join\r\nLOAD distinct\r\n    [Numéro de pièce, Rattachement par ligne],\r\n    [OTP],\r\n//     [Centre de coûts OTP],\r\n//     [Centre de coûts responsable],\r\n//     [Centre de coûts demandeur],\r\n    [Centre de coûts OTP 1],\r\n    [Centre de coûts OTP 2],\r\n    1 as AUneEcritureOTP\r\nResident Engagement WHERE [Type d'analyse]='OTP';\r\n///$tab Engagement fusion  - Si on a un OI\r\nEngagementFusionOI: //OI\r\nLOAD distinct\r\n    REF_LIGNE&'-OI-Engagement-'&AnnéeMois as REF_LIGNE,\r\n    [Type de valeur],\r\n    [Date comptable],\r\n    \"Est un engagement avec réservé\",\r\n    Engagement,\r\n    [Numéro de pièce, Rattachement par ligne] as KeyOI,\r\n    [Numéro de pièce, Rattachement par ligne],\r\n    [Numéro de pièce],\r\n    [Numéro de poste de la pièce de référence],\r\n    [Numéro d'imputation de la pièce de référence],\r\n    AnnéeMois,\r\n    \"Num Nature comptable\",\r\n    Libellé,\r\n    Classe,\r\n    \"N° pièce, Ligne d'écriture (LgE)\",\r\n    [ID Domaine Fonctionnel Engagement],\r\n    [Année-Numéro de pièce OR],\r\n    [Est un Ordre Interne],\r\n    [Ordre interne],\r\n    [OR],\r\n    [Centre de coûts Ordre interne Engagement],\r\n    \"Type de pièce d'origine - engagement\",\r\n    \"ID Fournisseur Engagement\",\r\n\t1 as AUneEcritureOrdreInterne,\r\n    1 as fieldEngagementFusionOI\r\nResident Engagement WHERE [Type d'analyse]='Ordre interne' \r\nAND NOT Exists(KeyCC,[Numéro de pièce, Rattachement par ligne]);\r\n\r\nleft join\r\nLOAD distinct\r\n    [Numéro de pièce, Rattachement par ligne],\r\n    [OTP],\r\n//     [Centre de coûts OTP],\r\n//     [Centre de coûts responsable],\r\n//     [Centre de coûts demandeur],\r\n    [Centre de coûts OTP 1],\r\n    [Centre de coûts OTP 2],\r\n    1 as AUneEcritureOTP\r\nResident Engagement WHERE [Type d'analyse]='OTP';\r\n///$tab Engagement fusion  - Si on a un OTP\r\nEngagementFusionOTP: //OTP\r\nLOAD distinct\r\n    REF_LIGNE&'-OTP-Engagement-'&AnnéeMois as REF_LIGNE,\r\n    [Type de valeur],\r\n    [Date comptable],\r\n    \"Est un engagement avec réservé\",\r\n    Engagement,\r\n    [Numéro de pièce, Rattachement par ligne] as KeyOTP,\r\n    [Numéro de pièce, Rattachement par ligne],\r\n    [ID Domaine Fonctionnel Engagement],\r\n    [Numéro de pièce],\r\n    [Numéro de poste de la pièce de référence],\r\n    [Numéro d'imputation de la pièce de référence],\r\n    \"N° pièce, Ligne d'écriture (LgE)\",\r\n    AnnéeMois,\r\n    \"Num Nature comptable\",\r\n    Libellé,\r\n    Classe,\r\n    [OTP],\r\n    \"Type de pièce d'origine - engagement\",\r\n//     [Centre de coûts OTP],\r\n//     [Centre de coûts responsable],\r\n//     [Centre de coûts demandeur],\r\n    [Centre de coûts OTP 1],\r\n    [Centre de coûts OTP 2],\r\n    \"ID Fournisseur Engagement\",\r\n    1 as AUneEcritureOTP,\r\n    1 as fieldEngagementFusionOTP\r\nResident Engagement WHERE [Type d'analyse]='OTP' \r\nAND NOT Exists(KeyCC,[Numéro de pièce, Rattachement par ligne])\r\nAND NOT Exists(KeyOI,[Numéro de pièce, Rattachement par ligne]);\r\n///$tab CONCATENATE\r\nEngagementfinal:\r\nLOAD *\r\n, 1 as Engagementfinal \r\nResident EngagementFusionCC;\r\n\r\nif FieldNumber(fieldEngagementFusionOI,'EngagementFusionOI')>= 0 then\r\n  CONCATENATE(Engagementfinal)\r\n  LOAD * Resident EngagementFusionOI;\r\n  drop table EngagementFusionOI;\r\nend if;\r\n\r\nif FieldNumber(fieldEngagementFusionOTP,'EngagementFusionOTP')>= 0 then\r\n  CONCATENATE(Engagementfinal)\r\n  LOAD * Resident EngagementFusionOTP;\r\n  drop table EngagementFusionOTP;\r\nend if;\r\n\r\nEngagementfinalfinal:\r\nLOAD *\r\n,1 as EngagementFinalfinal\r\n,if(AUneEcritureCentreDeCouts=1,1,0) as AUneEcritureCentreDeCouts_Final\r\n,if(AUneEcritureOrdreInterne=1,1,0) as AUneEcritureOrdreInterne_Final\r\n,if(AUneEcritureOTP=1,1,0) as AUneEcritureOTP_Final\r\nResident Engagementfinal;\r\n\r\ndrop field EngagementFinalfinal;\r\ndrop field Engagementfinal;\r\n\r\ndrop field AUneEcritureCentreDeCouts;\r\nrename field AUneEcritureCentreDeCouts_Final to AUneEcritureCentreDeCouts;\r\ndrop field AUneEcritureOrdreInterne;\r\nrename field AUneEcritureOrdreInterne_Final to AUneEcritureOrdreInterne;\r\ndrop field AUneEcritureOTP;\r\nrename field AUneEcritureOTP_Final to AUneEcritureOTP;\r\n\r\ndrop table Engagementfinal;\r\n\r\ndrop table Engagement;\r\ndrop table EngagementFusionCC;\r\n\r\nrename table Engagementfinalfinal to Engagement;\r\n\r\n\r\n///$tab Selection_OI_OTP_CC_engagement\r\n//19.04.2023 (Thomas AUGUET) : ajout de ce filtre de sélection pour facilement prendre une écriture qui contient un OI ou OTP ou CC\r\nSelection_OI_OTP_CC_engagement:\r\nLOAD REF_LIGNE,\r\n'OTP' as [Présence d'une écriture OTP/OI/CC]\r\nRESIDENT Engagement\r\nWHERE AUneEcritureOTP=1\r\n;\r\nCONCATENATE(Selection_OI_OTP_CC_engagement)\r\nLOAD REF_LIGNE,\r\n'OI' as [Présence d'une écriture OTP/OI/CC]\r\nRESIDENT Engagement\r\nWHERE AUneEcritureOrdreInterne=1\r\n;\r\nCONCATENATE(Selection_OI_OTP_CC_engagement)\r\nLOAD REF_LIGNE,\r\n'CC' as [Présence d'une écriture OTP/OI/CC]\r\nRESIDENT Engagement\r\nWHERE AUneEcritureCentreDeCouts=1\r\n;\r\n///$tab Store\r\nSTORE * FROM [Engagement] INTO [$(vDossier)/$(vDossierSave)_TEST_v1.5_FUSION/Engagement.qvd];\r\nSTORE * FROM [Selection_OI_OTP_CC_engagement] INTO [$(vDossier)/$(vDossierSave)_TEST_v1.5_FUSION/Selection_OI_OTP_CC_engagement.qvd];\r\n\r\nSTORE * FROM [MapFMIOI] INTO [$(vDossier)/$(vDossierSave)_TEST_v1.5_FUSION/MapFMIOI.qvd];\r\nSTORE * FROM [MapEKKN] INTO [$(vDossier)/$(vDossierSave)_TEST_v1.5_FUSION/MapEKKN.qvd];\r\n// STORE * FROM [MapEKKN_2] INTO [$(vDossier)/$(vDossierSave)_TEST_v1.5_FUSION/MapEKKN_2.qvd];",
+  "variables": [
+    {
+      "name": "vAnneeMin",
+      "definition": "2020"
+    },
+    {
+      "name": "vAnneeMax",
+      "definition": "2026"
+    },
+    {
+      "name": "vNumWeekdayFullReloadSurLesAnnées",
+      "definition": "5"
+    },
+    {
+      "name": "vAnneeReference3Ans",
+      "definition": "2020"
+    },
+    {
+      "name": "vTypeDeChargement",
+      "definition": "ChargementOptimiséSurToutesLesAnnées"
+    },
+    {
+      "name": "vAnnee",
+      "definition": "2027"
+    },
+    {
+      "name": "vNowNum",
+      "definition": "05.05.2026 03:16:47"
+    },
+    {
+      "name": "vNowTS",
+      "definition": "2026-05-05 03:16:47"
+    },
+    {
+      "name": "vTOD",
+      "definition": "0.14"
+    },
+    {
+      "name": "vIsMorningReload",
+      "definition": "1"
+    },
+    {
+      "name": "vIsEveningReload",
+      "definition": "0"
+    },
+    {
+      "name": "vReloadWindow",
+      "definition": "02-08"
+    },
+    {
+      "name": "vAnneeDeb",
+      "definition": "2023"
+    },
+    {
+      "name": "vNumWeekDay",
+      "definition": "1"
+    },
+    {
+      "name": "vAnneeFin",
+      "definition": "2027"
+    },
+    {
+      "name": "vNumWeekdayFullReloadSurLesChamps",
+      "definition": "6"
+    },
+    {
+      "name": "vDossier",
+      "definition": "lib://QVD_SAP/DFIN"
+    },
+    {
+      "name": "vDossierSave",
+      "definition": "DataModel"
+    },
+    {
+      "name": "vChargement",
+      "definition": "R3"
+    },
+    {
+      "name": "vOSUserRAW",
+      "definition": "UserDirectory=INTERNAL; UserId=sa_scheduler"
+    },
+    {
+      "name": "vOSUser",
+      "definition": "USERDIRECTORY=INTERNAL;USERID=SA_SCHEDULER"
+    },
+    {
+      "name": "vIsTask",
+      "definition": "1"
+    },
+    {
+      "name": "vReloadContext",
+      "definition": "TASK"
+    },
+    {
+      "name": "vWeekDayToday",
+      "definition": "1"
+    },
+    {
+      "name": "vHeureFinMatin",
+      "definition": "08"
+    },
+    {
+      "name": "vHeureFinMatinNum",
+      "definition": "8"
+    }
+  ]
+}
