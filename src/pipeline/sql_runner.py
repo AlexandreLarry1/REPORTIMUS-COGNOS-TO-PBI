@@ -4,7 +4,7 @@ import duckdb
 import pathlib
 import pandas as pd
 
-ROOT = pathlib.Path(__file__).parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent
 
 
 def _col_aliases(csv_path: pathlib.Path) -> str:

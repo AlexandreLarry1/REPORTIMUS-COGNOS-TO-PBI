@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ROOT = pathlib.Path(__file__).parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent
 WS_URL = os.getenv("QLIK_WS_URL", "ws://localhost:4848/app/")
 
 parser = argparse.ArgumentParser()

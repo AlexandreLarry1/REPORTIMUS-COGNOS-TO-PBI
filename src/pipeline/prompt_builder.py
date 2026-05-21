@@ -3,7 +3,7 @@ import csv
 import json
 import pathlib
 
-ROOT = pathlib.Path(__file__).parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent
 
 _RULES = (
     "- MAPPING LOAD              -> CREATE OR REPLACE TEMP TABLE\n"

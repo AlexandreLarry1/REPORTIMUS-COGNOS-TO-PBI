@@ -8,7 +8,7 @@ import uuid
 from dotenv import load_dotenv
 load_dotenv()
 
-ROOT = pathlib.Path(__file__).parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent
 
 REPORT_NAME = "MigrationQlikPBI"
 CANVAS_W    = 1280.0

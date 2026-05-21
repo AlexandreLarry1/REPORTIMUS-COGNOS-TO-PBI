@@ -13,7 +13,8 @@ import sys
 from dotenv import load_dotenv
 load_dotenv()
 
-ROOT = pathlib.Path(__file__).parent.parent
+ROOT = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))  # src/ → pipeline imports work
 
 
 def _wait_for_sql(sql_file: pathlib.Path) -> None:
