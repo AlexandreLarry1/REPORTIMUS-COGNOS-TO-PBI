@@ -1,17 +1,10 @@
-"""Execute generated.sql on inputs/ CSVs via DuckDB, postprocess and export."""
+"""Execute generated.sql on input/ CSVs via DuckDB, postprocess and export."""
 import csv
 import duckdb
 import pathlib
 import pandas as pd
 
-ROOT       = pathlib.Path(__file__).parent.parent
-INPUTS_DIR = ROOT / "inputs"
-SQL_FILE   = ROOT / "sql" / "generated.sql"
-OUT_FINAL  = ROOT / "output" / "final"
-OUT_DEBUG  = ROOT / "output" / "debug"
-
-# Tables marquées finales dans le SQL (CREATE OR REPLACE TABLE sans TEMP)
-# Détectées dynamiquement à l'exécution via SHOW TABLES.
+ROOT = pathlib.Path(__file__).parent.parent
 
 
 def _col_aliases(csv_path: pathlib.Path) -> str:
@@ -24,19 +17,19 @@ def _col_aliases(csv_path: pathlib.Path) -> str:
     return ", ".join(parts)
 
 
-def load_inputs(con: duckdb.DuckDBPyConnection, inputs_dir: pathlib.Path = INPUTS_DIR) -> None:
+def load_inputs(con: duckdb.DuckDBPyConnection, inputs_dir: pathlib.Path) -> None:
     for csv_path in sorted(inputs_dir.glob("*.csv")):
         cols = _col_aliases(csv_path)
+        view_name = f"{csv_path.stem}_src"
         con.execute(
-            f"CREATE VIEW {csv_path.stem} AS SELECT {cols} FROM read_csv_auto("
+            f"CREATE VIEW {view_name} AS SELECT {cols} FROM read_csv_auto("
             f"'{csv_path.as_posix()}', strict_mode=false, null_padding=true, "
             f"ignore_errors=true, parallel=false, all_varchar=true)"
         )
-        print(f"  {csv_path.stem} ← {csv_path.name}")
+        print(f"  {view_name} ← {csv_path.name}")
 
 
 def _postprocess(df: pd.DataFrame) -> pd.DataFrame:
-    """Date serial → ISO, float-int → int, NaN → '-'."""
     if "Date comptable" in df.columns:
         numeric = pd.to_numeric(df["Date comptable"], errors="coerce")
         mask = numeric.notna()
@@ -54,17 +47,23 @@ def _postprocess(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def run(sql_file: pathlib.Path = SQL_FILE, debug: bool = False) -> None:
+def run(example: str, debug: bool = False) -> None:
+    example_dir  = ROOT / "examples" / example
+    inputs_dir   = example_dir / "input"
+    intermediate = example_dir / "output" / "intermediate"
+    sql_file     = intermediate / "sql" / "generated.sql"
+    out_final    = intermediate / "final"
+    out_debug    = intermediate / "debug"
+
     con = duckdb.connect()
     print("Chargement des inputs...")
-    load_inputs(con)
+    load_inputs(con, inputs_dir)
 
     print(f"Exécution de {sql_file.name}...")
     sql = sql_file.read_text(encoding="utf-8")
     for stmt in (s.strip() for s in sql.split(";") if s.strip()):
         con.execute(stmt)
 
-    # Sépare tables finales (BASE TABLE), intermédiaires (LOCAL TEMPORARY) et vues d'input
     rows = con.execute(
         "SELECT table_name, table_type FROM information_schema.tables"
     ).fetchall()
@@ -75,24 +74,28 @@ def run(sql_file: pathlib.Path = SQL_FILE, debug: bool = False) -> None:
     if debug:
         print(f"Tables debug    : {inter_tables}")
 
-    OUT_FINAL.mkdir(parents=True, exist_ok=True)
+    out_final.mkdir(parents=True, exist_ok=True)
     for t in final_tables:
         n = con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
         df = _postprocess(con.execute(f"SELECT * FROM {t}").df())
-        df.to_csv(OUT_FINAL / f"{t}.csv", index=False)
-        print(f"  → output/final/{t}.csv  ({n:,} lignes)")
+        df.to_csv(out_final / f"{t}.csv", index=False)
+        print(f"  → examples/{example}/output/intermediate/final/{t}.csv  ({n:,} lignes)")
 
     if debug:
-        OUT_DEBUG.mkdir(parents=True, exist_ok=True)
+        out_debug.mkdir(parents=True, exist_ok=True)
         for t in inter_tables:
             n = con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
             df = _postprocess(con.execute(f"SELECT * FROM {t}").df())
-            df.to_csv(OUT_DEBUG / f"{t}.csv", index=False)
-            print(f"  → output/debug/{t}.csv  ({n:,} lignes)")
+            df.to_csv(out_debug / f"{t}.csv", index=False)
+            print(f"  → examples/{example}/output/intermediate/debug/{t}.csv  ({n:,} lignes)")
 
 
 if __name__ == "__main__":
-    import argparse
+    import argparse, os
+    from dotenv import load_dotenv
+    load_dotenv()
     p = argparse.ArgumentParser()
-    p.add_argument("--debug", action="store_true", help="Exporter aussi les tables intermédiaires")
-    run(debug=p.parse_args().debug)
+    p.add_argument("--example", default=os.getenv("EXAMPLE_NAME", ""))
+    p.add_argument("--debug", action="store_true")
+    args = p.parse_args()
+    run(example=args.example, debug=args.debug)

@@ -1,29 +1,31 @@
 """Orchestrateur de la pipeline Qlik → SQL → CSV.
 
 Modes :
-  paste      Génère le prompt → attend que l'utilisateur colle le SQL dans sql/generated.sql
+  paste      Génère le prompt → attend que l'utilisateur colle le SQL dans output/intermediate/sql/generated.sql
   api        Génère le prompt → appelle Claude API → exécute automatiquement
   skip-llm   Saute la génération LLM, relance uniquement sql_runner sur generated.sql existant
 """
 import argparse
+import os
 import pathlib
 import sys
 
-ROOT    = pathlib.Path(__file__).parent.parent
-SQL_DIR = ROOT / "sql"
-SQL_FILE = SQL_DIR / "generated.sql"
+from dotenv import load_dotenv
+load_dotenv()
+
+ROOT = pathlib.Path(__file__).parent.parent
 
 
-def _wait_for_sql() -> None:
+def _wait_for_sql(sql_file: pathlib.Path) -> None:
     print("\n" + "="*60)
     print("ÉTAPE MANUELLE")
-    print("  1. Ouvrez sql/prompt.txt")
+    print(f"  1. Ouvrez {sql_file.parent}/prompt.txt")
     print("  2. Copiez le contenu dans votre chat LLM (Claude, GPT…)")
-    print("  3. Collez la réponse dans sql/generated.sql")
+    print(f"  3. Collez la réponse dans {sql_file}")
     print("="*60)
-    input("\nAppuyez sur Entrée une fois sql/generated.sql créé…")
-    if not SQL_FILE.exists():
-        print("sql/generated.sql introuvable. Abandon.")
+    input("\nAppuyez sur Entrée une fois generated.sql créé…")
+    if not sql_file.exists():
+        print("generated.sql introuvable. Abandon.")
         sys.exit(1)
 
 
@@ -34,8 +36,7 @@ def _call_api(system: str, user: str) -> str:
         print("Package 'anthropic' manquant. Installez-le : pip install anthropic")
         sys.exit(1)
 
-    import os
-    api_key = os.environ.get("ANTHROPIC_API_KEY") or (ROOT / ".env").read_text().split("ANTHROPIC_API_KEY=")[-1].split()[0]
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=api_key)
 
     print("Appel Claude API…")
@@ -50,36 +51,38 @@ def _call_api(system: str, user: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Pipeline Qlik → SQL DuckDB → CSV")
-    parser.add_argument(
-        "--mode",
-        choices=["paste", "api", "skip-llm"],
-        default="paste",
-        help="paste: prompt manuel | api: appel Claude | skip-llm: relance sql_runner seul",
-    )
-    parser.add_argument("--debug", action="store_true", help="Exporter aussi les tables intermédiaires")
+    parser.add_argument("--mode", choices=["paste", "api", "skip-llm"], default="paste")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
+
+    example = os.getenv("EXAMPLE_NAME", "")
+    if not example:
+        print("EXAMPLE_NAME non défini dans .env. Abandon.")
+        sys.exit(1)
+
+    sql_file = ROOT / "examples" / example / "output" / "intermediate" / "sql" / "generated.sql"
 
     from pipeline.prompt_builder import build as build_prompt
     from pipeline.sql_runner import run as run_sql
 
     if args.mode == "skip-llm":
-        if not SQL_FILE.exists():
-            print(f"sql/generated.sql introuvable. Lancez d'abord --mode paste ou --mode api.")
+        if not sql_file.exists():
+            print(f"{sql_file} introuvable. Lancez d'abord --mode paste ou --mode api.")
             sys.exit(1)
-        print("Mode skip-llm : sql/generated.sql existant utilisé.")
+        print("Mode skip-llm : generated.sql existant utilisé.")
 
     elif args.mode == "paste":
-        build_prompt(write=True)
-        _wait_for_sql()
+        build_prompt(example=example, write=True)
+        _wait_for_sql(sql_file)
 
     elif args.mode == "api":
-        system, user = build_prompt(write=True)
+        system, user = build_prompt(example=example, write=True)
         sql = _call_api(system, user)
-        SQL_DIR.mkdir(exist_ok=True)
-        SQL_FILE.write_text(sql, encoding="utf-8")
-        print(f"SQL généré → {SQL_FILE}")
+        sql_file.parent.mkdir(parents=True, exist_ok=True)
+        sql_file.write_text(sql, encoding="utf-8")
+        print(f"SQL généré → {sql_file}")
 
-    run_sql(sql_file=SQL_FILE, debug=args.debug)
+    run_sql(example=example, debug=args.debug)
 
 
 if __name__ == "__main__":

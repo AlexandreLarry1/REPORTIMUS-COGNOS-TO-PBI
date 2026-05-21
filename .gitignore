@@ -6,13 +6,15 @@ __pycache__/
 .venv/
 venv/
 
-# Données source SAP (volumineuses, confidentielles)
+# Données source et outputs (volumineuses, confidentielles)
+examples/*/input/*
+!examples/*/input/.gitkeep
+examples/*/output/
+
+# Anciens chemins (legacy)
 inputs/
 data/
-
-# Outputs générés
 output/
-sql/generated.sql
-
-# Anciens chemins
 outputs/
+extraction/
+sql/generated.sql
