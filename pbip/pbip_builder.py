@@ -359,8 +359,8 @@ def main() -> None:
 
     example      = args.example
     example_dir  = ROOT / "examples" / example
-    intermediate = example_dir / "output" / "intermediate"
-    out_dir      = example_dir / "output" / "pbip"
+    intermediate = example_dir / "intermediate"
+    out_dir      = example_dir / "pbip"
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Output: {out_dir}\n")
 

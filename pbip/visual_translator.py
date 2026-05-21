@@ -15,8 +15,8 @@ REPORT_NAME = "MigrationQlikPBI"
 
 def _example_paths(example: str) -> dict:
     example_dir  = ROOT / "examples" / example
-    intermediate = example_dir / "output" / "intermediate"
-    pbip         = example_dir / "output" / "pbip"
+    intermediate = example_dir / "intermediate"
+    pbip         = example_dir / "pbip"
     return {
         "visual_json":   intermediate / "visual_extraction.json",
         "script_json":   intermediate / "extraction.json",

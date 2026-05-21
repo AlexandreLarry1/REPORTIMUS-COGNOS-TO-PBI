@@ -17,7 +17,7 @@ args = parser.parse_args()
 QVF_NAME = args.app
 
 EXAMPLE_NAME = os.getenv("EXAMPLE_NAME", "")
-OUTPUT_DIR = ROOT / "examples" / EXAMPLE_NAME / "output" / "intermediate"
+OUTPUT_DIR = ROOT / "examples" / EXAMPLE_NAME / "intermediate"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ws = websocket.create_connection(WS_URL)

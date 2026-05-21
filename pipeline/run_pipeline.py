@@ -60,7 +60,7 @@ def main() -> None:
         print("EXAMPLE_NAME non défini dans .env. Abandon.")
         sys.exit(1)
 
-    sql_file = ROOT / "examples" / example / "output" / "intermediate" / "sql" / "generated.sql"
+    sql_file = ROOT / "examples" / example / "intermediate" / "sql" / "generated.sql"
 
     from pipeline.prompt_builder import build as build_prompt
     from pipeline.sql_runner import run as run_sql

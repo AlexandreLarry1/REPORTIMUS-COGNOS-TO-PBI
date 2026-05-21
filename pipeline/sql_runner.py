@@ -50,7 +50,7 @@ def _postprocess(df: pd.DataFrame) -> pd.DataFrame:
 def run(example: str, debug: bool = False) -> None:
     example_dir  = ROOT / "examples" / example
     inputs_dir   = example_dir / "input"
-    intermediate = example_dir / "output" / "intermediate"
+    intermediate = example_dir / "intermediate"
     sql_file     = intermediate / "sql" / "generated.sql"
     out_final    = intermediate / "final"
     out_debug    = intermediate / "debug"

@@ -86,7 +86,7 @@ def build_user(variables: list[dict], script: str) -> str:
 def build(example: str, write: bool = True) -> tuple[str, str]:
     example_dir  = ROOT / "examples" / example
     inputs_dir   = example_dir / "input"
-    intermediate = example_dir / "output" / "intermediate"
+    intermediate = example_dir / "intermediate"
     sql_dir      = intermediate / "sql"
 
     data = json.loads((intermediate / "extraction.json").read_text(encoding="utf-8"))
