@@ -262,7 +262,7 @@ _WELLS: dict[str, tuple[str | None, str | None, int, int]] = {
     "lineChart":     ("Category", "Y",      -1, -1),
     "lineClusteredColumnComboChart": ("Category", "Y", -1, -1),
     "donutChart":    ("Category", "Y",        -1, 1),
-    "scatterChart":  ("Details",  None,      -1, 0),  # scatter handled separately
+    "scatterChart":  ("Group",    None,      -1, 0),  # scatter: grouping well is "Group" not "Details"
     "pivotTable":    ("Rows",     "Values", -1, -1),
     "treemap":       ("Category", "Values", -1, 1),
     "waterfallChart":("Category", "Y",      -1, 1),
@@ -554,6 +554,29 @@ def apply_translation(response: dict, paths: dict) -> None:
             translated = visuals_map[name]
             vtype = translated.get("visual_type", "card")
             resolved_dims = [_resolve_dim(d, bim_idx) for d in translated.get("dimensions", [])]
+
+            # tableEx: convert cross-dim-table dims to RELATED() calc cols on the primary table.
+            # PBI table renderer crashes (queryName undefined) when a Column from a foreign
+            # dim table is included directly in the From clause alongside the primary dim table.
+            if vtype == "tableEx" and resolved_dims:
+                from collections import Counter as _Counter
+                dim_tbls = [d.get("table", "") for d in resolved_dims if d.get("table", "").startswith("dim_")]
+                if dim_tbls:
+                    primary = _Counter(dim_tbls).most_common(1)[0][0]
+                    updated = []
+                    for d in resolved_dims:
+                        tbl, col = d.get("table", ""), d.get("column", "")
+                        if tbl and tbl != primary and tbl.startswith("dim_") and col:
+                            calc_name = d.get("label") or f"{tbl.replace('dim_', '')}_{col}"
+                            expr = f"RELATED({tbl}[{col}])"
+                            if _add_calc_col(bim, primary, calc_name, expr, "string"):
+                                print(f"  [RELATED] {primary}[{calc_name}] = {expr}")
+                                bim_idx = _bim_index(bim)
+                            updated.append({**d, "table": primary, "column": calc_name})
+                        else:
+                            updated.append(d)
+                    resolved_dims = updated
+
             sf = translated.get("slicer_field")
             if sf and "." in sf:
                 tbl_s, col_s = sf.split(".", 1)
@@ -586,6 +609,9 @@ def apply_translation(response: dict, paths: dict) -> None:
 
     paths["report"].write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  {patched} visualContainers patched in report.json")
+
+    # Second BIM write: persist any RELATED() calc cols added during the visual loop.
+    paths["bim"].write_text(json.dumps(bim, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # --- post-LLM DAX validation: scan all measure/calc-col expressions ---
     _validate_dax_refs(bim, bim_idx)
