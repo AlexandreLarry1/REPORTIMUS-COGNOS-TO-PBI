@@ -555,11 +555,14 @@ def apply_translation(response: dict, paths: dict) -> None:
             vtype = translated.get("visual_type", "card")
             resolved_dims = [_resolve_dim(d, bim_idx) for d in translated.get("dimensions", [])]
 
-            # tableEx: convert cross-dim-table dims to RELATED() calc cols on the primary table.
+            # tableEx: convert cross-dim-table dims to LOOKUPVALUE() calc cols on the primary table.
             # PBI table renderer crashes (queryName undefined) when a Column from a foreign
             # dim table is included directly in the From clause alongside the primary dim table.
+            # Use LOOKUPVALUE() not RELATED() — avoids circular-ref errors from PBI's
+            # calculated-column dependency graph when dim→dim relationships are present.
             if vtype == "tableEx" and resolved_dims:
                 from collections import Counter as _Counter
+                _rels = bim["model"].get("relationships", [])
                 dim_tbls = [d.get("table", "") for d in resolved_dims if d.get("table", "").startswith("dim_")]
                 if dim_tbls:
                     primary = _Counter(dim_tbls).most_common(1)[0][0]
@@ -568,9 +571,21 @@ def apply_translation(response: dict, paths: dict) -> None:
                         tbl, col = d.get("table", ""), d.get("column", "")
                         if tbl and tbl != primary and tbl.startswith("dim_") and col:
                             calc_name = d.get("label") or f"{tbl.replace('dim_', '')}_{col}"
-                            expr = f"RELATED({tbl}[{col}])"
+                            # Find join key: rel where primary→tbl or tbl→primary
+                            fk_col = pk_col = None
+                            for rel in _rels:
+                                if rel["fromTable"] == primary and rel["toTable"] == tbl:
+                                    fk_col, pk_col = rel["fromColumn"], rel["toColumn"]
+                                    break
+                                if rel["fromTable"] == tbl and rel["toTable"] == primary:
+                                    fk_col, pk_col = rel["toColumn"], rel["fromColumn"]
+                                    break
+                            if fk_col and pk_col:
+                                expr = f"LOOKUPVALUE({tbl}[{col}], {tbl}[{pk_col}], {primary}[{fk_col}])"
+                            else:
+                                expr = f"RELATED({tbl}[{col}])"
                             if _add_calc_col(bim, primary, calc_name, expr, "string"):
-                                print(f"  [RELATED] {primary}[{calc_name}] = {expr}")
+                                print(f"  [LOOKUP] {primary}[{calc_name}] = {expr}")
                                 bim_idx = _bim_index(bim)
                             updated.append({**d, "table": primary, "column": calc_name})
                         else:
