@@ -178,6 +178,75 @@ def _bim_table(csv_path: pathlib.Path) -> dict | None:
     }
 
 
+import re as _re_rel
+
+
+def _canonical_dim(col: str, dim_tbls: list[str]) -> str | None:
+    """Return the ONE dim table whose entity name best matches the column name.
+
+    ClientID   → dim_clients       (base 'client'   ⊂ 'clients')
+    PortefeuilleID → dim_portefeuilles  (base 'portefeuille' ⊂ 'portefeuilles')
+    If no match, return None → no relationship created for this column.
+    """
+    base = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', col).lower().replace('_', '')
+    if not base:
+        return None
+    scored = []
+    for dim in dim_tbls:
+        entity = dim.removeprefix('dim_').lower().replace('_', '').rstrip('s')
+        common = 0
+        for a, b in zip(base, entity):
+            if a == b:
+                common += 1
+            else:
+                break
+        if common >= min(3, len(entity)):
+            scored.append((common, dim))
+    return max(scored, key=lambda x: x[0])[1] if scored else None
+
+
+def _infer_relationships(tables: list) -> list:
+    """Infer fact→dim relationships using canonical dim matching per FK column.
+
+    Each FK column maps to exactly ONE dim table (by name similarity), preventing
+    ambiguous multi-path errors in Power BI when multiple tables share a column.
+    """
+    col_index: dict[str, list[str]] = {}
+    for t in tables:
+        for c in t.get("columns", []):
+            col_index.setdefault(c["name"], []).append(t["name"])
+
+    relationships = []
+    seen: set = set()
+
+    for col, tbls in col_index.items():
+        if len(tbls) < 2:
+            continue
+        if not _re_rel.search(r'(?i)(ID|Key|Ref|Code)$', col):
+            continue
+        dim_tbls  = [t for t in tbls if t.startswith("dim_")]
+        fact_tbls = [t for t in tbls if t.startswith("fact_")]
+        if not dim_tbls or not fact_tbls:
+            continue
+        canonical = _canonical_dim(col, dim_tbls)
+        if not canonical:
+            continue
+        for fact in fact_tbls:
+            key = (fact, canonical, col)
+            if key in seen:
+                continue
+            seen.add(key)
+            relationships.append({
+                "name": f"{fact}_{canonical}_{col}",
+                "fromTable": fact,
+                "fromColumn": col,
+                "toTable": canonical,
+                "toColumn": col,
+            })
+            print(f"  ~ relation: {fact}[{col}] → {canonical}[{col}]")
+    return relationships
+
+
 def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[str]:
     sm_dir  = out_root / f"{REPORT_NAME}.SemanticModel"
     tables  = []
@@ -187,6 +256,7 @@ def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[
             tables.append(t)
             print(f"  + table '{t['name']}' ({len(t['columns'])} cols) <- {csv_path.name}")
 
+    relationships = _infer_relationships(tables)
     bim = {
         "name": "SemanticModel",
         "compatibilityLevel": 1550,
@@ -196,12 +266,13 @@ def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[
             "defaultPowerBIDataSourceVersion": "powerBI_V3",
             "sourceQueryCulture": "fr-FR",
             "tables": tables,
+            "relationships": relationships,
         },
     }
     _write(sm_dir / "model.bim", bim)
-    _write(sm_dir / "model.pbism", {"version": "1.0", "settings": {}})
+    _write(sm_dir / "definition.pbism", {"version": "1.0", "settings": {}})
     _write(sm_dir / ".platform", _platform("SemanticModel", REPORT_NAME))
-    print(f"  -> {sm_dir / 'model.bim'}")
+    print(f"  -> {sm_dir / 'model.bim'}  ({len(relationships)} relations)")
     return [t["name"] for t in tables]
 
 
