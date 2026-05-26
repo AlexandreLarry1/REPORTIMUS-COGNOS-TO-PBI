@@ -3,12 +3,16 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import sys
+import unicodedata
 import uuid
 from dotenv import load_dotenv
 load_dotenv()
 
-ROOT       = pathlib.Path(__file__).parent.parent
+ROOT       = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))  # src/
+import observability as obs
 _ALPHABET  = "abcdefghijklmnopqrstuvwxyz"
 REPORT_NAME = "MigrationQlikPBI"
 
@@ -20,6 +24,7 @@ def _example_paths(example: str) -> dict:
     return {
         "visual_json":   intermediate / "visual_extraction.json",
         "script_json":   intermediate / "extraction.json",
+        "etl_context":   intermediate / "sql" / "etl_context.json",
         "bim":           pbip / f"{REPORT_NAME}.SemanticModel" / "model.bim",
         "report":        pbip / f"{REPORT_NAME}.Report" / "report.json",
         "prompt":        intermediate / "visual_prompt.txt",
@@ -32,12 +37,75 @@ def _example_paths(example: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def _tables_block(bim: dict) -> str:
-    lines = ["Tables disponibles dans le modele semantique Power BI :"]
+    lines = [
+        "Tables disponibles dans le modele semantique Power BI :",
+        "IMPORTANT : utilise EXACTEMENT ces noms de tables et de colonnes dans toutes les expressions DAX et dimensions.",
+        "Ne renomme pas, ne traduis pas, ne rajoute pas d'espaces ou d'accents.",
+    ]
     for t in bim["model"]["tables"]:
-        cols = ", ".join(c["name"] for c in t.get("columns", [])[:20])
-        suffix = f" ... (+{len(t['columns'])-20} cols)" if len(t.get("columns", [])) > 20 else ""
-        lines.append(f"- {t['name']} : {cols}{suffix}")
+        cols = ", ".join(c["name"] for c in t.get("columns", []))
+        lines.append(f"- {t['name']} : {cols}")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# DAX auto-fix helpers
+# ---------------------------------------------------------------------------
+
+def _norm(s: str) -> str:
+    """Normalize string for fuzzy matching: strip accents, lowercase, keep only alphanum."""
+    s = unicodedata.normalize("NFD", s)
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9]", "", s.lower())
+
+
+def _fix_dax_refs(expression: str, bim_idx: dict) -> tuple[str, list[str]]:
+    """Auto-correct Table[Column] references in a DAX expression against bim_idx.
+
+    Returns (fixed_expression, list_of_substitutions_made).
+    """
+    fixes: list[str] = []
+
+    def _resolve_table(raw: str) -> tuple[str, dict[str, str]] | None:
+        entry = bim_idx.get(raw.lower())
+        if entry:
+            return entry
+        norm_raw = _norm(raw)
+        # prefix match: Fact_Cours → fact_cours_historiques
+        candidates = [(k, v) for k, v in bim_idx.items() if _norm(v[0]).startswith(norm_raw) or norm_raw.startswith(_norm(v[0]))]
+        if len(candidates) == 1:
+            return candidates[0][1]
+        # best overlap
+        best = max(bim_idx.items(), key=lambda kv: len(set(_norm(kv[0])) & set(norm_raw)), default=None)
+        return best[1] if best else None
+
+    def _resolve_col(raw: str, cols: dict[str, str]) -> str | None:
+        exact = cols.get(raw.lower())
+        if exact:
+            return exact
+        norm_raw = _norm(raw)
+        for col_lower, col_actual in cols.items():
+            if _norm(col_actual) == norm_raw:
+                return col_actual
+        return None
+
+    def _replace(match: re.Match) -> str:
+        raw_tbl = match.group(1).strip()
+        raw_col = match.group(2).strip()
+        entry = _resolve_table(raw_tbl)
+        if not entry:
+            return match.group(0)
+        actual_tbl, cols = entry
+        actual_col = _resolve_col(raw_col, cols)
+        if not actual_col:
+            return match.group(0)
+        result = f"{actual_tbl}[{actual_col}]"
+        if result != match.group(0):
+            fixes.append(f"{match.group(0)} → {result}")
+        return result
+
+    fixed = re.sub(r"([\w][\w\s]*?)\[([^\]]+)\]", _replace, expression)
+    return fixed, fixes
 
 
 def _obj_lines(obj: dict, prefix: str = "  ") -> list[str]:
@@ -75,15 +143,40 @@ def _script_summary(script_data: dict | None) -> str:
     return f"\nExtrait du script Qlik (contexte metier) :\n{raw[:2000].strip()}\n[...tronque]"
 
 
+def _etl_context_block(etl_context: dict | None) -> str:
+    if not etl_context:
+        return ""
+    lines = ["\nTables ETL disponibles (post-transformation, prets pour DAX) :"]
+    for t in etl_context.get("tables", []):
+        cols = ", ".join(f"{c['name']} ({c['type']})" for c in t["columns"])
+        sample_vals = []
+        for row in t.get("sample", [])[:2]:
+            sample_vals.append("{" + ", ".join(f"{k}: {v}" for k, v in list(row.items())[:4]) + "}")
+        sample_str = " | ".join(sample_vals)
+        lines.append(f"- {t['name']} ({t['row_count']:,} lignes) : {cols}")
+        if sample_str:
+            lines.append(f"  ex: {sample_str}")
+    errors = etl_context.get("errors", [])
+    if errors:
+        lines.append(f"\nAttention : {len(errors)} erreur(s) ETL — ces tables peuvent etre absentes ou incompletes :")
+        for e in errors:
+            lines.append(f"  - {e.get('error', '')[:120]}")
+    return "\n".join(lines)
+
+
 _SYSTEM = (
     "Tu es un expert en migration Qlik -> Power BI.\n"
     "On te donne :\n"
-    "1. La liste des tables/colonnes du modele semantique PBI\n"
-    "2. Les objets visuels Qlik (id, type, titre, dimensions, mesures, position grille)\n"
+    "1. La liste des tables/colonnes du modele semantique PBI (noms EXACTS a utiliser)\n"
+    "2. Les donnees ETL avec types et exemples\n"
+    "3. Les objets visuels Qlik (id, type, titre, dimensions, mesures, position grille)\n"
     "   Les objets enfants d'un container sont indentes sous leur parent.\n"
-    "3. Un extrait du script Qlik pour contexte metier\n\n"
+    "4. Un extrait du script Qlik pour contexte metier\n\n"
     "Tu dois produire un JSON strict (sans markdown, sans explication) avec cette structure :\n"
     "{\n"
+    '  "calculated_columns": [\n'
+    '    {"table": "<table PBI>", "name": "<nom colonne>", "expression": "<DAX colonne calculee>", "data_type": "string|double|int64|boolean"}\n'
+    "  ],\n"
     '  "measures": [\n'
     '    {"name": "<nom lisible>", "table": "<table PBI>", "expression": "<DAX valide>"}\n'
     "  ],\n"
@@ -98,19 +191,22 @@ _SYSTEM = (
     "    }\n"
     "  ]\n"
     "}\n\n"
-    "Regles :\n"
+    "Regles CRITIQUES :\n"
+    "- Utilise UNIQUEMENT les noms de tables et colonnes tels que listes dans le bloc 'Tables disponibles'\n"
+    "- Dans les expressions DAX, reference les colonnes avec Table[ColonneExacte] (casse identique)\n"
+    "- Si une dimension Qlik est une expression calculee (ex: If(PnL>0,'Pos','Neg')), ajoute-la dans calculated_columns avec l'expression DAX equivalente. Ne la mets pas dans dimensions si elle n'existe pas comme colonne physique.\n"
     "- Chaque objet Qlik (y compris les enfants de containers) doit avoir une entree dans visuals\n"
     "- Les noms de mesures dans visuals[].measures doivent matcher measures[].name exactement\n"
     "- Pour filterpane/listbox : renseigne slicer_field, laisse dimensions et measures vides\n"
     "- Pour sn-text/text-image/action-button : visual_type=textbox, pas de dims/measures\n"
-    "- Pour sn-layout-container : visual_type=textbox, pas de dims/measures\n"
     "- Retourne UNIQUEMENT le JSON"
 )
 
 
-def build_prompt(bim: dict, sheets: list, script_data: dict | None) -> tuple[str, str]:
+def build_prompt(bim: dict, sheets: list, script_data: dict | None, etl_context: dict | None = None) -> tuple[str, str]:
     user = (
         f"{_tables_block(bim)}\n\n"
+        f"{_etl_context_block(etl_context)}\n\n"
         f"{_visuals_block(sheets)}"
         f"{_script_summary(script_data)}\n\n"
         "Produis le JSON de traduction PBI."
@@ -134,17 +230,55 @@ _WELLS: dict[str, tuple[str | None, str | None, int, int]] = {
     "lineChart":     ("Category", "Y",      -1, -1),
     "lineClusteredColumnComboChart": ("Category", "Y", -1, -1),
     "donutChart":    ("Category", "Y",        -1, 1),
-    "scatterChart":  ("Details",  "Y",      -1, 2),
+    "scatterChart":  ("Details",  None,      -1, 0),  # scatter handled separately
     "pivotTable":    ("Rows",     "Values", -1, -1),
     "treemap":       ("Category", "Values", -1, 1),
     "waterfallChart":("Category", "Y",      -1, 1),
     "gauge":         (None,       "Y",       0, 1),
     "map":           ("Location", "Size",   -1, 1),
-    "card":          ("Values",   "Values",  0, 1),
+    "card":          (None,       "Values",  0, 1),
     "tableEx":       ("Values",   "Values", -1, -1),
     "slicer":        ("Field",    None,       1, 0),
     "textbox":       (None,       None,      0, 0),
 }
+
+# scatter: measure[0]→X, measure[1]→Y, measure[2]→Size
+_SCATTER_MEAS_WELLS = ["X", "Y", "Size"]
+
+
+def _bim_index(bim: dict) -> dict[str, tuple[str, dict[str, str]]]:
+    """Build {table_lower: (actual_table_name, {col_lower: actual_col})}."""
+    idx: dict[str, tuple[str, dict[str, str]]] = {}
+    for t in bim["model"]["tables"]:
+        cols = {c["name"].lower(): c["name"] for c in t.get("columns", [])}
+        idx[t["name"].lower()] = (t["name"], cols)
+    return idx
+
+
+def _resolve_dim(d: dict, idx: dict) -> dict:
+    """Resolve table/column to actual bim casing (exact then fuzzy via _norm)."""
+    raw_tbl = d.get("table", "")
+    raw_col = d.get("column", "")
+
+    # table: exact then fuzzy
+    entry = idx.get(raw_tbl.lower())
+    if not entry:
+        norm_tbl = _norm(raw_tbl)
+        candidates = [v for k, v in idx.items() if _norm(v[0]).startswith(norm_tbl) or norm_tbl.startswith(_norm(v[0]))]
+        entry = candidates[0] if len(candidates) == 1 else None
+    if not entry:
+        return d
+    actual_tbl, cols = entry
+
+    # column: exact then fuzzy
+    actual_col = cols.get(raw_col.lower())
+    if not actual_col:
+        norm_col = _norm(raw_col)
+        for col_actual in cols.values():
+            if _norm(col_actual) == norm_col:
+                actual_col = col_actual
+                break
+    return {**d, "table": actual_tbl, "column": actual_col or raw_col}
 
 
 def _build_prototype_query(
@@ -188,7 +322,12 @@ def _build_prototype_query(
             if tbl and col:
                 _add_col(tbl, col, dim_well)
 
-    if meas_well and max_meas != 0:
+    if visual_type == "scatterChart":
+        for i, mname in enumerate(measure_names[:len(_SCATTER_MEAS_WELLS)]):
+            m = meas_by_name.get(mname)
+            if m:
+                _add_meas(m, _SCATTER_MEAS_WELLS[i])
+    elif meas_well and max_meas != 0:
         names = measure_names[:max_meas] if max_meas > 0 else measure_names
         for mname in names:
             m = meas_by_name.get(mname)
@@ -204,16 +343,54 @@ def _build_prototype_query(
     return projections, {"Version": 2, "From": froms, "Select": selects}, col_props
 
 
+def _add_calc_col(bim: dict, table: str, name: str, expression: str, data_type: str = "string") -> bool:
+    for t in bim["model"]["tables"]:
+        if t["name"] == table:
+            existing = [c["name"] for c in t.get("columns", [])]
+            if name not in existing:
+                t.setdefault("columns", []).append({
+                    "type": "calculated",
+                    "name": name,
+                    "lineageTag": str(uuid.uuid4()),
+                    "dataType": data_type,
+                    "expression": expression,
+                    "summarizeBy": "none",
+                })
+                return True
+    return False
+
+
 def apply_translation(response: dict, paths: dict) -> None:
     all_measures = response.get("measures", [])
     visuals_map  = {v["qlik_id"]: v for v in response.get("visuals", [])}
 
     bim = json.loads(paths["bim"].read_text(encoding="utf-8"))
+    bim_idx = _bim_index(bim)
+    # build {table_lower: actual_table_name}
+    tbl_name_map = {k: v[0] for k, v in bim_idx.items()}
+
     rename: dict[str, str] = {}
     added = 0
+    skipped = 0
     for m in all_measures:
+        req_tbl    = m.get("table", "")
+        actual_tbl = tbl_name_map.get(req_tbl.lower())
+        if not actual_tbl:
+            norm_req = _norm(req_tbl)
+            candidates = [v for k, v in tbl_name_map.items() if _norm(v).startswith(norm_req) or norm_req.startswith(_norm(v))]
+            actual_tbl = candidates[0] if len(candidates) == 1 else None
+        if not actual_tbl:
+            print(f"  [WARN] table '{req_tbl}' introuvable dans model.bim — mesure '{m['name']}' ignorée")
+            skipped += 1
+            continue
+        m["table"] = actual_tbl  # normalize casing for _build_prototype_query
+        # auto-fix DAX column references
+        fixed_expr, dax_fixes = _fix_dax_refs(m["expression"], bim_idx)
+        if dax_fixes:
+            print(f"  [DAX-FIX] '{m['name']}': {'; '.join(dax_fixes)}")
+        m["expression"] = fixed_expr
         for t in bim["model"]["tables"]:
-            if t["name"] == m.get("table", ""):
+            if t["name"] == actual_tbl:
                 col_names_lower = {c["name"].lower() for c in t.get("columns", [])}
                 meas_name = m["name"]
                 if meas_name.lower() in col_names_lower:
@@ -223,18 +400,49 @@ def apply_translation(response: dict, paths: dict) -> None:
                 if meas_name not in existing:
                     t.setdefault("measures", []).append({
                         "name": meas_name,
-                        "expression": m["expression"],
+                        "expression": fixed_expr,
                         "lineageTag": str(uuid.uuid4()),
                     })
                     added += 1
                 break
     for m in all_measures:
-        if m["name"] in rename:
-            m["_safe_name"] = rename[m["name"]]
-        else:
-            m["_safe_name"] = m["name"]
+        m["_safe_name"] = rename.get(m["name"], m["name"])
+
+    # --- calculated_columns from LLM response ---
+    calc_added = 0
+    for cc in response.get("calculated_columns", []):
+        req_tbl = cc.get("table", "")
+        actual_tbl = tbl_name_map.get(req_tbl.lower())
+        if not actual_tbl:
+            print(f"  [WARN] calc_col table '{req_tbl}' introuvable")
+            continue
+        expr, dax_fixes = _fix_dax_refs(cc.get("expression", "\"\""), bim_idx)
+        if dax_fixes:
+            print(f"  [DAX-FIX] calc_col '{cc['name']}': {'; '.join(dax_fixes)}")
+        if _add_calc_col(bim, actual_tbl, cc["name"], expr, cc.get("data_type", "string")):
+            print(f"  [CALC-COL] {actual_tbl}[{cc['name']}] ajoutée")
+            calc_added += 1
+            bim_idx = _bim_index(bim)  # refresh index
+
+    # --- detect missing dimension columns → add placeholder calc cols ---
+    placeholder_added = 0
+    for visual in visuals_map.values():
+        for d in visual.get("dimensions", []):
+            resolved = _resolve_dim(d, bim_idx)  # fuzzy resolve first
+            entry = bim_idx.get(resolved.get("table", "").lower())
+            if not entry:
+                continue
+            actual_tbl, cols = entry
+            col = resolved.get("column", "")
+            if col and col.lower() not in cols:
+                placeholder = f"\"TODO: DAX pour {col} (colonne calculee Qlik)\""
+                if _add_calc_col(bim, actual_tbl, col, placeholder, "string"):
+                    print(f"  [PLACEHOLDER] {actual_tbl}[{col}] — expression à compléter dans Power BI Desktop")
+                    placeholder_added += 1
+                    bim_idx = _bim_index(bim)
+
     paths["bim"].write_text(json.dumps(bim, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"  {added} measures added to model.bim ({len(rename)} renamed to avoid column conflicts)")
+    print(f"  {added} mesures | {calc_added} col. calculées | {placeholder_added} placeholders | {len(rename)} renommées | {skipped} ignorées")
 
     report  = json.loads(paths["report"].read_text(encoding="utf-8"))
     patched = 0
@@ -246,11 +454,19 @@ def apply_translation(response: dict, paths: dict) -> None:
                 continue
             translated = visuals_map[name]
             vtype = translated.get("visual_type", "card")
+            resolved_dims = [_resolve_dim(d, bim_idx) for d in translated.get("dimensions", [])]
+            sf = translated.get("slicer_field")
+            if sf and "." in sf:
+                tbl_s, col_s = sf.split(".", 1)
+                entry = bim_idx.get(tbl_s.lower())
+                if entry:
+                    actual_tbl_s, cols_s = entry
+                    sf = f"{actual_tbl_s}.{cols_s.get(col_s.lower(), col_s)}"
             projections, proto, col_props = _build_prototype_query(
-                translated.get("dimensions", []),
+                resolved_dims,
                 translated.get("measures", []),
                 all_measures,
-                translated.get("slicer_field"),
+                sf,
                 vtype,
             )
             sv = cfg.setdefault("singleVisual", {})
@@ -277,19 +493,34 @@ def apply_translation(response: dict, paths: dict) -> None:
 # API call
 # ---------------------------------------------------------------------------
 
-def _call_api(system: str, user: str) -> str:
-    try:
-        import anthropic
-    except ImportError:
-        print("pip install anthropic")
-        sys.exit(1)
-    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-    print("Appel Claude API...")
-    msg = client.messages.create(
-        model="claude-sonnet-4-6", max_tokens=8192,
-        system=system, messages=[{"role": "user", "content": user}],
+def _call_api(system: str, user: str, trace=None) -> str:
+    from openai import AzureOpenAI
+    client = AzureOpenAI(
+        api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+        api_version=os.environ["AZURE_OPENAI_API_VERSION"],
     )
-    return msg.content[0].text
+    model = os.environ["AZURE_OPENAI_DEPLOYMENT"]
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+
+    gen = (trace or obs._Noop()).generation(
+        name="visual_translation",
+        model=model,
+        input=messages,
+    )
+
+    print("Appel Azure OpenAI...")
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=8192,
+    )
+    result = response.choices[0].message.content
+    gen.end(output=result)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +543,13 @@ def main() -> None:
     visual_data = json.loads(paths["visual_json"].read_text(encoding="utf-8"))
     bim         = json.loads(paths["bim"].read_text(encoding="utf-8"))
     script_data = json.loads(paths["script_json"].read_text(encoding="utf-8")) if paths["script_json"].exists() else None
+    etl_context = json.loads(paths["etl_context"].read_text(encoding="utf-8")) if paths["etl_context"].exists() else None
     sheets      = visual_data.get("sheets", [])
+
+    if etl_context:
+        print(f"  etl_context chargé ({len(etl_context.get('tables', []))} tables)")
+    else:
+        print("  etl_context absent — prompt sans données ETL")
 
     if args.mode == "apply":
         if not paths["response"].exists():
@@ -321,27 +558,31 @@ def main() -> None:
         apply_translation(json.loads(paths["response"].read_text(encoding="utf-8")), paths)
         return
 
-    system, user = build_prompt(bim, sheets, script_data)
+    system, user = build_prompt(bim, sheets, script_data, etl_context)
 
-    if args.mode == "paste":
-        paths["prompt"].write_text(f"SYSTEM:\n{system}\n\nUSER:\n{user}", encoding="utf-8")
-        print(f"Prompt ecrit -> {paths['prompt']}")
-        print("\nCopier dans LLM, coller reponse JSON dans :")
-        print(f"  {paths['response']}")
-        input("\nAppuyez sur Entree une fois le fichier cree...")
-        if not paths["response"].exists():
-            print("Fichier introuvable. Abandon.")
-            sys.exit(1)
+    with obs.trace("visual_translation_run", example=args.example, mode=args.mode) as trace:
+        if args.mode == "paste":
+            paths["prompt"].write_text(f"SYSTEM:\n{system}\n\nUSER:\n{user}", encoding="utf-8")
+            print(f"Prompt ecrit -> {paths['prompt']}")
+            print("\nCopier dans LLM, coller reponse JSON dans :")
+            print(f"  {paths['response']}")
+            input("\nAppuyez sur Entree une fois le fichier cree...")
+            if not paths["response"].exists():
+                print("Fichier introuvable. Abandon.")
+                sys.exit(1)
 
-    elif args.mode == "api":
-        raw     = _call_api(system, user)
-        cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        paths["response"].write_text(cleaned, encoding="utf-8")
-        print(f"Reponse LLM -> {paths['response']}")
+        elif args.mode == "api":
+            raw     = _call_api(system, user, trace=trace)
+            cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            paths["response"].write_text(cleaned, encoding="utf-8")
+            print(f"Reponse LLM -> {paths['response']}")
 
-    response = json.loads(paths["response"].read_text(encoding="utf-8"))
-    print("\nApplication de la traduction...")
-    apply_translation(response, paths)
+        response = json.loads(paths["response"].read_text(encoding="utf-8"))
+        print("\nApplication de la traduction...")
+        apply_sp = trace.span(name="apply_translation")
+        apply_translation(response, paths)
+        apply_sp.end()
+
     print(f"\nDone. Ouvrez {paths['bim'].parent.parent / REPORT_NAME}.pbip dans Power BI Desktop.")
 
 
