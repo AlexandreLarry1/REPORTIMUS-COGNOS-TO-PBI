@@ -62,7 +62,7 @@ def _read_csv_headers(path: pathlib.Path) -> list[str]:
 def _infer_col_types(path: pathlib.Path, sample: int = 200) -> dict[str, str]:
     """Return {col_name: pbi_dataType} by sampling up to `sample` rows."""
     import re as _re
-    _DATE_RE = _re.compile(r"^\d{1,2}/\d{1,2}/\d{4}$")
+    _DATE_RE = _re.compile(r"^\d{4}-\d{2}-\d{2}$|^\d{1,2}/\d{1,2}/\d{4}$")
     for enc in ("utf-8-sig", "utf-8", "latin-1"):
         try:
             with open(path, newline="", encoding=enc) as f:
@@ -293,6 +293,46 @@ def _infer_relationships(tables: list) -> list:
         else:
             relationships.append(rel)
             print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}[{rel['toColumn']}]")
+
+    # Calendar pass: link each fact table's first dateTime column to the calendar dim.
+    cal_tbl = next(
+        (t for t in tables if any(k in t["name"].lower() for k in ("calendrier", "calendar", "mastercalendar"))),
+        None,
+    )
+    if cal_tbl:
+        cal_date_col = next(
+            (c["name"] for c in cal_tbl["columns"] if c["dataType"] == "dateTime"),
+            None,
+        )
+        if cal_date_col:
+            linked_facts: set = set()
+            for rel in relationships:
+                if rel["toTable"] == cal_tbl["name"]:
+                    linked_facts.add(rel["fromTable"])
+                if rel["fromTable"] == cal_tbl["name"]:
+                    linked_facts.add(rel["toTable"])
+            for fact_t in tables:
+                if not fact_t["name"].startswith("fact_"):
+                    continue
+                if fact_t["name"] in linked_facts:
+                    continue
+                fact_date_col = next(
+                    (c["name"] for c in fact_t["columns"] if c["dataType"] == "dateTime"),
+                    None,
+                )
+                if not fact_date_col:
+                    continue
+                key = (fact_t["name"], cal_tbl["name"], fact_date_col)
+                if key not in seen:
+                    seen.add(key)
+                    relationships.append({
+                        "name": f"{fact_t['name']}_{cal_tbl['name']}_{fact_date_col}",
+                        "fromTable": fact_t["name"],
+                        "fromColumn": fact_date_col,
+                        "toTable": cal_tbl["name"],
+                        "toColumn": cal_date_col,
+                    })
+                    print(f"  ~ calendar: {fact_t['name']}[{fact_date_col}] ->{cal_tbl['name']}[{cal_date_col}]")
 
     return relationships
 
