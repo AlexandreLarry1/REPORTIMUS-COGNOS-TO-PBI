@@ -244,10 +244,9 @@ def _infer_relationships(tables: list) -> list:
         dim_tbls  = [t for t in tbls if t.startswith("dim_")]
         fact_tbls = [t for t in tbls if t.startswith("fact_")]
 
-        # dim→dim: e.g. dim_portefeuilles[ClientID] ->dim_clients[ClientID]
-        # The "many" side is the dim that has the FK (not the PK owner).
-        # PK owner = the dim whose name matches the FK column best.
-        if len(dim_tbls) >= 2 and not fact_tbls:
+        # dim→dim: PK owner = dim whose name best matches the FK column.
+        # Triggered when >= 2 dims share the FK, regardless of fact tables.
+        if len(dim_tbls) >= 2:
             canonical = _canonical_dim(col, dim_tbls)
             if canonical:
                 for other_dim in dim_tbls:
@@ -263,6 +262,7 @@ def _infer_relationships(tables: list) -> list:
                             "toTable": canonical,
                             "toColumn": col,
                         })
+        if not fact_tbls:
             continue
 
         if not dim_tbls or not fact_tbls:
@@ -283,16 +283,39 @@ def _infer_relationships(tables: list) -> list:
                 "toColumn": col,
             })
 
-    # Drop direct fact→dim links that are already reachable via another path.
-    # Build incrementally: add a candidate only if toTable not yet reachable from fromTable.
-    relationships: list = []
-    for rel in candidates:
-        already_reachable = rel["toTable"] in _reachable(rel["fromTable"], relationships)
-        if already_reachable:
-            print(f"  ~ skipped (ambiguous path): {rel['fromTable']} ->{rel['toTable']} via {rel['fromColumn']}")
-        else:
-            relationships.append(rel)
-            print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}[{rel['toColumn']}]")
+    # Add all candidates — no BFS dedup (causes wrong drops when dim→dim exist).
+    # Deduplication is handled by the post-pass below using directed traversal.
+    relationships: list = list(candidates)
+    for rel in relationships:
+        print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}[{rel['toColumn']}]")
+
+    # Post-pass: deactivate fact→dim_X when fromTable is reachable from toTable via
+    # directed filter propagation (toTable filters fromTable through other active rels).
+    # Process most-canonical-match first so the "direct PK" link is deactivated before
+    # the "bridge dim" link, ensuring the bridge is kept active.
+    def _canonical_score(rel: dict) -> int:
+        col_base = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', rel.get("fromColumn", "")).lower().replace("_", "")
+        to_entity = rel["toTable"].removeprefix("dim_").lower().replace("_", "").rstrip("s")
+        return sum(1 for a, b in zip(col_base, to_entity) if a == b)
+
+    def _directed_reachable(from_tbl: str, rels: list) -> set:
+        """Tables reachable from from_tbl following filter direction (toTable→fromTable)."""
+        visited = {from_tbl}
+        queue = [from_tbl]
+        while queue:
+            cur = queue.pop()
+            for r in rels:
+                if r.get("isActive", True) and r["toTable"] == cur and r["fromTable"] not in visited:
+                    visited.add(r["fromTable"])
+                    queue.append(r["fromTable"])
+        return visited
+
+    fact_dim = [r for r in relationships if r["fromTable"].startswith("fact_") and r["toTable"].startswith("dim_")]
+    for rel in sorted(fact_dim, key=_canonical_score, reverse=True):
+        others = [r for r in relationships if r is not rel and r.get("isActive", True)]
+        if rel["fromTable"] in _directed_reachable(rel["toTable"], others):
+            rel["isActive"] = False
+            print(f"  ~ deactivated (indirect path): {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}")
 
     # Calendar pass: link each fact table's first dateTime column to the calendar dim.
     cal_tbl = next(
