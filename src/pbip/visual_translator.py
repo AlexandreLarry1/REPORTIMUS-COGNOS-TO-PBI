@@ -381,17 +381,21 @@ def _build_prototype_query(
 def _add_calc_col(bim: dict, table: str, name: str, expression: str, data_type: str = "string") -> bool:
     for t in bim["model"]["tables"]:
         if t["name"] == table:
-            existing = [c["name"] for c in t.get("columns", [])]
-            if name not in existing:
-                t.setdefault("columns", []).append({
-                    "type": "calculated",
-                    "name": name,
-                    "lineageTag": str(uuid.uuid4()),
-                    "dataType": data_type,
-                    "expression": expression,
-                    "summarizeBy": "none",
-                })
-                return True
+            for col in t.get("columns", []):
+                if col.get("type") == "calculated" and col["name"] == name:
+                    if col["expression"].startswith('"TODO') and not expression.startswith('"TODO'):
+                        col["expression"] = expression
+                        return True
+                    return False
+            t.setdefault("columns", []).append({
+                "type": "calculated",
+                "name": name,
+                "lineageTag": str(uuid.uuid4()),
+                "dataType": data_type,
+                "expression": expression,
+                "summarizeBy": "none",
+            })
+            return True
     return False
 
 
@@ -500,6 +504,23 @@ def apply_translation(response: dict, paths: dict) -> None:
             bim_idx = _bim_index(bim)  # refresh index
 
     # --- detect missing dimension columns ->add placeholder calc cols ---
+    def _infer_calc_expr(col_name: str, cols: dict[str, str]) -> str:
+        """Infer DAX for common Qlik calculated column patterns before falling back to TODO."""
+        col_lower = col_name.lower()
+        cols_lower = {c.lower(): c for c in cols.values()}
+        if re.match(r"nom\s+complet", col_lower):
+            nom = cols_lower.get("nom")
+            prenom = cols_lower.get("prenom")
+            if nom and prenom:
+                return f'[{nom}] & " " & [{prenom}]'
+        parts = col_name.rsplit(" ", 1)
+        if len(parts) == 2:
+            base = parts[0]
+            exact = cols_lower.get(base.lower())
+            if exact:
+                return f"[{exact}]"
+        return f'"TODO: DAX pour {col_name} (colonne calculee Qlik)"'
+
     placeholder_added = 0
     for visual in visuals_map.values():
         for d in visual.get("dimensions", []):
@@ -510,9 +531,12 @@ def apply_translation(response: dict, paths: dict) -> None:
             actual_tbl, cols = entry
             col = resolved.get("column", "")
             if col and col.lower() not in cols:
-                placeholder = f"\"TODO: DAX pour {col} (colonne calculee Qlik)\""
-                if _add_calc_col(bim, actual_tbl, col, placeholder, "string"):
-                    print(f"  [PLACEHOLDER] {actual_tbl}[{col}] — expression à compléter dans Power BI Desktop")
+                expr = _infer_calc_expr(col, cols)
+                if _add_calc_col(bim, actual_tbl, col, expr, "string"):
+                    if expr.startswith('"TODO'):
+                        print(f"  [PLACEHOLDER] {actual_tbl}[{col}] — expression à compléter dans Power BI Desktop")
+                    else:
+                        print(f"  [CALC-COL-INFERRED] {actual_tbl}[{col}] = {expr}")
                     placeholder_added += 1
                     bim_idx = _bim_index(bim)
 

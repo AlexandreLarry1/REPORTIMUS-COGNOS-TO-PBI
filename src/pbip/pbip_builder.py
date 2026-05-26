@@ -358,6 +358,43 @@ def _infer_relationships(tables: list) -> list:
                     })
                     print(f"  ~ calendar: {fact_t['name']}[{fact_date_col}] ->{cal_tbl['name']}[{cal_date_col}]")
 
+    # FK-to-PK pass: detect col "X" in table_a pointing to col "XID" in a dim.
+    # Handles patterns like dim_clients[Conseiller] → dim_conseillers[ConseillerID].
+    col_by_table: dict[str, list[str]] = {t["name"]: [c["name"] for c in t.get("columns", [])] for t in tables}
+    dim_pk_index: dict[str, tuple[str, str]] = {}  # "conseiller" → ("dim_conseillers", "ConseillerID")
+    for tbl_name, cols in col_by_table.items():
+        if not tbl_name.startswith("dim_"):
+            continue
+        for col in cols:
+            if _re_rel.search(r'(?i)(ID|Key|Ref|Code)$', col):
+                base = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', col).lower()
+                if base and base not in dim_pk_index:
+                    dim_pk_index[base] = (tbl_name, col)
+
+    for tbl_name, cols in col_by_table.items():
+        for col_a in cols:
+            if _re_rel.search(r'(?i)(ID|Key|Ref|Code)$', col_a):
+                continue  # already handled in main pass
+            base = col_a.lower()
+            pk_entry = dim_pk_index.get(base)
+            if not pk_entry:
+                continue
+            pk_tbl, pk_col = pk_entry
+            if pk_tbl == tbl_name:
+                continue
+            key = (tbl_name, pk_tbl, col_a)
+            if key in seen:
+                continue
+            seen.add(key)
+            relationships.append({
+                "name": f"{tbl_name}_{pk_tbl}_{col_a}",
+                "fromTable": tbl_name,
+                "fromColumn": col_a,
+                "toTable": pk_tbl,
+                "toColumn": pk_col,
+            })
+            print(f"  ~ fk-to-pk: {tbl_name}[{col_a}] ->{pk_tbl}[{pk_col}]")
+
     return relationships
 
 
