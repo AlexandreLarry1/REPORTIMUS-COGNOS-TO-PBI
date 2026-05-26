@@ -1,0 +1,1034 @@
+{
+  "run_at": "2026-05-26T16:05:22",
+  "example": "edr-demo-light",
+  "tables": [
+    {
+      "name": "dim_calendrier",
+      "row_count": 1096,
+      "columns": [
+        {
+          "name": "Date",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Annee",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Trimestre",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Mois",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "NomMois",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Semaine",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "JourSemaine",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "NomJour",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "EstWeekend",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "EstJourFerie",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Semestre",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "AnneeMois",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "AnneeTrimestreTxt",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "Date": "2022-01-01",
+          "Annee": "2022",
+          "Trimestre": "1",
+          "Mois": "1",
+          "NomMois": "January",
+          "Semaine": "52",
+          "JourSemaine": "6",
+          "NomJour": "Saturday",
+          "EstWeekend": "1",
+          "EstJourFerie": "0",
+          "Semestre": "1",
+          "AnneeMois": "2022-01",
+          "AnneeTrimestreTxt": "2022-Q1"
+        },
+        {
+          "Date": "2022-01-02",
+          "Annee": "2022",
+          "Trimestre": "1",
+          "Mois": "1",
+          "NomMois": "January",
+          "Semaine": "52",
+          "JourSemaine": "7",
+          "NomJour": "Sunday",
+          "EstWeekend": "1",
+          "EstJourFerie": "0",
+          "Semestre": "1",
+          "AnneeMois": "2022-01",
+          "AnneeTrimestreTxt": "2022-Q1"
+        },
+        {
+          "Date": "2022-01-03",
+          "Annee": "2022",
+          "Trimestre": "1",
+          "Mois": "1",
+          "NomMois": "January",
+          "Semaine": "1",
+          "JourSemaine": "1",
+          "NomJour": "Monday",
+          "EstWeekend": "0",
+          "EstJourFerie": "0",
+          "Semestre": "1",
+          "AnneeMois": "2022-01",
+          "AnneeTrimestreTxt": "2022-Q1"
+        }
+      ]
+    },
+    {
+      "name": "dim_clients",
+      "row_count": 100,
+      "columns": [
+        {
+          "name": "ClientID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Nom",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Prenom",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Email",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Telephone",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateNaissance",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Segment",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Pays",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Ville",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateEntreeRelation",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Conseiller",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ProfilRisque",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "StatutKYC",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "ClientID": "CLI0001",
+          "Nom": "Diaz",
+          "Prenom": "Alexandrie",
+          "Email": "hamonvincent@example.com",
+          "Telephone": "+33 (0)6 30 22 17 02",
+          "DateNaissance": "1976-04-04",
+          "Segment": "Retail",
+          "Pays": "Luxembourg",
+          "Ville": "Denis",
+          "DateEntreeRelation": "2021-04-11",
+          "Conseiller": "CONS002",
+          "ProfilRisque": "Conservateur",
+          "StatutKYC": "À renouveler"
+        },
+        {
+          "ClientID": "CLI0002",
+          "Nom": "Bourgeois",
+          "Prenom": "Virginie",
+          "Email": "ile-goff@example.org",
+          "Telephone": "+33 (0)3 86 37 17 98",
+          "DateNaissance": "1982-12-26",
+          "Segment": "Retail",
+          "Pays": "Allemagne",
+          "Ville": "Joubertboeuf",
+          "DateEntreeRelation": "2017-02-20",
+          "Conseiller": "CONS007",
+          "ProfilRisque": "Conservateur",
+          "StatutKYC": "En cours"
+        },
+        {
+          "ClientID": "CLI0003",
+          "Nom": "Royer",
+          "Prenom": "Cécile",
+          "Email": "cjean@example.org",
+          "Telephone": "04 72 46 25 98",
+          "DateNaissance": "1983-08-26",
+          "Segment": "Private",
+          "Pays": "Luxembourg",
+          "Ville": "Roger",
+          "DateEntreeRelation": "2019-04-21",
+          "Conseiller": "CONS006",
+          "ProfilRisque": "Modéré",
+          "StatutKYC": "En cours"
+        }
+      ]
+    },
+    {
+      "name": "dim_conseillers",
+      "row_count": 10,
+      "columns": [
+        {
+          "name": "ConseillerID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Nom",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Prenom",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Email",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Bureau",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Equipe",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "AnneeExperience",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Certification",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "NbClients",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "AuM_EUR",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "ConseillerID": "CONS001",
+          "Nom": "Gautier",
+          "Prenom": "Yves",
+          "Email": "lucasguillon@example.net",
+          "Bureau": "Paris",
+          "Equipe": "Equipe B",
+          "AnneeExperience": "13",
+          "Certification": "Aucune",
+          "NbClients": "17",
+          "AuM_EUR": "136634986.51"
+        },
+        {
+          "ConseillerID": "CONS002",
+          "Nom": "Gilles",
+          "Prenom": "Vincent",
+          "Email": "smonnier@example.org",
+          "Bureau": "Bordeaux",
+          "Equipe": "Equipe B",
+          "AnneeExperience": "6",
+          "Certification": "AMF",
+          "NbClients": "27",
+          "AuM_EUR": "101344181.08"
+        },
+        {
+          "ConseillerID": "CONS003",
+          "Nom": "Philippe",
+          "Prenom": "Olivie",
+          "Email": "oriviere@example.com",
+          "Bureau": "Bordeaux",
+          "Equipe": "Equipe B",
+          "AnneeExperience": "19",
+          "Certification": "CFA",
+          "NbClients": "38",
+          "AuM_EUR": "27558471.74"
+        }
+      ]
+    },
+    {
+      "name": "dim_instruments",
+      "row_count": 15,
+      "columns": [
+        {
+          "name": "InstrumentID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "NomInstrument",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TypeInstrument",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Classe Actif",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Devise",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Pays",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ISIN",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Emetteur",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "NiveauRisque",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "FraisGestion_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Macro Classe Actif",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "InstrumentID": "INST001",
+          "NomInstrument": "CAC 40 ETF",
+          "TypeInstrument": "ETF",
+          "Classe Actif": "Actions",
+          "Devise": "EUR",
+          "Pays": "FR",
+          "ISIN": "FR0000000001",
+          "Emetteur": "Lyxor",
+          "NiveauRisque": "Élevé",
+          "FraisGestion_pct": "0.2",
+          "Macro Classe Actif": "Risque"
+        },
+        {
+          "InstrumentID": "INST002",
+          "NomInstrument": "S&P 500 ETF",
+          "TypeInstrument": "ETF",
+          "Classe Actif": "Actions",
+          "Devise": "USD",
+          "Pays": "US",
+          "ISIN": "US0000000002",
+          "Emetteur": "iShares",
+          "NiveauRisque": "Élevé",
+          "FraisGestion_pct": "0.07",
+          "Macro Classe Actif": "Risque"
+        },
+        {
+          "InstrumentID": "INST003",
+          "NomInstrument": "OAT France 10 ans",
+          "TypeInstrument": "Obligation",
+          "Classe Actif": "Taux",
+          "Devise": "EUR",
+          "Pays": "FR",
+          "ISIN": "FR0000000003",
+          "Emetteur": "État Français",
+          "NiveauRisque": "Faible",
+          "FraisGestion_pct": "0.0",
+          "Macro Classe Actif": "Defensif"
+        }
+      ]
+    },
+    {
+      "name": "dim_portefeuilles",
+      "row_count": 150,
+      "columns": [
+        {
+          "name": "PortefeuilleID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ClientID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TypePortefeuille",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateOuverture",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Devise",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Statut",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ObjectifInvestissement",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "HorizonInvestissement",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "BenchmarkRef",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "PortefeuilleID": "PF00001",
+          "ClientID": "CLI0074",
+          "TypePortefeuille": "Compte Titres",
+          "DateOuverture": "2026-03-06",
+          "Devise": "EUR",
+          "Statut": "Actif",
+          "ObjectifInvestissement": "Préservation Capital",
+          "HorizonInvestissement": "Moyen terme (2-5 ans)",
+          "BenchmarkRef": "Bloomberg Aggr."
+        },
+        {
+          "PortefeuilleID": "PF00002",
+          "ClientID": "CLI0025",
+          "TypePortefeuille": "PER",
+          "DateOuverture": "2019-11-12",
+          "Devise": "EUR",
+          "Statut": "Actif",
+          "ObjectifInvestissement": "Préservation Capital",
+          "HorizonInvestissement": "Long terme (>5 ans)",
+          "BenchmarkRef": "CAC 40"
+        },
+        {
+          "PortefeuilleID": "PF00003",
+          "ClientID": "CLI0092",
+          "TypePortefeuille": "Compte Titres",
+          "DateOuverture": "2020-04-03",
+          "Devise": "EUR",
+          "Statut": "Actif",
+          "ObjectifInvestissement": "Croissance",
+          "HorizonInvestissement": "Long terme (>5 ans)",
+          "BenchmarkRef": "CAC 40"
+        }
+      ]
+    },
+    {
+      "name": "fact_alertes_risque",
+      "row_count": 500,
+      "columns": [
+        {
+          "name": "AlerteID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PortefeuilleID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ClientID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateAlerte",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TypeAlerte",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Severite",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Statut",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Description",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ValeurMesure",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "SeuilAlerte",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateResolution",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "AlerteID": "ALT00001",
+          "PortefeuilleID": "PF00115",
+          "ClientID": "CLI0095",
+          "DateAlerte": "2025-11-23",
+          "TypeAlerte": "Concentration Secteur",
+          "Severite": "Haute",
+          "Statut": "En traitement",
+          "Description": "Front remettre revoir donc cheveu parce que transformer assurer raison beaux côte.",
+          "ValeurMesure": "-23.81",
+          "SeuilAlerte": "7.34",
+          "DateResolution": "2026-02-14"
+        },
+        {
+          "AlerteID": "ALT00002",
+          "PortefeuilleID": "PF00075",
+          "ClientID": "CLI0066",
+          "DateAlerte": "2025-09-28",
+          "TypeAlerte": "Limite Exposition Dépassée",
+          "Severite": "Faible",
+          "Statut": "Ouverte",
+          "Description": "Arrivée arme grandir y parvenir ombre arrêter frapper madame.",
+          "ValeurMesure": "24.91",
+          "SeuilAlerte": "3.76",
+          "DateResolution": "2025-12-09"
+        },
+        {
+          "AlerteID": "ALT00003",
+          "PortefeuilleID": "PF00092",
+          "ClientID": "CLI0071",
+          "DateAlerte": "2025-02-28",
+          "TypeAlerte": "KYC Expiré",
+          "Severite": "Critique",
+          "Statut": "Ouverte",
+          "Description": "Croire vous saint main appel aide recevoir public.",
+          "ValeurMesure": "5.04",
+          "SeuilAlerte": "-8.78",
+          "DateResolution": "2026-05-18"
+        }
+      ]
+    },
+    {
+      "name": "fact_cours_historiques",
+      "row_count": 11730,
+      "columns": [
+        {
+          "name": "Date",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "InstrumentID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixOuverture",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixHaut",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixBas",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixCloture",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Volume",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Devise",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "Date": "2022-01-03",
+          "InstrumentID": "INST001",
+          "PrixOuverture": "180.6863",
+          "PrixHaut": "181.2461",
+          "PrixBas": "178.0952",
+          "PrixCloture": "179.009",
+          "Volume": "1854929.0",
+          "Devise": "EUR"
+        },
+        {
+          "Date": "2022-01-04",
+          "InstrumentID": "INST001",
+          "PrixOuverture": "175.7215",
+          "PrixHaut": "181.533",
+          "PrixBas": "175.2693",
+          "PrixCloture": "177.3287",
+          "Volume": "3083680.0",
+          "Devise": "EUR"
+        },
+        {
+          "Date": "2022-01-05",
+          "InstrumentID": "INST001",
+          "PrixOuverture": "174.396",
+          "PrixHaut": "174.6179",
+          "PrixBas": "170.3912",
+          "PrixCloture": "173.2673",
+          "Volume": "3157727.0",
+          "Devise": "EUR"
+        }
+      ]
+    },
+    {
+      "name": "fact_performances",
+      "row_count": 3600,
+      "columns": [
+        {
+          "name": "PeriodeDate",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PortefeuilleID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Rendement_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Benchmark_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Alpha_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Volatilite_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "RatioSharpe",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "MaxDrawdown_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ValeurPortefeuille_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "FluxNets_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "RendementCumule_pct",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "PeriodeDate": "2022-01-31",
+          "PortefeuilleID": "PF00070",
+          "Rendement_pct": "8.4",
+          "Benchmark_pct": "5.02",
+          "Alpha_pct": "3.38",
+          "Volatilite_pct": "8.95",
+          "RatioSharpe": "0.9385",
+          "MaxDrawdown_pct": "-8.85",
+          "ValeurPortefeuille_EUR": "237683.88",
+          "FluxNets_EUR": "83381.48",
+          "RendementCumule_pct": "68.1532"
+        },
+        {
+          "PeriodeDate": "2022-01-31",
+          "PortefeuilleID": "PF00017",
+          "Rendement_pct": "7.46",
+          "Benchmark_pct": "8.77",
+          "Alpha_pct": "-1.31",
+          "Volatilite_pct": "5.83",
+          "RatioSharpe": "1.2796",
+          "MaxDrawdown_pct": "-12.03",
+          "ValeurPortefeuille_EUR": "1326763.6",
+          "FluxNets_EUR": "73673.22",
+          "RendementCumule_pct": "53.0034"
+        },
+        {
+          "PeriodeDate": "2022-01-31",
+          "PortefeuilleID": "PF00126",
+          "Rendement_pct": "-7.1",
+          "Benchmark_pct": "3.26",
+          "Alpha_pct": "-10.36",
+          "Volatilite_pct": "16.73",
+          "RatioSharpe": "-0.4244",
+          "MaxDrawdown_pct": "-8.5",
+          "ValeurPortefeuille_EUR": "980006.39",
+          "FluxNets_EUR": "74582.81",
+          "RendementCumule_pct": "35.8458"
+        }
+      ]
+    },
+    {
+      "name": "fact_positions",
+      "row_count": 11546,
+      "columns": [
+        {
+          "name": "SnapshotDate",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PortefeuilleID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "InstrumentID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Quantite",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixRevientUnitaire",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixMarcheUnitaire",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ValeurAchat_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "ValeurMarche_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PnL_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PnL_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PoidsPortefeuille_pct",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Devise",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "SnapshotDate": "2022-01-31",
+          "PortefeuilleID": "PF00054",
+          "InstrumentID": "INST008",
+          "Quantite": "88.02",
+          "PrixRevientUnitaire": "179.1369",
+          "PrixMarcheUnitaire": "200.0082",
+          "ValeurAchat_EUR": "15767.63",
+          "ValeurMarche_EUR": "17604.72",
+          "PnL_EUR": "1837.09",
+          "PnL_pct": "11.65",
+          "PoidsPortefeuille_pct": "8.15",
+          "Devise": "EUR"
+        },
+        {
+          "SnapshotDate": "2022-01-31",
+          "PortefeuilleID": "PF00054",
+          "InstrumentID": "INST014",
+          "Quantite": "53.05",
+          "PrixRevientUnitaire": "141.8381",
+          "PrixMarcheUnitaire": "191.4769",
+          "ValeurAchat_EUR": "7524.51",
+          "ValeurMarche_EUR": "10157.85",
+          "PnL_EUR": "2633.34",
+          "PnL_pct": "35.0",
+          "PoidsPortefeuille_pct": "4.7",
+          "Devise": "EUR"
+        },
+        {
+          "SnapshotDate": "2022-01-31",
+          "PortefeuilleID": "PF00054",
+          "InstrumentID": "INST002",
+          "Quantite": "852.33",
+          "PrixRevientUnitaire": "108.1006",
+          "PrixMarcheUnitaire": "141.6482",
+          "ValeurAchat_EUR": "92137.38",
+          "ValeurMarche_EUR": "120731.01",
+          "PnL_EUR": "28593.63",
+          "PnL_pct": "31.03",
+          "PoidsPortefeuille_pct": "55.91",
+          "Devise": "EUR"
+        }
+      ]
+    },
+    {
+      "name": "fact_transactions",
+      "row_count": 1823,
+      "columns": [
+        {
+          "name": "TransactionID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PortefeuilleID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "InstrumentID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "DateTransaction",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TypeTransaction",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Quantite",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "PrixUnitaire",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "MontantBrut",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Frais",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "MontantNet",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Devise",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TauxChange_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "MontantNet_EUR",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Statut",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Courtier",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Operateur",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": [
+        {
+          "TransactionID": "TRX000001",
+          "PortefeuilleID": "PF00016",
+          "InstrumentID": "INST010",
+          "DateTransaction": "2025-03-03",
+          "TypeTransaction": "Frais",
+          "Quantite": "281.28",
+          "PrixUnitaire": "338.3065",
+          "MontantBrut": "95158.85",
+          "Frais": "251.53",
+          "MontantNet": "94907.32",
+          "Devise": "EUR",
+          "TauxChange_EUR": "1.0",
+          "MontantNet_EUR": "94907.32",
+          "Statut": "Exécuté",
+          "Courtier": "Xetra",
+          "Operateur": "OPE005"
+        },
+        {
+          "TransactionID": "TRX000002",
+          "PortefeuilleID": "PF00080",
+          "InstrumentID": "INST006",
+          "DateTransaction": "2023-08-02",
+          "TypeTransaction": "Achat",
+          "Quantite": "289.38",
+          "PrixUnitaire": "114.242",
+          "MontantBrut": "33059.35",
+          "Frais": "119.9",
+          "MontantNet": "32939.45",
+          "Devise": "USD",
+          "TauxChange_EUR": "1.0695",
+          "MontantNet_EUR": "35228.74",
+          "Statut": "Exécuté",
+          "Courtier": "OTC",
+          "Operateur": "OPE003"
+        },
+        {
+          "TransactionID": "TRX000006",
+          "PortefeuilleID": "PF00041",
+          "InstrumentID": "INST006",
+          "DateTransaction": "2023-10-11",
+          "TypeTransaction": "Dividende",
+          "Quantite": "361.08",
+          "PrixUnitaire": "390.6495",
+          "MontantBrut": "141055.72",
+          "Frais": "461.3",
+          "MontantNet": "141517.02",
+          "Devise": "EUR",
+          "TauxChange_EUR": "1.0",
+          "MontantNet_EUR": "141517.02",
+          "Statut": "Exécuté",
+          "Courtier": "NYSE",
+          "Operateur": "OPE002"
+        }
+      ]
+    },
+    {
+      "name": "kpi_clients",
+      "row_count": 85,
+      "columns": [
+        {
+          "name": "ClientID",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "Total Investi Client (EUR)",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "Total Dividendes Client (EUR)",
+          "type": "DOUBLE"
+        },
+        {
+          "name": "Nb Portefeuilles",
+          "type": "BIGINT"
+        }
+      ],
+      "sample": [
+        {
+          "ClientID": "CLI0090",
+          "Total Investi Client (EUR)": 287612.92,
+          "Total Dividendes Client (EUR)": 524043.02,
+          "Nb Portefeuilles": 3
+        },
+        {
+          "ClientID": "CLI0019",
+          "Total Investi Client (EUR)": 151358.71,
+          "Total Dividendes Client (EUR)": 140721.59,
+          "Nb Portefeuilles": 1
+        },
+        {
+          "ClientID": "CLI0097",
+          "Total Investi Client (EUR)": 587064.63,
+          "Total Dividendes Client (EUR)": 905830.42,
+          "Nb Portefeuilles": 5
+        }
+      ]
+    },
+    {
+      "name": "mastercalendar",
+      "row_count": 0,
+      "columns": [
+        {
+          "name": "Date",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "Annee",
+          "type": "BIGINT"
+        },
+        {
+          "name": "MoisNum",
+          "type": "BIGINT"
+        },
+        {
+          "name": "Mois",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "TrimestreLabel",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "SemaineISO",
+          "type": "BIGINT"
+        },
+        {
+          "name": "JourSemaineNum",
+          "type": "BIGINT"
+        },
+        {
+          "name": "JourSemaineNom",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "SemestreLabel",
+          "type": "VARCHAR"
+        },
+        {
+          "name": "AAAA_MM",
+          "type": "VARCHAR"
+        }
+      ],
+      "sample": []
+    }
+  ],
+  "errors": []
+}

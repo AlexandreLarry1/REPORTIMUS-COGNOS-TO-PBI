@@ -1,0 +1,1515 @@
+{
+  "name": "SemanticModel",
+  "compatibilityLevel": 1550,
+  "model": {
+    "culture": "fr-FR",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "fr-FR",
+    "tables": [
+      {
+        "name": "dim_calendrier",
+        "lineageTag": "a02faadc-7eb5-4f0c-81aa-b7250c644f81",
+        "columns": [
+          {
+            "name": "Date",
+            "lineageTag": "27242799-a7d8-48db-9252-875acaa5e5c0",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "Annee",
+            "lineageTag": "a87f3944-867f-4e24-b88f-c84488f19fdb",
+            "dataType": "int64",
+            "sourceColumn": "Annee",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Trimestre",
+            "lineageTag": "5cda030b-3220-41df-884d-a8f85dfb26d0",
+            "dataType": "int64",
+            "sourceColumn": "Trimestre",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Mois",
+            "lineageTag": "3a7961d1-d539-473b-9f11-4056340571e4",
+            "dataType": "int64",
+            "sourceColumn": "Mois",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "NomMois",
+            "lineageTag": "937d320a-6985-424a-bd1d-06ea14bc019c",
+            "dataType": "string",
+            "sourceColumn": "NomMois",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Semaine",
+            "lineageTag": "8f09f212-4ace-4fd7-b2af-da7fef10153c",
+            "dataType": "int64",
+            "sourceColumn": "Semaine",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "JourSemaine",
+            "lineageTag": "f8215068-b99a-4c13-bbb2-db6618554b9a",
+            "dataType": "int64",
+            "sourceColumn": "JourSemaine",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "NomJour",
+            "lineageTag": "fc64a57e-1eac-4160-ad06-75dff736ab85",
+            "dataType": "string",
+            "sourceColumn": "NomJour",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "EstWeekend",
+            "lineageTag": "b99ae519-4f2a-493a-a2cf-6e6dd2a6e034",
+            "dataType": "int64",
+            "sourceColumn": "EstWeekend",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "EstJourFerie",
+            "lineageTag": "3652377f-2827-4281-9899-3df705a40a46",
+            "dataType": "int64",
+            "sourceColumn": "EstJourFerie",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Semestre",
+            "lineageTag": "9ece4b5e-27e2-4cb5-ab9d-eabfc6611ae7",
+            "dataType": "int64",
+            "sourceColumn": "Semestre",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "AnneeMois",
+            "lineageTag": "ecddbb7f-bf4c-4a9f-982c-b43ba14dc3d0",
+            "dataType": "string",
+            "sourceColumn": "AnneeMois",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AnneeTrimestreTxt",
+            "lineageTag": "5a133e15-e691-4463-83ae-d7214ef83b7d",
+            "dataType": "string",
+            "sourceColumn": "AnneeTrimestreTxt",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Annee-Mois",
+            "lineageTag": "e82ad7ff-7875-4495-94b3-3a9246b70849",
+            "dataType": "string",
+            "expression": "dim_calendrier[AnneeMois]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Annee-Trimestre",
+            "lineageTag": "aff04482-74cb-4d60-8894-25d8075902cd",
+            "dataType": "string",
+            "expression": "dim_calendrier[AnneeTrimestreTxt]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/dim_calendrier.csv\"),[Delimiter=\",\", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"Date\", type datetime}, {\"Annee\", type number}, {\"Trimestre\", type number}, {\"Mois\", type number}, {\"Semaine\", type number}, {\"JourSemaine\", type number}, {\"EstWeekend\", type number}, {\"EstJourFerie\", type number}, {\"Semestre\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_clients",
+        "lineageTag": "156a3d44-ff24-4629-a894-43843479a186",
+        "columns": [
+          {
+            "name": "ClientID",
+            "lineageTag": "6ae5018e-2b65-4f41-a9c8-b7ee4844c587",
+            "dataType": "string",
+            "sourceColumn": "ClientID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Nom",
+            "lineageTag": "6e54c042-72ea-4a44-8f96-c683eebb0e4b",
+            "dataType": "string",
+            "sourceColumn": "Nom",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Prenom",
+            "lineageTag": "fb999028-5b13-4b79-85f7-4268ab711ffa",
+            "dataType": "string",
+            "sourceColumn": "Prenom",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Email",
+            "lineageTag": "3e9776ba-4452-409e-be1c-03b03ab0dc2c",
+            "dataType": "string",
+            "sourceColumn": "Email",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Telephone",
+            "lineageTag": "42eb35fd-799c-415b-90a0-3bbe46993030",
+            "dataType": "int64",
+            "sourceColumn": "Telephone",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "DateNaissance",
+            "lineageTag": "d57a2ca4-7054-4589-914f-6737ee5ce373",
+            "dataType": "dateTime",
+            "sourceColumn": "DateNaissance",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "Segment",
+            "lineageTag": "5655c51c-ac83-4440-babd-25d774d10a1b",
+            "dataType": "string",
+            "sourceColumn": "Segment",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Pays",
+            "lineageTag": "d0030a57-184b-4714-9622-1482459fd8c3",
+            "dataType": "string",
+            "sourceColumn": "Pays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Ville",
+            "lineageTag": "ebbc944a-ed8b-4e7a-bdbb-7e590c2c1e80",
+            "dataType": "string",
+            "sourceColumn": "Ville",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateEntreeRelation",
+            "lineageTag": "3212aac2-2eb0-4b8a-866a-25790739b528",
+            "dataType": "dateTime",
+            "sourceColumn": "DateEntreeRelation",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "Conseiller",
+            "lineageTag": "16d0d0a4-196c-4834-aa65-825544fc1905",
+            "dataType": "string",
+            "sourceColumn": "Conseiller",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ProfilRisque",
+            "lineageTag": "0cb1cdb5-4de2-428e-8182-921d073da0d4",
+            "dataType": "string",
+            "sourceColumn": "ProfilRisque",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "StatutKYC",
+            "lineageTag": "5040a036-3ef4-427e-bad1-f1b25daa0d9d",
+            "dataType": "string",
+            "sourceColumn": "StatutKYC",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Nom Complet Client",
+            "lineageTag": "b2c0fe91-efc3-418e-9b87-e353b34f36b6",
+            "dataType": "string",
+            "expression": "dim_clients[Prenom] & \" \" & dim_clients[Nom]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Segment Client",
+            "lineageTag": "b7e92d16-f077-4952-bca4-088489846d2b",
+            "dataType": "string",
+            "expression": "dim_clients[Segment]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Pays Client",
+            "lineageTag": "08ea3096-2b54-4afb-a4c8-532f7f687cc2",
+            "dataType": "string",
+            "expression": "dim_clients[Pays]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Anciennete (ans)",
+            "lineageTag": "8bcf255e-32bf-4f15-a62e-7ccdfd69749d",
+            "dataType": "int64",
+            "expression": "DATEDIFF(dim_clients[DateEntreeRelation], TODAY(), YEAR)",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Nom Complet Conseiller",
+            "lineageTag": "9653a36f-1b60-45a5-a1bc-6401d32b7b98",
+            "dataType": "string",
+            "expression": "dim_clients[Conseiller]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Nb Clients",
+            "expression": "COUNTROWS(VALUES(dim_clients[ClientID]))",
+            "lineageTag": "4752b7e2-bff3-400f-8fdd-ea54369e242f"
+          },
+          {
+            "name": "Anciennete Moy. (ans)",
+            "expression": "AVERAGE(dim_clients[Anciennete (ans)])",
+            "lineageTag": "88b3ccf8-4c38-486e-b0f2-b16c0774d044"
+          },
+          {
+            "name": "Count ClientID",
+            "expression": "COUNTROWS(VALUES(dim_clients[ClientID]))",
+            "lineageTag": "ee04e0da-0874-4a7f-b288-c217e64f919d"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/dim_clients.csv\"),[Delimiter=\",\", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"Telephone\", type number}, {\"DateNaissance\", type datetime}, {\"DateEntreeRelation\", type datetime}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_conseillers",
+        "lineageTag": "c63f2612-9ab5-4b68-83ab-b0cc094fe4c4",
+        "columns": [
+          {
+            "name": "ConseillerID",
+            "lineageTag": "03cbfa25-f3e8-42f4-9ef8-bc3299021a9f",
+            "dataType": "string",
+            "sourceColumn": "ConseillerID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Nom",
+            "lineageTag": "b49d1ce4-cb40-4a96-89bb-94698585b2d2",
+            "dataType": "string",
+            "sourceColumn": "Nom",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Prenom",
+            "lineageTag": "0c6e44d9-8838-452a-9e53-53fb3800e6eb",
+            "dataType": "string",
+            "sourceColumn": "Prenom",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Email",
+            "lineageTag": "23869c9c-3853-4505-829e-6ed6ab3fb008",
+            "dataType": "string",
+            "sourceColumn": "Email",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Bureau",
+            "lineageTag": "6ea2b5b0-335f-45f4-b6e3-38e86332130c",
+            "dataType": "string",
+            "sourceColumn": "Bureau",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Equipe",
+            "lineageTag": "e4e9603e-0fb5-41ce-b357-e6ebe6f18237",
+            "dataType": "string",
+            "sourceColumn": "Equipe",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AnneeExperience",
+            "lineageTag": "391b3336-7d0c-42a3-8c71-ef77e61a5842",
+            "dataType": "int64",
+            "sourceColumn": "AnneeExperience",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Certification",
+            "lineageTag": "017fcd2f-faf4-4854-aa7e-9e34e88a091c",
+            "dataType": "string",
+            "sourceColumn": "Certification",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NbClients",
+            "lineageTag": "298f575b-9ab2-4d56-8493-8033bdaf5fb7",
+            "dataType": "int64",
+            "sourceColumn": "NbClients",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "AuM_EUR",
+            "lineageTag": "e0dd8bba-773f-4315-baa4-3e63327ac08e",
+            "dataType": "double",
+            "sourceColumn": "AuM_EUR",
+            "summarizeBy": "sum"
+          }
+        ],
+        "measures": [],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/dim_conseillers.csv\"),[Delimiter=\",\", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"AnneeExperience\", type number}, {\"NbClients\", type number}, {\"AuM_EUR\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_instruments",
+        "lineageTag": "8b4f7368-0789-4054-9828-d62dca4d8080",
+        "columns": [
+          {
+            "name": "InstrumentID",
+            "lineageTag": "2595446b-0ddb-49a3-b76d-d8c894ac07c6",
+            "dataType": "string",
+            "sourceColumn": "InstrumentID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NomInstrument",
+            "lineageTag": "5b9619e8-54b2-4bac-a8c2-92ab0c2ec349",
+            "dataType": "string",
+            "sourceColumn": "NomInstrument",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TypeInstrument",
+            "lineageTag": "99da4501-255a-43d6-9f26-c1eeb6c69d47",
+            "dataType": "string",
+            "sourceColumn": "TypeInstrument",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Classe Actif",
+            "lineageTag": "2203512b-817a-4281-9fd7-115460efd8d4",
+            "dataType": "string",
+            "sourceColumn": "Classe Actif",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Devise",
+            "lineageTag": "2c2516fd-22f7-40d1-bdee-18f616e9ef5d",
+            "dataType": "string",
+            "sourceColumn": "Devise",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Pays",
+            "lineageTag": "d2db7323-bf4c-468a-ac8d-968a24db9c49",
+            "dataType": "string",
+            "sourceColumn": "Pays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ISIN",
+            "lineageTag": "a3219c5c-f1f4-491d-ae98-07edd21f4919",
+            "dataType": "string",
+            "sourceColumn": "ISIN",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Emetteur",
+            "lineageTag": "bad78e6b-1f65-48ce-bc2b-e7aef05ce482",
+            "dataType": "string",
+            "sourceColumn": "Emetteur",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NiveauRisque",
+            "lineageTag": "d2c3fe66-5e3c-4b72-9ad8-b7c4171c3635",
+            "dataType": "string",
+            "sourceColumn": "NiveauRisque",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FraisGestion_pct",
+            "lineageTag": "913447ae-ae2d-4bcc-ac94-78ddf03ba24c",
+            "dataType": "double",
+            "sourceColumn": "FraisGestion_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "type": "calculated",
+            "name": "Macro Classe Actif",
+            "lineageTag": "d1111be0-abba-4118-862d-e9053fc93cda",
+            "dataType": "string",
+            "expression": "dim_instruments[Macro Classe Actif]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Count InstrumentID",
+            "expression": "COUNTROWS(VALUES(dim_instruments[InstrumentID]))",
+            "lineageTag": "79417cd4-e26b-4ad5-9fc1-3bacc7f0ed7d"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/dim_instruments.csv\"),[Delimiter=\",\", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"FraisGestion_pct\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_portefeuilles",
+        "lineageTag": "09217cbd-5de3-4c3e-8215-ba5f6159cd59",
+        "columns": [
+          {
+            "name": "PortefeuilleID",
+            "lineageTag": "573282b2-853f-4d76-9503-ee987a11868c",
+            "dataType": "string",
+            "sourceColumn": "PortefeuilleID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClientID",
+            "lineageTag": "8fe4da21-ffbc-4473-ab1a-f1f297fceec2",
+            "dataType": "string",
+            "sourceColumn": "ClientID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TypePortefeuille",
+            "lineageTag": "2a061200-0562-4090-9c12-f6a54df507fa",
+            "dataType": "string",
+            "sourceColumn": "TypePortefeuille",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateOuverture",
+            "lineageTag": "98a42148-7f55-4e29-8d5d-310842b5cc35",
+            "dataType": "dateTime",
+            "sourceColumn": "DateOuverture",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "Devise",
+            "lineageTag": "690d26cb-6eb8-480d-943a-2af60d4f693b",
+            "dataType": "string",
+            "sourceColumn": "Devise",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Statut",
+            "lineageTag": "1fc7f16d-0030-4408-ae4a-627597eee744",
+            "dataType": "string",
+            "sourceColumn": "Statut",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ObjectifInvestissement",
+            "lineageTag": "274b5003-8596-4721-831d-e6caaafecb47",
+            "dataType": "string",
+            "sourceColumn": "ObjectifInvestissement",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "HorizonInvestissement",
+            "lineageTag": "de2133c2-6ae8-4d75-8748-6f800065dfc8",
+            "dataType": "string",
+            "sourceColumn": "HorizonInvestissement",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "BenchmarkRef",
+            "lineageTag": "8ba43096-3190-449e-befd-a13c4e349d28",
+            "dataType": "string",
+            "sourceColumn": "BenchmarkRef",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Nb Portef. Moy. / Client",
+            "expression": "COUNTROWS(VALUES(dim_portefeuilles[PortefeuilleID])) / COUNTROWS(VALUES(dim_clients[ClientID]))",
+            "lineageTag": "0225e460-0fa8-49c7-b6fc-bced46478cab"
+          },
+          {
+            "name": "Count PortefeuilleID",
+            "expression": "COUNTROWS(VALUES(dim_portefeuilles[PortefeuilleID]))",
+            "lineageTag": "f9b881b2-afd7-4cf8-a508-2f232779e4f4"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/dim_portefeuilles.csv\"),[Delimiter=\",\", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"DateOuverture\", type datetime}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_alertes_risque",
+        "lineageTag": "6cdf1119-2c29-4026-9701-d7b969d903d3",
+        "columns": [
+          {
+            "name": "AlerteID",
+            "lineageTag": "7402e125-1fb0-4130-b6d4-8e0a6cfa99ee",
+            "dataType": "string",
+            "sourceColumn": "AlerteID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PortefeuilleID",
+            "lineageTag": "776b7d2a-b1c2-4848-ba30-15e97f247729",
+            "dataType": "string",
+            "sourceColumn": "PortefeuilleID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClientID",
+            "lineageTag": "c4011a40-1def-488e-8c57-fde508f56567",
+            "dataType": "string",
+            "sourceColumn": "ClientID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateAlerte",
+            "lineageTag": "76cb7ad3-fdd7-4e54-99e2-9732cef2f145",
+            "dataType": "dateTime",
+            "sourceColumn": "DateAlerte",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "TypeAlerte",
+            "lineageTag": "49e597cd-f689-4b4c-8c0c-98797b251222",
+            "dataType": "string",
+            "sourceColumn": "TypeAlerte",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severite",
+            "lineageTag": "bef1a7e8-655d-4827-8f28-f5cc9107d5be",
+            "dataType": "string",
+            "sourceColumn": "Severite",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Statut",
+            "lineageTag": "df473e8c-8538-44dd-af4d-4ea99ff060ab",
+            "dataType": "string",
+            "sourceColumn": "Statut",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Description",
+            "lineageTag": "95a85cd9-b2e0-4d92-a42b-2b18fa492d90",
+            "dataType": "string",
+            "sourceColumn": "Description",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ValeurMesure",
+            "lineageTag": "897fc7fa-dc63-46a8-9c3c-9129ddfd32c8",
+            "dataType": "double",
+            "sourceColumn": "ValeurMesure",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "SeuilAlerte",
+            "lineageTag": "9fe19d81-b04c-4b63-8833-8c001f9e3662",
+            "dataType": "double",
+            "sourceColumn": "SeuilAlerte",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "DateResolution",
+            "lineageTag": "699078ef-70db-4d44-8f58-78e4eadb5166",
+            "dataType": "dateTime",
+            "sourceColumn": "DateResolution",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "type": "calculated",
+            "name": "Type Alerte",
+            "lineageTag": "d5780cd6-728e-4402-bc21-9f9652898a0d",
+            "dataType": "string",
+            "expression": "fact_alertes_risque[TypeAlerte]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Statut Alerte",
+            "lineageTag": "238da91d-0126-4aaf-be01-b013f13f9462",
+            "dataType": "string",
+            "expression": "fact_alertes_risque[Statut]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Nb Alertes",
+            "expression": "COUNTROWS(VALUES(fact_alertes_risque[AlerteID]))",
+            "lineageTag": "ff161175-8016-4f84-9627-bcc7b12fc105"
+          },
+          {
+            "name": "Alertes Critiques",
+            "expression": "CALCULATE(COUNTROWS(VALUES(fact_alertes_risque[AlerteID])), fact_alertes_risque[Severite] = \"Critique\")",
+            "lineageTag": "35e0b80e-ce2d-4d9c-b4a9-03004148f99a"
+          },
+          {
+            "name": "Count Statut Alerte",
+            "expression": "COUNTROWS(VALUES(fact_alertes_risque[Statut Alerte]))",
+            "lineageTag": "de56886f-567f-4fe9-af25-2650fe28c65c"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/fact_alertes_risque.csv\"),[Delimiter=\",\", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"DateAlerte\", type datetime}, {\"ValeurMesure\", type number}, {\"SeuilAlerte\", type number}, {\"DateResolution\", type datetime}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_cours_historiques",
+        "lineageTag": "fc27d6e9-7c97-40f5-994e-224c379ebee3",
+        "columns": [
+          {
+            "name": "Date",
+            "lineageTag": "96758b07-3236-453d-a8ff-de914e45627f",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "InstrumentID",
+            "lineageTag": "a1b12da5-e76a-43ee-83bc-f66ac53f82e3",
+            "dataType": "string",
+            "sourceColumn": "InstrumentID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PrixOuverture",
+            "lineageTag": "13b46840-bf84-478f-bd40-38bc055ea984",
+            "dataType": "double",
+            "sourceColumn": "PrixOuverture",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixHaut",
+            "lineageTag": "32e23613-7f84-47e1-888f-20aeacce24e0",
+            "dataType": "double",
+            "sourceColumn": "PrixHaut",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixBas",
+            "lineageTag": "84c9fafa-22b5-4308-ba19-95b0f6ea8db5",
+            "dataType": "double",
+            "sourceColumn": "PrixBas",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixCloture",
+            "lineageTag": "2e69c08c-dec3-41da-a125-2f81c44a1e7e",
+            "dataType": "double",
+            "sourceColumn": "PrixCloture",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Volume",
+            "lineageTag": "dd0cbf6a-332a-4585-8582-dcdd7a69013c",
+            "dataType": "double",
+            "sourceColumn": "Volume",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Devise",
+            "lineageTag": "78cc075e-f38a-4192-909e-14709cd163ec",
+            "dataType": "string",
+            "sourceColumn": "Devise",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Sum Volume",
+            "expression": "SUM(fact_cours_historiques[Volume])",
+            "lineageTag": "e55bedb9-c939-4724-8342-49353650e2e2"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/fact_cours_historiques.csv\"),[Delimiter=\",\", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"Date\", type datetime}, {\"PrixOuverture\", type number}, {\"PrixHaut\", type number}, {\"PrixBas\", type number}, {\"PrixCloture\", type number}, {\"Volume\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_performances",
+        "lineageTag": "34271f50-c53e-4e49-b84b-6fc1b7326e53",
+        "columns": [
+          {
+            "name": "PeriodeDate",
+            "lineageTag": "93f1a272-69da-4d3f-bf43-c38fe2de4176",
+            "dataType": "dateTime",
+            "sourceColumn": "PeriodeDate",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "PortefeuilleID",
+            "lineageTag": "d8f8fe00-59dc-4f67-b01c-ab3f73850679",
+            "dataType": "string",
+            "sourceColumn": "PortefeuilleID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rendement_pct",
+            "lineageTag": "e4a64ab5-72bb-4f8c-bcdf-76cebcc0c746",
+            "dataType": "double",
+            "sourceColumn": "Rendement_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Benchmark_pct",
+            "lineageTag": "62482551-175a-4ba7-bafb-167453ca406b",
+            "dataType": "double",
+            "sourceColumn": "Benchmark_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Alpha_pct",
+            "lineageTag": "191788c9-9814-4240-b1b9-b8db45c7e637",
+            "dataType": "double",
+            "sourceColumn": "Alpha_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Volatilite_pct",
+            "lineageTag": "af7cffa9-beb8-4209-8d39-49b4908a9560",
+            "dataType": "double",
+            "sourceColumn": "Volatilite_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "RatioSharpe",
+            "lineageTag": "d2f91730-c0b8-45b9-be68-82f3dfd5c72f",
+            "dataType": "double",
+            "sourceColumn": "RatioSharpe",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "MaxDrawdown_pct",
+            "lineageTag": "95db15e1-a62f-4cc5-b951-2a143f2cb60d",
+            "dataType": "double",
+            "sourceColumn": "MaxDrawdown_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ValeurPortefeuille_EUR",
+            "lineageTag": "979ce4d6-37e1-41c2-8dd1-965496b2aa99",
+            "dataType": "double",
+            "sourceColumn": "ValeurPortefeuille_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "FluxNets_EUR",
+            "lineageTag": "e41cb446-4ce9-4cd7-8fe7-7bd2f8a3cc4c",
+            "dataType": "double",
+            "sourceColumn": "FluxNets_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "RendementCumule_pct",
+            "lineageTag": "ab7fb229-4816-4354-b486-2cf7eb5e7f57",
+            "dataType": "double",
+            "sourceColumn": "RendementCumule_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "type": "calculated",
+            "name": "Rendement (%)",
+            "lineageTag": "6af8c2de-0516-4661-a13c-33299f824833",
+            "dataType": "double",
+            "expression": "fact_performances[Rendement_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Benchmark (%)",
+            "lineageTag": "774e8f04-b3e2-44eb-b7af-5faa56e6e415",
+            "dataType": "double",
+            "expression": "fact_performances[Benchmark_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Alpha (%)",
+            "lineageTag": "85a0ecb7-7955-434e-9214-6e4b82c3ed01",
+            "dataType": "double",
+            "expression": "fact_performances[Alpha_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Volatilite (%)",
+            "lineageTag": "5a38da92-0a15-4f8d-bd3c-e89f64247eab",
+            "dataType": "double",
+            "expression": "fact_performances[Volatilite_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Ratio Sharpe",
+            "lineageTag": "a71cd9c8-7af8-4070-a756-8dad5c5beddb",
+            "dataType": "double",
+            "expression": "fact_performances[RatioSharpe]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Max Drawdown (%)",
+            "lineageTag": "a9509329-0e90-45d5-8e9e-d24f2d6bab8e",
+            "dataType": "double",
+            "expression": "fact_performances[MaxDrawdown_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Valeur Portefeuille (EUR)",
+            "lineageTag": "34ff7f19-00cf-49d1-815e-80206d6f9866",
+            "dataType": "double",
+            "expression": "fact_performances[ValeurPortefeuille_EUR]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Flux Nets (EUR)",
+            "lineageTag": "342dd1e4-5dc5-4f74-941b-9e41a49be0a4",
+            "dataType": "double",
+            "expression": "fact_performances[FluxNets_EUR]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Rendement Cumule (%)",
+            "lineageTag": "8e0e4967-0881-4f45-9235-28c23b995978",
+            "dataType": "double",
+            "expression": "fact_performances[RendementCumule_pct]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Avg Rendement (%)",
+            "expression": "AVERAGE(fact_performances[Rendement_pct])",
+            "lineageTag": "66213735-3ea1-4134-bcf9-d4a9545d32d1"
+          },
+          {
+            "name": "Avg Benchmark (%)",
+            "expression": "AVERAGE(fact_performances[Benchmark_pct])",
+            "lineageTag": "27188fab-ee2c-46bc-89a3-d0a1ba6ec09b"
+          },
+          {
+            "name": "Avg Alpha (%)",
+            "expression": "AVERAGE(fact_performances[Alpha_pct])",
+            "lineageTag": "7df912dd-7b82-41c2-8636-35a69b4feef4"
+          },
+          {
+            "name": "Avg Volatilite (%)",
+            "expression": "AVERAGE(fact_performances[Volatilite_pct])",
+            "lineageTag": "4cad5c0d-f8e2-47a9-b25c-14115a0a2fef"
+          },
+          {
+            "name": "Min Max Drawdown (%)",
+            "expression": "MIN(fact_performances[MaxDrawdown_pct])",
+            "lineageTag": "10c5957c-31aa-4578-8b4b-5fa311a5884a"
+          },
+          {
+            "name": "Avg Ratio Sharpe",
+            "expression": "AVERAGE(fact_performances[RatioSharpe])",
+            "lineageTag": "42fdd740-c4b9-455c-bae4-40484fe096a6"
+          },
+          {
+            "name": "Avg Rendement Cumule (%)",
+            "expression": "AVERAGE(fact_performances[RendementCumule_pct])",
+            "lineageTag": "b0667614-4e23-47d0-acc1-64505455fbee"
+          },
+          {
+            "name": "Sum Valeur Portefeuille EUR",
+            "expression": "SUM(fact_performances[ValeurPortefeuille_EUR])",
+            "lineageTag": "58f00de3-dbef-4139-ac02-81d5ac2264a7"
+          },
+          {
+            "name": "Sum Flux Nets EUR",
+            "expression": "SUM(fact_performances[FluxNets_EUR])",
+            "lineageTag": "11be5878-a9b9-4b0c-836f-b04de4881950"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/fact_performances.csv\"),[Delimiter=\",\", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"PeriodeDate\", type datetime}, {\"Rendement_pct\", type number}, {\"Benchmark_pct\", type number}, {\"Alpha_pct\", type number}, {\"Volatilite_pct\", type number}, {\"RatioSharpe\", type number}, {\"MaxDrawdown_pct\", type number}, {\"ValeurPortefeuille_EUR\", type number}, {\"FluxNets_EUR\", type number}, {\"RendementCumule_pct\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_positions",
+        "lineageTag": "d52556c8-c4b7-432a-8dde-38838639ecc2",
+        "columns": [
+          {
+            "name": "SnapshotDate",
+            "lineageTag": "8fa33bd1-144f-4b02-9abc-175b7682018c",
+            "dataType": "dateTime",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "PortefeuilleID",
+            "lineageTag": "27ca48c2-7191-4271-91ed-d2eab55e30eb",
+            "dataType": "string",
+            "sourceColumn": "PortefeuilleID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "InstrumentID",
+            "lineageTag": "bbbbdcee-3863-4dbd-a1a7-0893aa976a7a",
+            "dataType": "string",
+            "sourceColumn": "InstrumentID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Quantite",
+            "lineageTag": "841d09f1-f7f6-4e32-916d-9f57fe57aa19",
+            "dataType": "double",
+            "sourceColumn": "Quantite",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixRevientUnitaire",
+            "lineageTag": "30885691-17c2-43d4-9386-79e494c6808e",
+            "dataType": "double",
+            "sourceColumn": "PrixRevientUnitaire",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixMarcheUnitaire",
+            "lineageTag": "79d84d94-d73b-4c7c-b6ee-a69e0846368f",
+            "dataType": "double",
+            "sourceColumn": "PrixMarcheUnitaire",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ValeurAchat_EUR",
+            "lineageTag": "7fbdeb4e-8b3c-464e-8b96-fe98ea487d07",
+            "dataType": "double",
+            "sourceColumn": "ValeurAchat_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ValeurMarche_EUR",
+            "lineageTag": "b1bfa36d-f406-4ebc-a089-1f58a70bd599",
+            "dataType": "double",
+            "sourceColumn": "ValeurMarche_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PnL_EUR",
+            "lineageTag": "fd809a63-3e21-4b41-a685-0f58c58dbed1",
+            "dataType": "double",
+            "sourceColumn": "PnL_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PnL_pct",
+            "lineageTag": "561aa560-c901-432b-9abd-c2484b942129",
+            "dataType": "double",
+            "sourceColumn": "PnL_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PoidsPortefeuille_pct",
+            "lineageTag": "28a642be-01a3-4430-b4ee-2aa0e0f14b35",
+            "dataType": "double",
+            "sourceColumn": "PoidsPortefeuille_pct",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Devise",
+            "lineageTag": "8607af4d-7b08-496e-a756-81b0be3a33be",
+            "dataType": "string",
+            "sourceColumn": "Devise",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Valeur Marche (EUR)",
+            "lineageTag": "977e5e76-eb09-4cf1-a614-be2f53de997c",
+            "dataType": "double",
+            "expression": "fact_positions[ValeurMarche_EUR]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "PnL (EUR)",
+            "lineageTag": "9f8a5bdb-c363-45c5-9449-951c3c419ac0",
+            "dataType": "double",
+            "expression": "fact_positions[PnL_EUR]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Poids Portefeuille (%)",
+            "lineageTag": "40a384c9-ae46-4aad-b73c-42769e25f4a5",
+            "dataType": "double",
+            "expression": "fact_positions[PoidsPortefeuille_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Valeur Achat (EUR)",
+            "lineageTag": "1cb4a25f-56cd-4dde-a44b-e10969fccd38",
+            "dataType": "double",
+            "expression": "fact_positions[ValeurAchat_EUR]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "PnL (%)",
+            "lineageTag": "50d7f128-6089-44bb-98a2-e894fe2818cb",
+            "dataType": "double",
+            "expression": "fact_positions[PnL_pct]",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Signe PnL",
+            "lineageTag": "f284cad7-1c9a-46c9-b2e6-ba6bf2bb7679",
+            "dataType": "string",
+            "expression": "IF(fact_positions[PnL_EUR]>0,\"Positif\",IF(fact_positions[PnL_EUR]<0,\"Negatif\",\"Nul\"))",
+            "summarizeBy": "none"
+          },
+          {
+            "type": "calculated",
+            "name": "Revenus EUR",
+            "lineageTag": "9e54bd47-95e5-43da-a60f-c6b20d268284",
+            "dataType": "double",
+            "expression": "fact_positions[PnL_EUR]",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "AuM Moyen / Client (EUR)",
+            "expression": "SUM(fact_positions[ValeurMarche_EUR]) / COUNTROWS(VALUES(dim_clients[ClientID]))",
+            "lineageTag": "4380ce76-0190-4391-90ab-24b56db91cfa"
+          },
+          {
+            "name": "Revenus Totaux (EUR)",
+            "expression": "SUM(fact_positions[Revenus EUR])",
+            "lineageTag": "19f7ce99-b707-4cfe-9e35-2d0a8f76e794"
+          },
+          {
+            "name": "Sum Valeur Marche EUR",
+            "expression": "SUM(fact_positions[ValeurMarche_EUR])",
+            "lineageTag": "c7780afb-f0ad-4015-a5f8-e69167434835"
+          },
+          {
+            "name": "Sum PnL EUR",
+            "expression": "SUM(fact_positions[PnL_EUR])",
+            "lineageTag": "9813b9cc-ee71-4ba4-a2f8-b9faa27a1068"
+          },
+          {
+            "name": "Sum Valeur Achat EUR",
+            "expression": "SUM(fact_positions[ValeurAchat_EUR])",
+            "lineageTag": "ac76a027-7a1a-470f-ab65-dfd7e3c5003e"
+          },
+          {
+            "name": "Avg PnL (%)",
+            "expression": "AVERAGE(fact_positions[PnL_pct])",
+            "lineageTag": "ed879b39-c1e0-4d16-b334-e2af062431e6"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/fact_positions.csv\"),[Delimiter=\",\", Columns=12, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"SnapshotDate\", type datetime}, {\"Quantite\", type number}, {\"PrixRevientUnitaire\", type number}, {\"PrixMarcheUnitaire\", type number}, {\"ValeurAchat_EUR\", type number}, {\"ValeurMarche_EUR\", type number}, {\"PnL_EUR\", type number}, {\"PnL_pct\", type number}, {\"PoidsPortefeuille_pct\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_transactions",
+        "lineageTag": "dc2514a3-c20a-4c7f-ae5a-17d0f95ab7e0",
+        "columns": [
+          {
+            "name": "TransactionID",
+            "lineageTag": "d2c11d8b-bbc9-4a4a-a3fd-39e4a71e07ee",
+            "dataType": "string",
+            "sourceColumn": "TransactionID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PortefeuilleID",
+            "lineageTag": "97b8211f-7ea1-4d7e-b18a-299407026c9c",
+            "dataType": "string",
+            "sourceColumn": "PortefeuilleID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "InstrumentID",
+            "lineageTag": "75d971e4-4280-4d73-acb8-c98d25ed141f",
+            "dataType": "string",
+            "sourceColumn": "InstrumentID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateTransaction",
+            "lineageTag": "d22ca5ba-60b1-498c-a0a2-3295adec6c82",
+            "dataType": "dateTime",
+            "sourceColumn": "DateTransaction",
+            "summarizeBy": "none",
+            "formatString": "General Date"
+          },
+          {
+            "name": "TypeTransaction",
+            "lineageTag": "254250c1-cf3c-40e6-baa8-759b507d9ac0",
+            "dataType": "string",
+            "sourceColumn": "TypeTransaction",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Quantite",
+            "lineageTag": "7f09cfa1-ab11-485c-99c4-15f66ff73230",
+            "dataType": "double",
+            "sourceColumn": "Quantite",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PrixUnitaire",
+            "lineageTag": "48b195f3-046c-47b9-98c7-4c348545e401",
+            "dataType": "double",
+            "sourceColumn": "PrixUnitaire",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "MontantBrut",
+            "lineageTag": "55192da4-6c80-4f26-aeaf-4c82ea778f70",
+            "dataType": "double",
+            "sourceColumn": "MontantBrut",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Frais",
+            "lineageTag": "31450b28-fc00-4ea2-ab83-5b5cc230e103",
+            "dataType": "double",
+            "sourceColumn": "Frais",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "MontantNet",
+            "lineageTag": "7e837120-9066-4aa5-82cb-9d531ed7a078",
+            "dataType": "double",
+            "sourceColumn": "MontantNet",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Devise",
+            "lineageTag": "dcc5d6e1-653b-4e90-af48-ee4851421fb8",
+            "dataType": "string",
+            "sourceColumn": "Devise",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TauxChange_EUR",
+            "lineageTag": "b1ea6eda-20e6-4222-ade2-bcf2722fb26f",
+            "dataType": "double",
+            "sourceColumn": "TauxChange_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "MontantNet_EUR",
+            "lineageTag": "64556a38-fa6c-4c37-a36f-13c8b5d9bd69",
+            "dataType": "double",
+            "sourceColumn": "MontantNet_EUR",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Statut",
+            "lineageTag": "658b4479-ceff-402a-84c1-0cf444e177ee",
+            "dataType": "string",
+            "sourceColumn": "Statut",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Courtier",
+            "lineageTag": "ca8e7ac7-2b56-4dda-b4e7-d93bda6bad71",
+            "dataType": "string",
+            "sourceColumn": "Courtier",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Operateur",
+            "lineageTag": "138a58ce-775c-4ffd-87be-c6993e3e3253",
+            "dataType": "string",
+            "sourceColumn": "Operateur",
+            "summarizeBy": "none"
+          }
+        ],
+        "measures": [
+          {
+            "name": "Nb Tx Moy. / Client",
+            "expression": "COUNTROWS(VALUES(fact_transactions[TransactionID])) / COUNTROWS(VALUES(dim_clients[ClientID]))",
+            "lineageTag": "60b308fc-24f1-4b20-9cd2-69e8302eac11"
+          },
+          {
+            "name": "Count TransactionID",
+            "expression": "COUNTROWS(VALUES(fact_transactions[TransactionID]))",
+            "lineageTag": "e96a8d7b-7022-4ac9-b9a7-f292b98d7a0a"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(\"C:/Users/AlexandreLARRY/Desktop/Migration Qlik PBI/REPORTIMUS-QLIK-TO-POWERBI/examples/edr-demo-light/input/fact_transactions.csv\"),[Delimiter=\",\", Columns=16, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    #\"Changed Types\" = Table.TransformColumnTypes(#\"Promoted Headers\", {{\"DateTransaction\", type datetime}, {\"Quantite\", type number}, {\"PrixUnitaire\", type number}, {\"MontantBrut\", type number}, {\"Frais\", type number}, {\"MontantNet\", type number}, {\"TauxChange_EUR\", type number}, {\"MontantNet_EUR\", type number}}, \"en-US\")",
+                "in",
+                "    #\"Changed Types\""
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "dim_portefeuilles_dim_clients_ClientID",
+        "fromTable": "dim_portefeuilles",
+        "fromColumn": "ClientID",
+        "toTable": "dim_clients",
+        "toColumn": "ClientID"
+      },
+      {
+        "name": "fact_alertes_risque_dim_clients_ClientID",
+        "fromTable": "fact_alertes_risque",
+        "fromColumn": "ClientID",
+        "toTable": "dim_clients",
+        "toColumn": "ClientID",
+        "isActive": false
+      },
+      {
+        "name": "fact_cours_historiques_dim_instruments_InstrumentID",
+        "fromTable": "fact_cours_historiques",
+        "fromColumn": "InstrumentID",
+        "toTable": "dim_instruments",
+        "toColumn": "InstrumentID"
+      },
+      {
+        "name": "fact_positions_dim_instruments_InstrumentID",
+        "fromTable": "fact_positions",
+        "fromColumn": "InstrumentID",
+        "toTable": "dim_instruments",
+        "toColumn": "InstrumentID"
+      },
+      {
+        "name": "fact_transactions_dim_instruments_InstrumentID",
+        "fromTable": "fact_transactions",
+        "fromColumn": "InstrumentID",
+        "toTable": "dim_instruments",
+        "toColumn": "InstrumentID"
+      },
+      {
+        "name": "fact_alertes_risque_dim_portefeuilles_PortefeuilleID",
+        "fromTable": "fact_alertes_risque",
+        "fromColumn": "PortefeuilleID",
+        "toTable": "dim_portefeuilles",
+        "toColumn": "PortefeuilleID"
+      },
+      {
+        "name": "fact_performances_dim_portefeuilles_PortefeuilleID",
+        "fromTable": "fact_performances",
+        "fromColumn": "PortefeuilleID",
+        "toTable": "dim_portefeuilles",
+        "toColumn": "PortefeuilleID"
+      },
+      {
+        "name": "fact_positions_dim_portefeuilles_PortefeuilleID",
+        "fromTable": "fact_positions",
+        "fromColumn": "PortefeuilleID",
+        "toTable": "dim_portefeuilles",
+        "toColumn": "PortefeuilleID"
+      },
+      {
+        "name": "fact_transactions_dim_portefeuilles_PortefeuilleID",
+        "fromTable": "fact_transactions",
+        "fromColumn": "PortefeuilleID",
+        "toTable": "dim_portefeuilles",
+        "toColumn": "PortefeuilleID"
+      },
+      {
+        "name": "fact_alertes_risque_dim_calendrier_DateAlerte",
+        "fromTable": "fact_alertes_risque",
+        "fromColumn": "DateAlerte",
+        "toTable": "dim_calendrier",
+        "toColumn": "Date"
+      },
+      {
+        "name": "fact_cours_historiques_dim_calendrier_Date",
+        "fromTable": "fact_cours_historiques",
+        "fromColumn": "Date",
+        "toTable": "dim_calendrier",
+        "toColumn": "Date"
+      },
+      {
+        "name": "fact_performances_dim_calendrier_PeriodeDate",
+        "fromTable": "fact_performances",
+        "fromColumn": "PeriodeDate",
+        "toTable": "dim_calendrier",
+        "toColumn": "Date"
+      },
+      {
+        "name": "fact_positions_dim_calendrier_SnapshotDate",
+        "fromTable": "fact_positions",
+        "fromColumn": "SnapshotDate",
+        "toTable": "dim_calendrier",
+        "toColumn": "Date"
+      },
+      {
+        "name": "fact_transactions_dim_calendrier_DateTransaction",
+        "fromTable": "fact_transactions",
+        "fromColumn": "DateTransaction",
+        "toTable": "dim_calendrier",
+        "toColumn": "Date"
+      },
+      {
+        "name": "dim_clients_dim_conseillers_Conseiller",
+        "fromTable": "dim_clients",
+        "fromColumn": "Conseiller",
+        "toTable": "dim_conseillers",
+        "toColumn": "ConseillerID"
+      }
+    ]
+  }
+}

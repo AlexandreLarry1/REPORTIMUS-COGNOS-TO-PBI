@@ -1,0 +1,101 @@
+ClientID,Nom,Prenom,Email,Telephone,DateNaissance,Segment,Pays,Ville,DateEntreeRelation,Conseiller,ProfilRisque,StatutKYC
+CLI0001,Diaz,Alexandrie,hamonvincent@example.com,+33 (0)6 30 22 17 02,1976-04-04,Retail,Luxembourg,Denis,2021-04-11,CONS002,Conservateur,À renouveler
+CLI0002,Bourgeois,Virginie,ile-goff@example.org,+33 (0)3 86 37 17 98,1982-12-26,Retail,Allemagne,Joubertboeuf,2017-02-20,CONS007,Conservateur,En cours
+CLI0003,Royer,Cécile,cjean@example.org,04 72 46 25 98,1983-08-26,Private,Luxembourg,Roger,2019-04-21,CONS006,Modéré,En cours
+CLI0004,De Oliveira,Alix,wroche@example.org,+33 (0)2 79 76 20 58,1962-04-22,Premium,Allemagne,Hebert,2021-07-12,CONS007,Dynamique,À renouveler
+CLI0005,Maillet,Alfred,qcaron@example.net,0661414003,1964-02-05,Premium,Suisse,Bèguedan,2019-12-02,CONS007,Modéré,En cours
+CLI0006,Leclercq,Patricia,marianneguillou@example.com,0375331967,1988-07-20,Premium,Allemagne,Lelièvre-les-Bains,2022-01-13,CONS008,Dynamique,En cours
+CLI0007,Garnier,Constance,matthieu02@example.net,+33 3 83 67 99 62,1958-02-21,Retail,France,Vallée-sur-Guillet,2017-07-24,CONS001,Conservateur,À renouveler
+CLI0008,Besnard,Élise,gpasquier@example.org,02 31 41 23 12,1953-08-23,Retail,France,Lelièvre,2025-03-28,CONS002,Modéré,À renouveler
+CLI0009,Rodrigues,Laure,virginie26@example.com,+33 2 37 62 27 46,1974-05-22,Institutionnel,Allemagne,Fleury,2023-01-04,CONS001,Dynamique,Validé
+CLI0010,Rolland,Michel,colasarnaude@example.net,+33 3 67 30 22 48,1947-06-24,Retail,Suisse,Bodin-sur-Garcia,2024-10-24,CONS007,Dynamique,En cours
+CLI0011,Fabre,Paulette,elisabethgrenier@example.org,+33 6 34 11 41 28,1984-10-14,Retail,Suisse,Joseph,2016-11-19,CONS006,Modéré,À renouveler
+CLI0012,Petit,Susan,eugeneguilbert@example.org,+33 (0)2 18 13 37 56,1965-03-26,Retail,France,Leclerc,2023-07-07,CONS002,Agressif,Validé
+CLI0013,Blot,Étienne,zoeetienne@example.org,0176014738,1974-06-05,Premium,Suisse,Duhamel-les-Bains,2016-05-26,CONS004,Dynamique,En cours
+CLI0014,Guyot,Gabriel,juliette79@example.org,+33 (0)2 21 93 79 29,1956-09-07,Premium,Luxembourg,Sainte Laure-la-Forêt,2016-10-15,CONS004,Conservateur,Validé
+CLI0015,Marchal,Valérie,lucy54@example.com,+33 (0)2 99 14 51 91,1974-08-02,Retail,Belgique,Delattre,2019-10-25,CONS004,Dynamique,À renouveler
+CLI0016,Reynaud,Paulette,alainboulay@example.net,0480444675,1955-07-07,Premium,Luxembourg,DenisBourg,2017-01-02,CONS009,Conservateur,En cours
+CLI0017,Traore,Étienne,cecile24@example.net,+33 (0)2 31 89 37 43,1954-03-14,Institutionnel,France,Mendès,2023-07-25,CONS008,Modéré,Validé
+CLI0018,Chevallier,Caroline,mguillet@example.com,+33 (0)1 41 59 38 80,1964-12-17,Premium,Suisse,Pruvost-sur-Gomes,2025-05-03,CONS003,Dynamique,À renouveler
+CLI0019,Giraud,Éric,reneleveque@example.net,0634605058,1997-06-06,Institutionnel,Allemagne,Seguin,2022-04-20,CONS007,Conservateur,À renouveler
+CLI0020,Pineau,Christophe,zoe91@example.org,+33 (0)5 67 84 36 16,1991-03-05,Private,Belgique,Masse,2019-04-16,CONS003,Conservateur,À renouveler
+CLI0021,Guérin,Étienne,bernadettehamon@example.net,0298202752,1999-08-27,Retail,Allemagne,Rossi,2017-12-30,CONS005,Modéré,À renouveler
+CLI0022,Germain,Michelle,odeschamps@example.com,04 74 89 11 08,1984-09-26,Premium,France,Lesage-sur-Mer,2016-09-30,CONS008,Dynamique,À renouveler
+CLI0023,Lucas,Marguerite,remyleleu@example.com,+33 (0)3 52 14 91 57,1974-07-07,Institutionnel,Suisse,Lévêque-sur-Dumas,2022-05-16,CONS004,Dynamique,À renouveler
+CLI0024,Besnard,Agnès,sylvie99@example.net,0637104753,1985-04-06,Private,Allemagne,Goncalvesnec,2019-01-31,CONS002,Modéré,À renouveler
+CLI0025,Nguyen,Michèle,merlelorraine@example.net,02 36 61 06 21,1959-10-15,Private,Allemagne,Roussetboeuf,2024-08-27,CONS008,Dynamique,Validé
+CLI0026,Raynaud,Martin,dollivier@example.org,05 58 05 72 42,1960-03-31,Premium,Belgique,Lenoir,2020-12-17,CONS009,Modéré,En cours
+CLI0027,Gauthier,Richard,gillesbuisson@example.org,+33 2 69 31 09 18,1965-12-01,Premium,Belgique,Robert,2022-08-04,CONS002,Dynamique,En cours
+CLI0028,Maillard,Gérard,gregoireboulay@example.com,01 79 69 31 58,1970-02-21,Private,Suisse,De Sousa,2016-09-19,CONS001,Agressif,Validé
+CLI0029,Couturier,Nicolas,simone28@example.net,+33 (0)6 48 45 06 82,1988-10-04,Retail,Belgique,BessonVille,2019-08-16,CONS009,Dynamique,À renouveler
+CLI0030,Pires,Astrid,guillotemmanuel@example.com,+33 4 86 26 39 23,1948-08-02,Retail,Allemagne,Maurice,2017-07-08,CONS001,Conservateur,En cours
+CLI0031,Poirier,Étienne,julescolas@example.com,0486793606,1986-10-30,Institutionnel,Allemagne,Vallée,2019-11-11,CONS002,Conservateur,À renouveler
+CLI0032,Clerc,Rémy,rocheranne@example.net,+33 6 20 56 70 00,1981-01-06,Retail,France,Verdier,2023-01-21,CONS004,Agressif,En cours
+CLI0033,Allain,Yves,gnicolas@example.net,0484820090,1966-05-16,Private,Allemagne,Legros,2017-12-23,CONS003,Dynamique,À renouveler
+CLI0034,Martinez,Sophie,gregoire12@example.org,+33 2 76 23 29 66,1948-01-20,Private,Suisse,Carpentier,2016-08-26,CONS007,Conservateur,Validé
+CLI0035,Coste,Lucie,adupuis@example.net,+33 (0)1 39 79 43 43,1984-04-04,Private,Luxembourg,Torres,2025-05-10,CONS008,Conservateur,À renouveler
+CLI0036,Bazin,Élise,nhebert@example.org,+33 (0)4 87 72 96 26,2000-08-13,Retail,France,Martel,2022-06-16,CONS008,Dynamique,En cours
+CLI0037,Chrétien,Nath,gauthieranais@example.net,+33 4 83 70 39 05,1970-09-04,Institutionnel,France,DufourBourg,2021-01-18,CONS004,Modéré,À renouveler
+CLI0038,Lejeune,Thibaut,ovoisin@example.com,+33 1 49 42 13 87,1949-06-03,Retail,Suisse,Texier,2016-06-07,CONS007,Dynamique,En cours
+CLI0039,Le Roux,Agnès,rcharles@example.com,+33 1 79 11 10 54,1990-08-28,Institutionnel,Suisse,Hubert,2023-10-10,CONS001,Modéré,À renouveler
+CLI0040,Moreno,Véronique,thomasgeorges@example.net,0356246199,1994-12-05,Retail,Belgique,Salmon,2020-12-31,CONS003,Agressif,En cours
+CLI0041,Voisin,Frédérique,xmarion@example.com,+33 3 57 08 84 63,1960-09-11,Private,France,Mariedan,2023-01-20,CONS007,Agressif,En cours
+CLI0042,Klein,Capucine,merlenicole@example.com,+33 1 49 05 01 07,1998-01-01,Private,Belgique,Foucher,2022-06-15,CONS001,Conservateur,En cours
+CLI0043,Lucas,Michelle,amelie51@example.com,0357276605,1959-12-06,Premium,Allemagne,Raynaud,2023-07-16,CONS007,Conservateur,À renouveler
+CLI0044,Lecoq,Cécile,gbrunel@example.com,0169400881,1996-04-11,Retail,France,Sainte Maurice,2024-08-14,CONS005,Conservateur,En cours
+CLI0045,Boucher,Emmanuelle,alicepichon@example.org,0371266256,1974-11-19,Retail,France,Saint Nicolasboeuf,2024-02-24,CONS008,Modéré,À renouveler
+CLI0046,Lelièvre,Charles,odetteberger@example.org,+33 4 67 59 16 21,1985-11-20,Premium,Luxembourg,Rouxnec,2024-02-18,CONS005,Conservateur,Validé
+CLI0047,Gallet,Nathalie,benoit34@example.com,03 90 86 50 04,1954-11-29,Private,France,Sainte Denise,2019-09-02,CONS007,Dynamique,Validé
+CLI0048,Alves,Pauline,lemaitreagnes@example.org,+33 2 40 32 81 04,1988-02-12,Retail,Allemagne,Legendre-sur-Louis,2019-05-04,CONS009,Modéré,En cours
+CLI0049,Bousquet,Denis,catherinegauthier@example.com,+33 (0)3 23 24 86 78,1957-11-18,Premium,Belgique,Da Silva-sur-Besnard,2018-08-19,CONS008,Agressif,À renouveler
+CLI0050,Teixeira,Valérie,rogerlecoq@example.net,+33 2 14 45 89 35,1993-06-15,Retail,Belgique,Denis,2022-05-09,CONS003,Modéré,En cours
+CLI0051,Paul,Emmanuelle,brungabrielle@example.org,+33 (0)4 69 15 36 21,1980-04-28,Institutionnel,Luxembourg,Hervédan,2017-10-07,CONS004,Conservateur,À renouveler
+CLI0052,Collin,Nath,meyerceline@example.com,03 56 07 61 97,1986-11-02,Private,Allemagne,Jourdan-la-Forêt,2019-03-22,CONS005,Dynamique,À renouveler
+CLI0053,Clerc,Étienne,fpetit@example.com,04 57 85 73 55,1945-12-25,Institutionnel,Belgique,Lévy,2020-10-18,CONS004,Dynamique,Validé
+CLI0054,Delahaye,Michelle,tcaron@example.org,0563412593,1974-01-01,Private,Suisse,Lejeune,2024-12-24,CONS001,Conservateur,À renouveler
+CLI0055,Mace,Timothée,legrandchristine@example.net,+33 5 56 57 23 62,1996-08-21,Premium,Allemagne,Sainte Dominique,2022-03-02,CONS010,Dynamique,À renouveler
+CLI0056,Klein,Laetitia,simone97@example.org,05 53 25 76 22,1978-07-03,Private,Allemagne,Bazin,2020-08-24,CONS009,Modéré,En cours
+CLI0057,Royer,Christine,boulayjulien@example.org,+33 (0)5 35 29 92 96,1984-11-12,Private,Luxembourg,Traore,2020-10-12,CONS001,Modéré,En cours
+CLI0058,Lefort,Guillaume,barthelemylucie@example.net,04 56 72 03 88,1949-09-03,Premium,Belgique,Delmas,2018-03-06,CONS006,Conservateur,À renouveler
+CLI0059,Chauveau,Brigitte,aubrydominique@example.org,04 92 76 95 78,1957-12-01,Private,Allemagne,Masse,2021-01-08,CONS001,Dynamique,Validé
+CLI0060,Barbe,Théodore,thomasleroy@example.org,+33 3 73 47 99 49,1956-10-13,Retail,Belgique,Prévost,2023-08-14,CONS001,Agressif,En cours
+CLI0061,Benoit,Hélène,constance22@example.org,+33 (0)3 45 08 57 70,1970-07-31,Premium,Suisse,Faivreboeuf,2020-11-13,CONS010,Modéré,En cours
+CLI0062,Pottier,Élisabeth,maryluce@example.com,05 61 73 95 69,1978-04-12,Premium,Luxembourg,Sainte Martin,2020-10-02,CONS008,Modéré,Validé
+CLI0063,Salmon,Alexandre,matthieu74@example.net,02 43 43 08 55,1995-09-22,Premium,Suisse,Julien,2021-01-01,CONS009,Modéré,En cours
+CLI0064,Courtois,Aimée,le-goffmathilde@example.com,+33 4 88 73 37 49,1958-07-22,Institutionnel,Luxembourg,Gilbert,2023-11-17,CONS009,Modéré,À renouveler
+CLI0065,Da Costa,Frédérique,alexandrephilippe@example.org,05 19 50 55 14,1980-09-05,Institutionnel,Allemagne,Gérard-sur-Roche,2017-10-05,CONS003,Agressif,À renouveler
+CLI0066,Roger,Sabine,victoire52@example.org,0490878203,1959-02-18,Private,Luxembourg,Guilbert-les-Bains,2022-09-27,CONS001,Conservateur,À renouveler
+CLI0067,Petitjean,Zacharie,isabelledaniel@example.com,+33 3 55 85 98 10,1994-08-04,Premium,France,Jacquotdan,2019-09-10,CONS009,Modéré,En cours
+CLI0068,Moreno,Margot,mleclercq@example.org,+33 2 48 29 28 80,1999-02-04,Private,Belgique,Saint Nicolas-les-Bains,2017-04-16,CONS002,Dynamique,En cours
+CLI0069,Munoz,Théodore,zdupont@example.com,0143547817,1961-10-03,Retail,Belgique,Dufour,2017-09-16,CONS003,Agressif,En cours
+CLI0070,Devaux,Nicole,emilemorel@example.net,02 29 03 17 90,1961-04-21,Premium,France,Raymond,2018-07-21,CONS002,Modéré,En cours
+CLI0071,Lecomte,Aurore,vchevallier@example.net,+33 1 40 67 54 78,1996-01-12,Retail,Suisse,Saint David,2018-11-26,CONS010,Dynamique,À renouveler
+CLI0072,Briand,Pauline,bertrandgabrielle@example.org,03 63 73 65 94,1971-04-18,Private,France,Faure,2019-05-04,CONS002,Modéré,Validé
+CLI0073,Dubois,Marc,gilleszoe@example.net,+33 2 32 99 55 08,1954-08-20,Institutionnel,Allemagne,Delannoyboeuf,2018-02-11,CONS004,Conservateur,À renouveler
+CLI0074,Gay,Caroline,jacqueszacharie@example.com,+33 2 50 55 01 96,1997-08-25,Private,Allemagne,Delorme,2018-12-01,CONS007,Agressif,En cours
+CLI0075,Diaz,Caroline,colettebrun@example.com,+33 (0)3 75 60 12 11,1972-06-21,Retail,Belgique,Salmon-sur-Mer,2025-03-06,CONS002,Conservateur,À renouveler
+CLI0076,Petit,Jeannine,marionmatthieu@example.com,07 73 79 72 50,1948-03-27,Premium,Allemagne,Dupuis,2020-08-18,CONS010,Agressif,Validé
+CLI0077,Berger,Louise,lucassuzanne@example.com,02 90 82 69 08,1961-07-06,Private,Belgique,Hernandez,2019-08-20,CONS004,Modéré,À renouveler
+CLI0078,Lefèvre,Robert,susannebourgeois@example.org,+33 (0)3 26 97 91 01,1960-03-18,Premium,France,DavidBourg,2016-07-20,CONS010,Modéré,Validé
+CLI0079,Potier,Victoire,francoiseetienne@example.com,+33 2 22 65 49 99,1992-05-04,Institutionnel,France,Saint PaulineBourg,2020-07-14,CONS010,Agressif,En cours
+CLI0080,Grenier,Stéphane,marechaledouard@example.net,+33 (0)2 85 32 40 08,1975-11-22,Institutionnel,France,Saint Étienne,2018-03-13,CONS001,Dynamique,À renouveler
+CLI0081,Brun,Anastasie,beckermarcelle@example.com,+33 2 69 23 88 67,1968-09-22,Institutionnel,Belgique,Sainte Jacques,2020-03-19,CONS010,Dynamique,À renouveler
+CLI0082,Bernier,Laetitia,philippe52@example.net,0366872502,1991-04-01,Premium,France,Reynaud,2020-03-06,CONS002,Modéré,À renouveler
+CLI0083,Bruneau,Marguerite,dpayet@example.org,04 97 52 91 17,1988-08-25,Private,France,Noël-sur-Toussaint,2023-11-12,CONS007,Modéré,À renouveler
+CLI0084,Mace,Julie,hmartel@example.com,0685831982,1949-06-07,Premium,Suisse,Noël-sur-Picard,2021-11-08,CONS010,Conservateur,En cours
+CLI0085,Perrin,Marcelle,bessonroland@example.net,+33 (0)1 88 34 86 47,1985-11-16,Premium,France,Lecomtenec,2023-03-28,CONS010,Modéré,Validé
+CLI0086,Klein,Claude,bpaul@example.net,+33 3 44 31 24 83,1990-06-21,Private,Allemagne,Allard,2022-09-22,CONS009,Agressif,Validé
+CLI0087,Roger,Isabelle,dlouis@example.org,0663502695,1957-06-23,Institutionnel,Belgique,Sanchez,2017-08-03,CONS006,Dynamique,À renouveler
+CLI0088,Dupuis,Roland,schretien@example.org,+33 (0)7 85 02 96 75,1947-04-11,Institutionnel,Suisse,Saint Antoine,2016-10-18,CONS005,Dynamique,En cours
+CLI0089,Blanc,Théophile,thierry00@example.net,+33 4 80 49 71 11,1986-10-11,Private,Luxembourg,Fischer-sur-Mer,2024-10-12,CONS004,Conservateur,Validé
+CLI0090,Picard,Célina,sauvageandree@example.com,+33 4 87 93 46 92,1977-07-20,Premium,Belgique,Saint Gilles,2022-05-12,CONS006,Dynamique,Validé
+CLI0091,Aubert,Stéphanie,christineleroux@example.org,0365275029,1984-04-01,Premium,Allemagne,Le Rouxboeuf,2017-04-11,CONS004,Dynamique,Validé
+CLI0092,Renaud,Adrien,lucylaurent@example.net,+33 (0)2 55 00 58 18,1981-07-18,Institutionnel,Belgique,Pons-sur-Pages,2020-11-15,CONS005,Agressif,Validé
+CLI0093,Moreno,Martin,cbourgeois@example.com,+33 (0)2 47 95 14 34,1988-09-14,Retail,Allemagne,Saint Lucy-la-Forêt,2024-05-14,CONS007,Dynamique,Validé
+CLI0094,Couturier,Stéphanie,margaud70@example.com,0363842036,1977-07-26,Retail,Allemagne,Bouvet,2023-06-19,CONS003,Conservateur,Validé
+CLI0095,Vallet,Antoinette,edouardbernard@example.net,+33 (0)6 78 24 16 49,1948-10-24,Retail,Luxembourg,Fontaine,2018-02-01,CONS005,Conservateur,En cours
+CLI0096,Weber,Martine,marine70@example.org,01 76 33 49 08,1997-12-15,Premium,Belgique,Carlier-sur-Bourgeois,2024-08-04,CONS008,Dynamique,À renouveler
+CLI0097,Letellier,Agathe,christiane93@example.net,04 91 87 46 10,1990-01-27,Premium,Luxembourg,Saint Marine,2025-04-09,CONS006,Modéré,Validé
+CLI0098,Lemoine,Antoinette,pauline51@example.com,0155252024,1998-02-21,Institutionnel,Luxembourg,Hamon,2020-09-09,CONS002,Dynamique,En cours
+CLI0099,Andre,Thibaut,lucie16@example.org,+33 (0)2 90 79 27 36,1992-03-05,Retail,Belgique,Sainte Raymonddan,2018-09-08,CONS001,Conservateur,En cours
+CLI0100,Lopez,Élisabeth,aime71@example.net,+33 1 72 68 98 27,1971-08-31,Institutionnel,France,Fontaineboeuf,2024-05-02,CONS008,Conservateur,À renouveler

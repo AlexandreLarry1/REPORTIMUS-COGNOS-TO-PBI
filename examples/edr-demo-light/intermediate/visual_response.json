@@ -1,0 +1,766 @@
+{
+  "calculated_columns": [
+    {
+      "table": "dim_clients",
+      "name": "Nom Complet Client",
+      "expression": "dim_clients[Prenom] & \" \" & dim_clients[Nom]",
+      "data_type": "string"
+    },
+    {
+      "table": "dim_clients",
+      "name": "Segment Client",
+      "expression": "dim_clients[Segment]",
+      "data_type": "string"
+    },
+    {
+      "table": "dim_clients",
+      "name": "Pays Client",
+      "expression": "dim_clients[Pays]",
+      "data_type": "string"
+    },
+    {
+      "table": "dim_clients",
+      "name": "Anciennete (ans)",
+      "expression": "DATEDIFF(dim_clients[DateEntreeRelation], TODAY(), YEAR)",
+      "data_type": "int64"
+    },
+    {
+      "table": "dim_clients",
+      "name": "Nom Complet Conseiller",
+      "expression": "dim_clients[Conseiller]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_positions",
+      "name": "Valeur Marche (EUR)",
+      "expression": "fact_positions[ValeurMarche_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_positions",
+      "name": "PnL (EUR)",
+      "expression": "fact_positions[PnL_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_positions",
+      "name": "Poids Portefeuille (%)",
+      "expression": "fact_positions[PoidsPortefeuille_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_positions",
+      "name": "Valeur Achat (EUR)",
+      "expression": "fact_positions[ValeurAchat_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_positions",
+      "name": "PnL (%)",
+      "expression": "fact_positions[PnL_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_cours_historiques",
+      "name": "Volume",
+      "expression": "fact_cours_historiques[Volume]",
+      "data_type": "double"
+    },
+    {
+      "table": "dim_instruments",
+      "name": "Classe Actif",
+      "expression": "dim_instruments[Classe Actif]",
+      "data_type": "string"
+    },
+    {
+      "table": "dim_instruments",
+      "name": "Macro Classe Actif",
+      "expression": "dim_instruments[Macro Classe Actif]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Rendement (%)",
+      "expression": "fact_performances[Rendement_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Benchmark (%)",
+      "expression": "fact_performances[Benchmark_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Alpha (%)",
+      "expression": "fact_performances[Alpha_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Volatilite (%)",
+      "expression": "fact_performances[Volatilite_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Ratio Sharpe",
+      "expression": "fact_performances[RatioSharpe]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Max Drawdown (%)",
+      "expression": "fact_performances[MaxDrawdown_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Valeur Portefeuille (EUR)",
+      "expression": "fact_performances[ValeurPortefeuille_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Flux Nets (EUR)",
+      "expression": "fact_performances[FluxNets_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_performances",
+      "name": "Rendement Cumule (%)",
+      "expression": "fact_performances[RendementCumule_pct]",
+      "data_type": "double"
+    },
+    {
+      "table": "dim_calendrier",
+      "name": "Annee-Mois",
+      "expression": "dim_calendrier[AnneeMois]",
+      "data_type": "string"
+    },
+    {
+      "table": "dim_calendrier",
+      "name": "Annee-Trimestre",
+      "expression": "dim_calendrier[AnneeTrimestreTxt]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_alertes_risque",
+      "name": "Type Alerte",
+      "expression": "fact_alertes_risque[TypeAlerte]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_alertes_risque",
+      "name": "Statut Alerte",
+      "expression": "fact_alertes_risque[Statut]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_alertes_risque",
+      "name": "Severite",
+      "expression": "fact_alertes_risque[Severite]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_alertes_risque",
+      "name": "Description",
+      "expression": "fact_alertes_risque[Description]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_positions",
+      "name": "Signe PnL",
+      "expression": "IF(fact_positions[PnL_EUR]>0,\"Positif\",IF(fact_positions[PnL_EUR]<0,\"Negatif\",\"Nul\"))",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_positions",
+      "name": "Revenus EUR",
+      "expression": "fact_positions[PnL_EUR]",
+      "data_type": "double"
+    },
+    {
+      "table": "fact_positions",
+      "name": "InstrumentID",
+      "expression": "fact_positions[InstrumentID]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_transactions",
+      "name": "TransactionID",
+      "expression": "fact_transactions[TransactionID]",
+      "data_type": "string"
+    },
+    {
+      "table": "fact_alertes_risque",
+      "name": "AlerteID",
+      "expression": "fact_alertes_risque[AlerteID]",
+      "data_type": "string"
+    }
+  ],
+  "measures": [
+    {
+      "name": "Nb Clients",
+      "table": "dim_clients",
+      "expression": "COUNTROWS(VALUES(dim_clients[ClientID]))"
+    },
+    {
+      "name": "AuM Moyen / Client (EUR)",
+      "table": "fact_positions",
+      "expression": "SUM(fact_positions[Valeur Marche (EUR)]) / COUNTROWS(VALUES(dim_clients[ClientID]))"
+    },
+    {
+      "name": "Nb Portef. Moy. / Client",
+      "table": "dim_portefeuilles",
+      "expression": "COUNTROWS(VALUES(dim_portefeuilles[PortefeuilleID])) / COUNTROWS(VALUES(dim_clients[ClientID]))"
+    },
+    {
+      "name": "Anciennete Moy. (ans)",
+      "table": "dim_clients",
+      "expression": "AVERAGE(dim_clients[Anciennete (ans)])"
+    },
+    {
+      "name": "Nb Tx Moy. / Client",
+      "table": "fact_transactions",
+      "expression": "COUNTROWS(VALUES(fact_transactions[TransactionID])) / COUNTROWS(VALUES(dim_clients[ClientID]))"
+    },
+    {
+      "name": "Revenus Totaux (EUR)",
+      "table": "fact_positions",
+      "expression": "SUM(fact_positions[Revenus EUR])"
+    },
+    {
+      "name": "Count ClientID",
+      "table": "dim_clients",
+      "expression": "COUNTROWS(VALUES(dim_clients[ClientID]))"
+    },
+    {
+      "name": "Sum Valeur Marche EUR",
+      "table": "fact_positions",
+      "expression": "SUM(fact_positions[Valeur Marche (EUR)])"
+    },
+    {
+      "name": "Count TransactionID",
+      "table": "fact_transactions",
+      "expression": "COUNTROWS(VALUES(fact_transactions[TransactionID]))"
+    },
+    {
+      "name": "Sum PnL EUR",
+      "table": "fact_positions",
+      "expression": "SUM(fact_positions[PnL (EUR)])"
+    },
+    {
+      "name": "Count PortefeuilleID",
+      "table": "dim_portefeuilles",
+      "expression": "COUNTROWS(VALUES(dim_portefeuilles[PortefeuilleID]))"
+    },
+    {
+      "name": "Sum Valeur Achat EUR",
+      "table": "fact_positions",
+      "expression": "SUM(fact_positions[Valeur Achat (EUR)])"
+    },
+    {
+      "name": "Sum Volume",
+      "table": "fact_cours_historiques",
+      "expression": "SUM(fact_cours_historiques[Volume])"
+    },
+    {
+      "name": "Count InstrumentID",
+      "table": "dim_instruments",
+      "expression": "COUNTROWS(VALUES(dim_instruments[InstrumentID]))"
+    },
+    {
+      "name": "Avg PnL (%)",
+      "table": "fact_positions",
+      "expression": "AVERAGE(fact_positions[PnL (%)])"
+    },
+    {
+      "name": "Avg Rendement (%)",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Rendement (%)])"
+    },
+    {
+      "name": "Avg Benchmark (%)",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Benchmark (%)])"
+    },
+    {
+      "name": "Avg Alpha (%)",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Alpha (%)])"
+    },
+    {
+      "name": "Avg Volatilite (%)",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Volatilite (%)])"
+    },
+    {
+      "name": "Min Max Drawdown (%)",
+      "table": "fact_performances",
+      "expression": "MIN(fact_performances[Max Drawdown (%)])"
+    },
+    {
+      "name": "Avg Ratio Sharpe",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Ratio Sharpe])"
+    },
+    {
+      "name": "Avg Rendement Cumule (%)",
+      "table": "fact_performances",
+      "expression": "AVERAGE(fact_performances[Rendement Cumule (%)])"
+    },
+    {
+      "name": "Sum Valeur Portefeuille EUR",
+      "table": "fact_performances",
+      "expression": "SUM(fact_performances[Valeur Portefeuille (EUR)])"
+    },
+    {
+      "name": "Sum Flux Nets EUR",
+      "table": "fact_performances",
+      "expression": "SUM(fact_performances[Flux Nets (EUR)])"
+    },
+    {
+      "name": "Nb Alertes",
+      "table": "fact_alertes_risque",
+      "expression": "COUNTROWS(VALUES(fact_alertes_risque[AlerteID]))"
+    },
+    {
+      "name": "Alertes Critiques",
+      "table": "fact_alertes_risque",
+      "expression": "CALCULATE(COUNTROWS(VALUES(fact_alertes_risque[AlerteID])), fact_alertes_risque[Severite] = \"Critique\")"
+    },
+    {
+      "name": "Count Statut Alerte",
+      "table": "fact_alertes_risque",
+      "expression": "COUNTROWS(VALUES(fact_alertes_risque[Statut Alerte]))"
+    }
+  ],
+  "visuals": [
+    {
+      "qlik_id": "d05_k_cli",
+      "visual_type": "card",
+      "title": "Nb Clients",
+      "dimensions": [],
+      "measures": ["Nb Clients"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "d05_k_aum_cli",
+      "visual_type": "card",
+      "title": "AuM Moyen / Client (EUR)",
+      "dimensions": [],
+      "measures": ["AuM Moyen / Client (EUR)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "d05_k_port_cli",
+      "visual_type": "card",
+      "title": "Nb Portef. Moy. / Client",
+      "dimensions": [],
+      "measures": ["Nb Portef. Moy. / Client"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "d05_k_anciennete",
+      "visual_type": "card",
+      "title": "Anciennete Moy. (ans)",
+      "dimensions": [],
+      "measures": ["Anciennete Moy. (ans)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "d05_k_tx_cli",
+      "visual_type": "card",
+      "title": "Nb Tx Moy. / Client",
+      "dimensions": [],
+      "measures": ["Nb Tx Moy. / Client"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "d05_k_revenus",
+      "visual_type": "card",
+      "title": "Revenus Totaux (EUR)",
+      "dimensions": [],
+      "measures": ["Revenus Totaux (EUR)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "SzmmUN",
+      "visual_type": "donutChart",
+      "title": "Clients par Statut KYC",
+      "dimensions": [
+        {"table": "dim_clients", "column": "StatutKYC", "label": "Statut KYC"}
+      ],
+      "measures": ["Nb Clients"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "sNQgff",
+      "visual_type": "donutChart",
+      "title": "AuM par Profil Risque",
+      "dimensions": [
+        {"table": "dim_clients", "column": "ProfilRisque", "label": "Profil Risque"}
+      ],
+      "measures": ["Sum Valeur Marche EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "YhwxKKD",
+      "visual_type": "scatterChart",
+      "title": "AuM vs PnL par Client (Bubble = Nb Tx)",
+      "dimensions": [
+        {"table": "dim_clients", "column": "Nom Complet Client", "label": "Nom Complet Client"}
+      ],
+      "measures": ["Sum Valeur Marche EUR", "Sum PnL EUR", "Count TransactionID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "BKDctLR",
+      "visual_type": "tableEx",
+      "title": "Fiche Complete Clients",
+      "dimensions": [
+        {"table": "dim_clients", "column": "ClientID", "label": "ClientID"},
+        {"table": "dim_clients", "column": "Nom Complet Client", "label": "Nom Complet Client"},
+        {"table": "dim_clients", "column": "Segment Client", "label": "Segment Client"},
+        {"table": "dim_clients", "column": "Pays Client", "label": "Pays Client"},
+        {"table": "dim_clients", "column": "ProfilRisque", "label": "Profil Risque"},
+        {"table": "dim_clients", "column": "StatutKYC", "label": "Statut KYC"},
+        {"table": "dim_clients", "column": "Nom Complet Conseiller", "label": "Nom Complet Conseiller"}
+      ],
+      "measures": ["Sum Valeur Marche EUR", "Sum PnL EUR", "Count TransactionID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "maRyZ",
+      "visual_type": "lineChart",
+      "title": "Evolution AuM & Flux Nets - Mensuel",
+      "dimensions": [
+        {"table": "dim_calendrier", "column": "Annee-Mois", "label": "Annee-Mois"}
+      ],
+      "measures": ["Sum Valeur Portefeuille EUR", "Sum Flux Nets EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "Jjrcrq",
+      "visual_type": "card",
+      "title": "AuM Total (EUR)",
+      "dimensions": [],
+      "measures": ["Sum Valeur Marche EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "KamTat",
+      "visual_type": "card",
+      "title": "PnL Total (EUR)",
+      "dimensions": [],
+      "measures": ["Sum PnL EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "mcJZMf",
+      "visual_type": "card",
+      "title": "Nb Portefeuilles",
+      "dimensions": [],
+      "measures": ["Count PortefeuilleID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "xFxc",
+      "visual_type": "card",
+      "title": "Nb Portefeuilles",
+      "dimensions": [],
+      "measures": ["Count PortefeuilleID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "DShYMgp",
+      "visual_type": "donutChart",
+      "title": "Allocation par Macro-Classe d'Actif",
+      "dimensions": [
+        {"table": "dim_instruments", "column": "Macro Classe Actif", "label": "Macro Classe Actif"}
+      ],
+      "measures": ["Sum Valeur Marche EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "Pgmfmmp",
+      "visual_type": "barChart",
+      "title": "AuM et PnL par Classe d'Actif",
+      "dimensions": [
+        {"table": "dim_instruments", "column": "Classe Actif", "label": "Classe Actif"}
+      ],
+      "measures": ["Sum Valeur Marche EUR", "Sum PnL EUR", "Avg PnL (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "vXUkBT",
+      "visual_type": "card",
+      "title": "Rendement Moyen (%)",
+      "dimensions": [],
+      "measures": ["Avg Rendement (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "XZjum",
+      "visual_type": "card",
+      "title": "Benchmark Moyen (%)",
+      "dimensions": [],
+      "measures": ["Avg Benchmark (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "YBJre",
+      "visual_type": "card",
+      "title": "Benchmark Moyen (%)",
+      "dimensions": [],
+      "measures": ["Avg Benchmark (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "dhdXuS",
+      "visual_type": "card",
+      "title": "Ratio Sharpe Moyen",
+      "dimensions": [],
+      "measures": ["Avg Ratio Sharpe"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "jeAUQS",
+      "visual_type": "card",
+      "title": "Max Drawdown (%)",
+      "dimensions": [],
+      "measures": ["Min Max Drawdown (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "zgjN",
+      "visual_type": "barChart",
+      "title": "",
+      "dimensions": [],
+      "measures": ["Sum Flux Nets EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "AxJLCbB",
+      "visual_type": "columnChart",
+      "title": "Rendement vs Benchmark - Mensuel",
+      "dimensions": [
+        {"table": "dim_calendrier", "column": "Annee-Mois", "label": "Annee-Mois"}
+      ],
+      "measures": ["Avg Rendement (%)", "Avg Benchmark (%)", "Avg Alpha (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "eTpjNRw",
+      "visual_type": "donutChart",
+      "title": "Surperforme vs Sous-performe",
+      "dimensions": [
+        {"table": "fact_performances", "column": "Alpha (%)", "label": "Vs Benchmark"}
+      ],
+      "measures": ["Count PortefeuilleID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "cUT",
+      "visual_type": "lineChart",
+      "title": "Max Drawdown & Volatilite - Mensuel",
+      "dimensions": [
+        {"table": "dim_calendrier", "column": "Annee-Mois", "label": "Annee-Mois"}
+      ],
+      "measures": ["Min Max Drawdown (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "NwNMeU",
+      "visual_type": "lineChart",
+      "title": "Max Drawdown & Volatilite - Mensuel",
+      "dimensions": [
+        {"table": "dim_calendrier", "column": "Annee-Mois", "label": "Annee-Mois"}
+      ],
+      "measures": ["Avg Volatilite (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "Teumgy",
+      "visual_type": "slicer",
+      "title": "",
+      "dimensions": [],
+      "measures": [],
+      "slicer_field": "dim_calendrier[Date]"
+    },
+    {
+      "qlik_id": "vHgWjG",
+      "visual_type": "pivotTable",
+      "title": "Rendements par Portefeuille x Trimestre",
+      "dimensions": [
+        {"table": "dim_portefeuilles", "column": "PortefeuilleID", "label": "PortefeuilleID"},
+        {"table": "dim_calendrier", "column": "Annee-Trimestre", "label": "Annee-Trimestre"}
+      ],
+      "measures": ["Avg Rendement (%)", "Avg Benchmark (%)", "Avg Alpha (%)", "Avg Rendement Cumule (%)", "Avg Ratio Sharpe", "Min Max Drawdown (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "CMGNa",
+      "visual_type": "barChart",
+      "title": "PnL et Valeur Marche par Classe d'Actif",
+      "dimensions": [
+        {"table": "dim_instruments", "column": "Classe Actif", "label": "Classe Actif"}
+      ],
+      "measures": ["Sum Valeur Marche EUR", "Sum PnL EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "aBQmrJK",
+      "visual_type": "donutChart",
+      "title": "PnL Positif vs Negatif",
+      "dimensions": [
+        {"table": "fact_positions", "column": "Signe PnL", "label": "Signe PnL"}
+      ],
+      "measures": ["Count InstrumentID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "Ebtz",
+      "visual_type": "card",
+      "title": "Valeur Marche Totale (EUR)",
+      "dimensions": [],
+      "measures": ["Sum Valeur Marche EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "GGYLGaq",
+      "visual_type": "card",
+      "title": "PnL Total (EUR)",
+      "dimensions": [],
+      "measures": ["Sum PnL EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "PPaQk",
+      "visual_type": "card",
+      "title": "Nb Instruments",
+      "dimensions": [],
+      "measures": ["Count InstrumentID"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "PAZjYvV",
+      "visual_type": "card",
+      "title": "PnL Moyen (%)",
+      "dimensions": [],
+      "measures": ["Avg PnL (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "ApcUHQ",
+      "visual_type": "card",
+      "title": "Valeur Achat Totale (EUR)",
+      "dimensions": [],
+      "measures": ["Sum Valeur Achat EUR"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "mwARR",
+      "visual_type": "card",
+      "title": "Volume Total (cours)",
+      "dimensions": [],
+      "measures": ["Sum Volume"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "PmDcd",
+      "visual_type": "scatterChart",
+      "title": "PnL(%) vs Valeur Marche par Classe d'Actif",
+      "dimensions": [
+        {"table": "dim_instruments", "column": "Classe Actif", "label": "Classe Actif"}
+      ],
+      "measures": ["Avg PnL (%)", "Sum Valeur Marche EUR", "Avg Poids Portefeuille (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "RcAWdj",
+      "visual_type": "card",
+      "title": "Volatilite Moy. (%)",
+      "dimensions": [],
+      "measures": ["Avg Volatilite (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "Ybtxt",
+      "visual_type": "card",
+      "title": "Ratio Sharpe Moyen",
+      "dimensions": [],
+      "measures": ["Avg Ratio Sharpe"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "zUjSV",
+      "visual_type": "card",
+      "title": "Max Drawdown (%)",
+      "dimensions": [],
+      "measures": ["Min Max Drawdown (%)"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "qJngZ",
+      "visual_type": "card",
+      "title": "Nb Alertes",
+      "dimensions": [],
+      "measures": ["Nb Alertes"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "juYFSv",
+      "visual_type": "card",
+      "title": "Alertes Critiques",
+      "dimensions": [],
+      "measures": ["Alertes Critiques"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "NvaP",
+      "visual_type": "barChart",
+      "title": "",
+      "dimensions": [
+        {"table": "fact_alertes_risque", "column": "Type Alerte", "label": "Type Alerte"},
+        {"table": "fact_alertes_risque", "column": "Severite", "label": "Severite"}
+      ],
+      "measures": ["Nb Alertes"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "qKuGVa",
+      "visual_type": "columnChart",
+      "title": "Alertes par sévèrité et statuts",
+      "dimensions": [
+        {"table": "fact_alertes_risque", "column": "Severite", "label": "Severite"},
+        {"table": "fact_alertes_risque", "column": "Statut Alerte", "label": "Statut Alerte"}
+      ],
+      "measures": ["Nb Alertes"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "dYKmvn",
+      "visual_type": "scatterChart",
+      "title": "Distribution des alertes",
+      "dimensions": [
+        {"table": "fact_alertes_risque", "column": "Severite", "label": "Severite"}
+      ],
+      "measures": ["Nb Alertes", "Count Statut Alerte"],
+      "slicer_field": null
+    },
+    {
+      "qlik_id": "nfdakc",
+      "visual_type": "tableEx",
+      "title": "",
+      "dimensions": [
+        {"table": "dim_portefeuilles", "column": "PortefeuilleID", "label": "PortefeuilleID"},
+        {"table": "dim_portefeuilles", "column": "TypePortefeuille", "label": "Type Portefeuille"},
+        {"table": "fact_alertes_risque", "column": "Type Alerte", "label": "Type Alerte"}
+      ],
+      "measures": [],
+      "slicer_field": null
+    }
+  ]
+}
