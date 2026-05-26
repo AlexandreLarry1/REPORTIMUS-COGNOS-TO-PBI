@@ -382,11 +382,11 @@ def _add_calc_col(bim: dict, table: str, name: str, expression: str, data_type: 
     for t in bim["model"]["tables"]:
         if t["name"] == table:
             for col in t.get("columns", []):
-                if col.get("type") == "calculated" and col["name"] == name:
-                    if col["expression"].startswith('"TODO') and not expression.startswith('"TODO'):
+                if col["name"] == name:
+                    if col.get("type") == "calculated" and col["expression"].startswith('"TODO') and not expression.startswith('"TODO'):
                         col["expression"] = expression
                         return True
-                    return False
+                    return False  # already exists (regular or calculated)
             t.setdefault("columns", []).append({
                 "type": "calculated",
                 "name": name,
