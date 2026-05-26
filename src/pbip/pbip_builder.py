@@ -243,6 +243,28 @@ def _infer_relationships(tables: list) -> list:
             continue
         dim_tbls  = [t for t in tbls if t.startswith("dim_")]
         fact_tbls = [t for t in tbls if t.startswith("fact_")]
+
+        # dim→dim: e.g. dim_portefeuilles[ClientID] → dim_clients[ClientID]
+        # The "many" side is the dim that has the FK (not the PK owner).
+        # PK owner = the dim whose name matches the FK column best.
+        if len(dim_tbls) >= 2 and not fact_tbls:
+            canonical = _canonical_dim(col, dim_tbls)
+            if canonical:
+                for other_dim in dim_tbls:
+                    if other_dim == canonical:
+                        continue
+                    key = (other_dim, canonical, col)
+                    if key not in seen:
+                        seen.add(key)
+                        candidates.append({
+                            "name": f"{other_dim}_{canonical}_{col}",
+                            "fromTable": other_dim,
+                            "fromColumn": col,
+                            "toTable": canonical,
+                            "toColumn": col,
+                        })
+            continue
+
         if not dim_tbls or not fact_tbls:
             continue
         canonical = _canonical_dim(col, dim_tbls)

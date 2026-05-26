@@ -192,14 +192,23 @@ _SYSTEM = (
     "  ]\n"
     "}\n\n"
     "Regles CRITIQUES :\n"
-    "- Utilise UNIQUEMENT les noms de tables et colonnes tels que listes dans le bloc 'Tables disponibles'\n"
-    "- Dans les expressions DAX, reference les colonnes avec Table[ColonneExacte] (casse identique)\n"
-    "- Si une dimension Qlik est une expression calculee (ex: If(PnL>0,'Pos','Neg')), ajoute-la dans calculated_columns avec l'expression DAX equivalente. Ne la mets pas dans dimensions si elle n'existe pas comme colonne physique.\n"
-    "- Chaque objet Qlik (y compris les enfants de containers) doit avoir une entree dans visuals\n"
-    "- Les noms de mesures dans visuals[].measures doivent matcher measures[].name exactement\n"
-    "- Pour filterpane/listbox : renseigne slicer_field, laisse dimensions et measures vides\n"
-    "- Pour sn-text/text-image/action-button : visual_type=textbox, pas de dims/measures\n"
-    "- Retourne UNIQUEMENT le JSON"
+    "- Utilise UNIQUEMENT les noms de tables et colonnes tels que listes dans le bloc 'Tables disponibles'.\n"
+    "  La casse doit etre IDENTIQUE : 'fact_alertes_risque' et non 'Fact_Alertes', 'Rendement_pct' et non 'Rendement (%)'.\n"
+    "  Ne raccourcis jamais un nom de table ou de colonne.\n"
+    "- Dans les expressions DAX, reference les colonnes avec NomTable[NomColonneExact].\n"
+    "  Si une mesure necessite une colonne qui n'est PAS dans la liste, tu DOIS d'abord la creer dans\n"
+    "  calculated_columns avec l'expression DAX adequate avant de l'utiliser dans measures.\n"
+    "  Exemple : si Qlik a 'Year(Today())-Year(DateNaissance)', creer d'abord\n"
+    "  calculated_columns: {table: 'dim_clients', name: 'Anciennete (ans)',\n"
+    "  expression: 'DATEDIFF([DateNaissance], TODAY(), YEAR)', data_type: 'int64'}\n"
+    "  puis measures: {expression: 'AVERAGE(dim_clients[Anciennete (ans)])'}\n"
+    "- Si une dimension Qlik est une expression calculee, ajoute-la dans calculated_columns.\n"
+    "  Ne la mets pas dans dimensions si elle n'existe pas comme colonne physique.\n"
+    "- Chaque objet Qlik (y compris les enfants de containers) doit avoir une entree dans visuals.\n"
+    "- Les noms de mesures dans visuals[].measures doivent matcher measures[].name exactement.\n"
+    "- Pour filterpane/listbox : renseigne slicer_field, laisse dimensions et measures vides.\n"
+    "- Pour sn-text/text-image/action-button : visual_type=textbox, pas de dims/measures.\n"
+    "- Retourne UNIQUEMENT le JSON."
 )
 
 
@@ -378,6 +387,31 @@ def _add_calc_col(bim: dict, table: str, name: str, expression: str, data_type: 
     return False
 
 
+def _validate_dax_refs(bim: dict, bim_idx: dict) -> None:
+    """Scan all measure/calculated-column expressions and warn on unresolved Table[Col] refs."""
+    ref_re = re.compile(r"(\w[\w\s]*?)\[([^\]]+)\]")
+    errors: list[str] = []
+    for t in bim["model"]["tables"]:
+        tbl = t["name"]
+        for m in t.get("measures", []) + [c for c in t.get("columns", []) if c.get("type") == "calculated"]:
+            expr = m.get("expression", "")
+            for match in ref_re.finditer(expr):
+                raw_tbl, raw_col = match.group(1).strip(), match.group(2).strip()
+                entry = bim_idx.get(raw_tbl.lower())
+                if not entry:
+                    errors.append(f"  [DAX-ERR][llm] {tbl}::{m['name']} — table '{raw_tbl}' inconnue")
+                    continue
+                actual_tbl, cols = entry
+                if raw_col.lower() not in cols:
+                    errors.append(f"  [DAX-ERR][llm] {tbl}::{m['name']} — colonne '{actual_tbl}[{raw_col}]' introuvable")
+    if errors:
+        print(f"\n  {len(errors)} reference(s) DAX non resolues — a corriger dans le prompt ou via calculated_columns :")
+        for e in errors:
+            print(e)
+    else:
+        print("  DAX validation OK — toutes les references resolues")
+
+
 def apply_translation(response: dict, paths: dict) -> None:
     all_measures = response.get("measures", [])
     visuals_map  = {v["qlik_id"]: v for v in response.get("visuals", [])}
@@ -505,6 +539,9 @@ def apply_translation(response: dict, paths: dict) -> None:
 
     paths["report"].write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  {patched} visualContainers patched in report.json")
+
+    # --- post-LLM DAX validation: scan all measure/calc-col expressions ---
+    _validate_dax_refs(bim, bim_idx)
 
 
 # ---------------------------------------------------------------------------
