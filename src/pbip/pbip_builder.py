@@ -184,9 +184,9 @@ import re as _re_rel
 def _canonical_dim(col: str, dim_tbls: list[str]) -> str | None:
     """Return the ONE dim table whose entity name best matches the column name.
 
-    ClientID   → dim_clients       (base 'client'   ⊂ 'clients')
-    PortefeuilleID → dim_portefeuilles  (base 'portefeuille' ⊂ 'portefeuilles')
-    If no match, return None → no relationship created for this column.
+    ClientID   ->dim_clients       (base 'client'   ⊂ 'clients')
+    PortefeuilleID ->dim_portefeuilles  (base 'portefeuille' ⊂ 'portefeuilles')
+    If no match, return None ->no relationship created for this column.
     """
     base = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', col).lower().replace('_', '')
     if not base:
@@ -244,7 +244,7 @@ def _infer_relationships(tables: list) -> list:
         dim_tbls  = [t for t in tbls if t.startswith("dim_")]
         fact_tbls = [t for t in tbls if t.startswith("fact_")]
 
-        # dim→dim: e.g. dim_portefeuilles[ClientID] → dim_clients[ClientID]
+        # dim→dim: e.g. dim_portefeuilles[ClientID] ->dim_clients[ClientID]
         # The "many" side is the dim that has the FK (not the PK owner).
         # PK owner = the dim whose name matches the FK column best.
         if len(dim_tbls) >= 2 and not fact_tbls:
@@ -289,10 +289,10 @@ def _infer_relationships(tables: list) -> list:
     for rel in candidates:
         already_reachable = rel["toTable"] in _reachable(rel["fromTable"], relationships)
         if already_reachable:
-            print(f"  ~ skipped (ambiguous path): {rel['fromTable']} → {rel['toTable']} via {rel['fromColumn']}")
+            print(f"  ~ skipped (ambiguous path): {rel['fromTable']} ->{rel['toTable']} via {rel['fromColumn']}")
         else:
             relationships.append(rel)
-            print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] → {rel['toTable']}[{rel['toColumn']}]")
+            print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}[{rel['toColumn']}]")
 
     return relationships
 

@@ -71,7 +71,7 @@ def _fix_dax_refs(expression: str, bim_idx: dict) -> tuple[str, list[str]]:
         if entry:
             return entry
         norm_raw = _norm(raw)
-        # prefix match: Fact_Cours → fact_cours_historiques
+        # prefix match: Fact_Cours ->fact_cours_historiques
         candidates = [(k, v) for k, v in bim_idx.items() if _norm(v[0]).startswith(norm_raw) or norm_raw.startswith(_norm(v[0]))]
         if len(candidates) == 1:
             return candidates[0][1]
@@ -87,6 +87,14 @@ def _fix_dax_refs(expression: str, bim_idx: dict) -> tuple[str, list[str]]:
         for col_lower, col_actual in cols.items():
             if _norm(col_actual) == norm_raw:
                 return col_actual
+        # pct suffix: "Rendement (%)" ->try "Rendement_pct" / "rendementpct"
+        if "%" in raw:
+            base_norm = _norm(re.sub(r"\s*\(%\)\s*$", "", raw))
+            for col_lower, col_actual in cols.items():
+                if _norm(col_actual) in (base_norm + "pct", base_norm + "_pct"):
+                    return col_actual
+                if _norm(col_actual).startswith(base_norm) and "pct" in _norm(col_actual):
+                    return col_actual
         return None
 
     def _replace(match: re.Match) -> str:
@@ -101,7 +109,7 @@ def _fix_dax_refs(expression: str, bim_idx: dict) -> tuple[str, list[str]]:
             return match.group(0)
         result = f"{actual_tbl}[{actual_col}]"
         if result != match.group(0):
-            fixes.append(f"{match.group(0)} → {result}")
+            fixes.append(f"{match.group(0)} ->{result}")
         return result
 
     fixed = re.sub(r"([\w][\w\s]*?)\[([^\]]+)\]", _replace, expression)
@@ -230,7 +238,7 @@ def build_prompt(bim: dict, sheets: list, script_data: dict | None, etl_context:
 def _stable_alias(entity: str) -> str:
     """Derive a stable alias from the table name: initials of underscore-separated segments.
 
-    dim_clients → dc, fact_positions → fp, MasterCalendar → mc.
+    dim_clients ->dc, fact_positions ->fp, MasterCalendar ->mc.
     """
     parts = re.split(r"[_\s]+", entity.lower())
     return "".join(p[0] for p in parts if p)
@@ -324,7 +332,7 @@ def _build_prototype_query(
                             "Name": ref, "NativeReferenceName": col})
         if well:
             entry: dict = {"queryRef": ref}
-            if not projections.get(well):  # first item in this well → active
+            if not projections.get(well):  # first item in this well ->active
                 entry["active"] = True
             projections.setdefault(well, []).append(entry)
 
@@ -448,7 +456,22 @@ def apply_translation(response: dict, paths: dict) -> None:
                 if meas_name.lower() in col_names_lower:
                     meas_name = meas_name + " M"
                     rename[m["name"]] = meas_name
-                existing = [x["name"] for x in t.get("measures", [])]
+                existing_map = {x["name"]: x for x in t.get("measures", [])}
+                if meas_name in existing_map:
+                    # update only if the fixed expression resolves all Table[Col] refs
+                    _ref_re = re.compile(r"(\w[\w\s]*?)\[([^\]]+)\]")
+                    still_broken = any(
+                        not (bim_idx.get(mo.group(1).strip().lower()) and
+                             mo.group(2).strip().lower() in (bim_idx.get(mo.group(1).strip().lower()) or ({}, {}))[1])
+                        for mo in _ref_re.finditer(fixed_expr)
+                    )
+                    if not still_broken and existing_map[meas_name]["expression"] != fixed_expr:
+                        existing_map[meas_name]["expression"] = fixed_expr
+                        print(f"  [DAX-UPDATE] '{meas_name}' expression mise a jour")
+                    elif still_broken and dax_fixes:
+                        print(f"  [DAX-SKIP] '{meas_name}' refs non resolues — expression existante conservee")
+                    break
+                existing = list(existing_map.keys())
                 if meas_name not in existing:
                     t.setdefault("measures", []).append({
                         "name": meas_name,
@@ -476,7 +499,7 @@ def apply_translation(response: dict, paths: dict) -> None:
             calc_added += 1
             bim_idx = _bim_index(bim)  # refresh index
 
-    # --- detect missing dimension columns → add placeholder calc cols ---
+    # --- detect missing dimension columns ->add placeholder calc cols ---
     placeholder_added = 0
     for visual in visuals_map.values():
         for d in visual.get("dimensions", []):
