@@ -48,8 +48,12 @@ def _inputs_block(inputs_dir: pathlib.Path) -> str:
     for p in sorted(inputs_dir.glob("*.csv")):
         cols = _csv_columns(p)
         lines.append(f"- {p.stem}_src : {', '.join(cols)}")
-    lines.append("\nUtilise <NomTable>_src comme source dans les FROM/JOIN. "
-                 "Cree les tables finales sans suffixe (ex: CREATE OR REPLACE TABLE AUM AS SELECT ... FROM AUM_src).")
+    lines.append(
+        "\nREGLE CRITIQUE : utilise EXACTEMENT les noms de colonnes et de vues listes ci-dessus. "
+        "Ne renomme pas, ne rajoute pas d'espaces, ne raccourcis pas les noms de vues. "
+        "Ex : si la vue s'appelle fact_cours_historiques_src, utilise fact_cours_historiques_src (pas Fact_Cours_src). "
+        "Si la colonne s'appelle NomMois, utilise NomMois (pas \"Nom Mois\")."
+    )
     return "\n".join(lines)
 
 
