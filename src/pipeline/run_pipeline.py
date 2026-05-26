@@ -16,6 +16,8 @@ load_dotenv()
 ROOT = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))  # src/ → pipeline imports work
 
+import observability as obs
+
 
 def _wait_for_sql(sql_file: pathlib.Path) -> None:
     print("\n" + "="*60)
@@ -30,24 +32,34 @@ def _wait_for_sql(sql_file: pathlib.Path) -> None:
         sys.exit(1)
 
 
-def _call_api(system: str, user: str) -> str:
-    try:
-        import anthropic
-    except ImportError:
-        print("Package 'anthropic' manquant. Installez-le : pip install anthropic")
-        sys.exit(1)
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic(api_key=api_key)
-
-    print("Appel Claude API…")
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=8192,
-        system=system,
-        messages=[{"role": "user", "content": user}],
+def _call_api(system: str, user: str, trace=None) -> str:
+    from openai import AzureOpenAI
+    client = AzureOpenAI(
+        api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+        api_version=os.environ["AZURE_OPENAI_API_VERSION"],
     )
-    return message.content[0].text
+    model = os.environ["AZURE_OPENAI_DEPLOYMENT"]
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+
+    gen = (trace or obs._Noop()).generation(
+        name="sql_generation",
+        model=model,
+        input=messages,
+    )
+
+    print("Appel Azure OpenAI…")
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=8192,
+    )
+    result = response.choices[0].message.content
+    gen.end(output=result)
+    return result
 
 
 def main() -> None:
@@ -66,24 +78,27 @@ def main() -> None:
     from pipeline.prompt_builder import build as build_prompt
     from pipeline.sql_runner import run as run_sql
 
-    if args.mode == "skip-llm":
-        if not sql_file.exists():
-            print(f"{sql_file} introuvable. Lancez d'abord --mode paste ou --mode api.")
-            sys.exit(1)
-        print("Mode skip-llm : generated.sql existant utilisé.")
+    with obs.trace("pipeline_run", example=example, mode=args.mode) as trace:
+        if args.mode == "skip-llm":
+            if not sql_file.exists():
+                print(f"{sql_file} introuvable. Lancez d'abord --mode paste ou --mode api.")
+                sys.exit(1)
+            print("Mode skip-llm : generated.sql existant utilisé.")
 
-    elif args.mode == "paste":
-        build_prompt(example=example, write=True)
-        _wait_for_sql(sql_file)
+        elif args.mode == "paste":
+            build_prompt(example=example, write=True)
+            _wait_for_sql(sql_file)
 
-    elif args.mode == "api":
-        system, user = build_prompt(example=example, write=True)
-        sql = _call_api(system, user)
-        sql_file.parent.mkdir(parents=True, exist_ok=True)
-        sql_file.write_text(sql, encoding="utf-8")
-        print(f"SQL généré → {sql_file}")
+        elif args.mode == "api":
+            system, user = build_prompt(example=example, write=True)
+            sql = _call_api(system, user, trace=trace)
+            sql_file.parent.mkdir(parents=True, exist_ok=True)
+            sql_file.write_text(sql, encoding="utf-8")
+            print(f"SQL généré → {sql_file}")
 
-    run_sql(example=example, debug=args.debug)
+        sql_sp = trace.span(name="sql_execution")
+        run_sql(example=example, debug=args.debug)
+        sql_sp.end()
 
 
 if __name__ == "__main__":
