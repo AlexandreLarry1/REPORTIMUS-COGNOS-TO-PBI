@@ -205,18 +205,35 @@ def _canonical_dim(col: str, dim_tbls: list[str]) -> str | None:
     return max(scored, key=lambda x: x[0])[1] if scored else None
 
 
+def _reachable(from_tbl: str, rels: list) -> set[str]:
+    """Return all tables reachable from from_tbl via rels (BFS, both directions)."""
+    visited = {from_tbl}
+    queue = [from_tbl]
+    while queue:
+        cur = queue.pop()
+        for r in rels:
+            for neighbor in (r["toTable"] if r["fromTable"] == cur else
+                             r["fromTable"] if r["toTable"] == cur else None,):
+                if neighbor and neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+    return visited
+
+
 def _infer_relationships(tables: list) -> list:
     """Infer fact→dim relationships using canonical dim matching per FK column.
 
-    Each FK column maps to exactly ONE dim table (by name similarity), preventing
-    ambiguous multi-path errors in Power BI when multiple tables share a column.
+    Each FK column maps to exactly ONE dim table (by name similarity).
+    After building all candidate links, redundant direct fact→dim paths are dropped
+    when the dim is already reachable via another intermediate table — preventing
+    Power BI ambiguous-path errors at refresh.
     """
     col_index: dict[str, list[str]] = {}
     for t in tables:
         for c in t.get("columns", []):
             col_index.setdefault(c["name"], []).append(t["name"])
 
-    relationships = []
+    candidates = []
     seen: set = set()
 
     for col, tbls in col_index.items():
@@ -236,14 +253,25 @@ def _infer_relationships(tables: list) -> list:
             if key in seen:
                 continue
             seen.add(key)
-            relationships.append({
+            candidates.append({
                 "name": f"{fact}_{canonical}_{col}",
                 "fromTable": fact,
                 "fromColumn": col,
                 "toTable": canonical,
                 "toColumn": col,
             })
-            print(f"  ~ relation: {fact}[{col}] → {canonical}[{col}]")
+
+    # Drop direct fact→dim links that are already reachable via another path.
+    # Build incrementally: add a candidate only if toTable not yet reachable from fromTable.
+    relationships: list = []
+    for rel in candidates:
+        already_reachable = rel["toTable"] in _reachable(rel["fromTable"], relationships)
+        if already_reachable:
+            print(f"  ~ skipped (ambiguous path): {rel['fromTable']} → {rel['toTable']} via {rel['fromColumn']}")
+        else:
+            relationships.append(rel)
+            print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] → {rel['toTable']}[{rel['toColumn']}]")
+
     return relationships
 
 

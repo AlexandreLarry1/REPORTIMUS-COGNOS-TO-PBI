@@ -218,9 +218,24 @@ def build_prompt(bim: dict, sheets: list, script_data: dict | None, etl_context:
 # Apply translation
 # ---------------------------------------------------------------------------
 
+def _stable_alias(entity: str) -> str:
+    """Derive a stable alias from the table name: initials of underscore-separated segments.
+
+    dim_clients → dc, fact_positions → fp, MasterCalendar → mc.
+    """
+    parts = re.split(r"[_\s]+", entity.lower())
+    return "".join(p[0] for p in parts if p)
+
+
 def _alias(entity: str, tables_used: dict) -> str:
     if entity not in tables_used:
-        tables_used[entity] = _ALPHABET[len(tables_used) % 26]
+        base = _stable_alias(entity)
+        alias = base
+        n = 2
+        while alias in tables_used.values():
+            alias = f"{base}{n}"
+            n += 1
+        tables_used[entity] = alias
     return tables_used[entity]
 
 
@@ -299,7 +314,10 @@ def _build_prototype_query(
             selects.append({"Column": {"Expression": {"SourceRef": {"Source": a}}, "Property": col},
                             "Name": ref, "NativeReferenceName": col})
         if well:
-            projections.setdefault(well, []).append({"queryRef": ref})
+            entry: dict = {"queryRef": ref}
+            if not projections.get(well):  # first item in this well → active
+                entry["active"] = True
+            projections.setdefault(well, []).append(entry)
 
     def _add_meas(m: dict, well: str | None) -> None:
         tbl  = m["table"]
