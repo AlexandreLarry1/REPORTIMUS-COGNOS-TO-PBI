@@ -128,17 +128,18 @@ def _m_expression(csv_path: pathlib.Path, n_cols: int, col_types: dict[str, str]
         f'[Delimiter=",", Columns={n_cols}, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),',
         '    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])',
     ]
-    transforms = []
+    # Use Table.TransformColumnTypes with "en-US" culture so that numeric columns
+    # with dot decimal separator parse correctly regardless of PBI Desktop locale.
+    type_schema = []
     if col_types:
+        pq_type = {"double": "type number", "int64": "type number", "dateTime": "type datetime"}
         for col, dt in col_types.items():
-            if dt in ("double", "int64"):
-                transforms.append(f'{{"{col}", each try Number.From(_) otherwise null, type nullable number}}')
-            elif dt == "dateTime":
-                transforms.append(f'{{"{col}", each try DateTime.From(_) otherwise null, type nullable datetime}}')
-    if transforms:
-        t_list = ", ".join(transforms)
+            if dt in pq_type:
+                type_schema.append(f'{{"{col}", {pq_type[dt]}}}')
+    if type_schema:
+        schema_list = ", ".join(type_schema)
         lines[-1] += ","
-        lines.append(f'    #"Changed Types" = Table.TransformColumns(#"Promoted Headers", {{{t_list}}})')
+        lines.append(f'    #"Changed Types" = Table.TransformColumnTypes(#"Promoted Headers", {{{schema_list}}}, "en-US")')
         lines.append("in")
         lines.append('    #"Changed Types"')
     else:
