@@ -262,7 +262,7 @@ _WELLS: dict[str, tuple[str | None, str | None, int, int]] = {
     "lineChart":     ("Category", "Y",      -1, -1),
     "lineClusteredColumnComboChart": ("Category", "Y", -1, -1),
     "donutChart":    ("Category", "Y",        -1, 1),
-    "scatterChart":  ("Group",    None,      -1, 0),  # scatter: grouping well is "Group" not "Details"
+    "scatterChart":  ("Category", None,      -1, 0),  # scatter Details bucket internal name is "Category"
     "pivotTable":    ("Rows",     "Values", -1, -1),
     "treemap":       ("Category", "Values", -1, 1),
     "waterfallChart":("Category", "Y",      -1, 1),
