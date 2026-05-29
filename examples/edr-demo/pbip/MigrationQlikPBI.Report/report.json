@@ -1,0 +1,504 @@
+{
+  "config": "{\"version\":\"5.72\",\"themeCollection\":{\"baseTheme\":{\"name\":\"CY26SU04\",\"version\":{\"visual\":\"2.8.0\",\"report\":\"3.2.0\",\"page\":\"2.3.1\"},\"type\":2}},\"activeSectionIndex\":0,\"defaultDrillFilterOtherVisuals\":true,\"linguisticSchemaSyncVersion\":2,\"settings\":{\"useNewFilterPaneExperience\":true,\"allowChangeFilterTypes\":true,\"useStylableVisualContainerHeader\":true,\"queryLimitOption\":6,\"useEnhancedTooltips\":true,\"exportDataMode\":1,\"useDefaultAggregateDisplayName\":true},\"objects\":{\"section\":[{\"properties\":{\"verticalAlignment\":{\"expr\":{\"Literal\":{\"Value\":\"'Top'\"}}}}}]}}",
+  "layoutOptimization": 0,
+  "resourcePackages": [
+    {
+      "resourcePackage": {
+        "disabled": false,
+        "items": [
+          {
+            "name": "CY26SU04",
+            "path": "BaseThemes/CY26SU04.json",
+            "type": 202
+          }
+        ],
+        "name": "SharedResources",
+        "type": 2
+      }
+    }
+  ],
+  "sections": [
+    {
+      "config": "{}",
+      "displayName": "05 - Client & Conseiller",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "56ff6083a5a74b2ebcc1",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"d05_k_cli\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":0.0,\"z\":1000,\"width\":170.7,\"height\":96.0,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_clients.Nb Clients\"}]},\"columnProperties\":{\"dim_clients.Nb Clients\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Nb Clients\"},\"Name\":\"dim_clients.Nb Clients\",\"NativeReferenceName\":\"Nb Clients\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Clients'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1000
+        },
+        {
+          "config": "{\"name\":\"d05_k_aum_cli\",\"layouts\":[{\"id\":0,\"position\":{\"x\":170.7,\"y\":0.0,\"z\":2000,\"width\":170.7,\"height\":96.0,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.AuM Moyen / Client (EUR)\"}]},\"columnProperties\":{\"fact_positions.AuM Moyen / Client (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM Moyen / Client (EUR)\"},\"Name\":\"fact_positions.AuM Moyen / Client (EUR)\",\"NativeReferenceName\":\"AuM Moyen / Client (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'AuM Moyen / Client (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 170.7,
+          "y": 0.0,
+          "z": 2000
+        },
+        {
+          "config": "{\"name\":\"d05_k_port_cli\",\"layouts\":[{\"id\":0,\"position\":{\"x\":341.3,\"y\":0.0,\"z\":3000,\"width\":170.7,\"height\":96.0,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_portefeuilles.Nb Portef. Moy. / Client\"}]},\"columnProperties\":{\"dim_portefeuilles.Nb Portef. Moy. / Client\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"Nb Portef. Moy. / Client\"},\"Name\":\"dim_portefeuilles.Nb Portef. Moy. / Client\",\"NativeReferenceName\":\"Nb Portef. Moy. / Client\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Portef. Moy. / Client'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 341.3,
+          "y": 0.0,
+          "z": 3000
+        },
+        {
+          "config": "{\"name\":\"d05_k_anciennete\",\"layouts\":[{\"id\":0,\"position\":{\"x\":512.0,\"y\":0.0,\"z\":4000,\"width\":170.7,\"height\":96.0,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_clients.Anciennete Moy. (ans)\"}]},\"columnProperties\":{\"dim_clients.Anciennete Moy. (ans)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Anciennete Moy. (ans)\"},\"Name\":\"dim_clients.Anciennete Moy. (ans)\",\"NativeReferenceName\":\"Anciennete Moy. (ans)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Anciennete Moy. (ans)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 512.0,
+          "y": 0.0,
+          "z": 4000
+        },
+        {
+          "config": "{\"name\":\"d05_k_tx_cli\",\"layouts\":[{\"id\":0,\"position\":{\"x\":682.7,\"y\":0.0,\"z\":5000,\"width\":170.7,\"height\":96.0,\"tabOrder\":5000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_transactions.Nb Tx Moy. / Client\"}]},\"columnProperties\":{\"fact_transactions.Nb Tx Moy. / Client\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"ft\",\"Entity\":\"fact_transactions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"ft\"}},\"Property\":\"Nb Tx Moy. / Client\"},\"Name\":\"fact_transactions.Nb Tx Moy. / Client\",\"NativeReferenceName\":\"Nb Tx Moy. / Client\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Tx Moy. / Client'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 682.7,
+          "y": 0.0,
+          "z": 5000
+        },
+        {
+          "config": "{\"name\":\"d05_k_revenus\",\"layouts\":[{\"id\":0,\"position\":{\"x\":853.3,\"y\":0.0,\"z\":6000,\"width\":170.7,\"height\":96.0,\"tabOrder\":6000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_transactions.Revenus Totaux (EUR)\"}]},\"columnProperties\":{\"fact_transactions.Revenus Totaux (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"ft\",\"Entity\":\"fact_transactions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"ft\"}},\"Property\":\"Revenus Totaux (EUR)\"},\"Name\":\"fact_transactions.Revenus Totaux (EUR)\",\"NativeReferenceName\":\"Revenus Totaux (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Revenus Totaux (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 853.3,
+          "y": 0.0,
+          "z": 6000
+        },
+        {
+          "config": "{\"name\":\"SzmmUN\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":96.0,\"z\":7000,\"width\":554.7,\"height\":192.0,\"tabOrder\":7000}}],\"singleVisual\":{\"visualType\":\"donutChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_clients.StatutKYC\",\"active\":true}],\"Y\":[{\"queryRef\":\"dim_clients.Count Distinct ClientID\"}]},\"columnProperties\":{\"dim_clients.StatutKYC\":{\"roles\":{\"Category\":{}}},\"dim_clients.Count Distinct ClientID\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"StatutKYC\"},\"Name\":\"dim_clients.StatutKYC\",\"NativeReferenceName\":\"StatutKYC\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Count Distinct ClientID\"},\"Name\":\"dim_clients.Count Distinct ClientID\",\"NativeReferenceName\":\"Count Distinct ClientID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Clients par Statut KYC'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 554.7,
+          "x": 0.0,
+          "y": 96.0,
+          "z": 7000
+        },
+        {
+          "config": "{\"name\":\"sNQgff\",\"layouts\":[{\"id\":0,\"position\":{\"x\":554.7,\"y\":96.0,\"z\":8000,\"width\":469.3,\"height\":192.0,\"tabOrder\":8000}}],\"singleVisual\":{\"visualType\":\"donutChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_clients.ProfilRisque\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_positions.AuM\"}]},\"columnProperties\":{\"dim_clients.ProfilRisque\":{\"roles\":{\"Category\":{}}},\"fact_positions.AuM\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"ProfilRisque\"},\"Name\":\"dim_clients.ProfilRisque\",\"NativeReferenceName\":\"ProfilRisque\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM\"},\"Name\":\"fact_positions.AuM\",\"NativeReferenceName\":\"AuM\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'AuM par Profil Risque'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 469.3,
+          "x": 554.7,
+          "y": 96.0,
+          "z": 8000
+        },
+        {
+          "config": "{\"name\":\"YhwxKKD\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":288.0,\"z\":9000,\"width\":1024.0,\"height\":240.0,\"tabOrder\":9000}}],\"singleVisual\":{\"visualType\":\"scatterChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_clients.Nom Complet Client\",\"active\":true}],\"X\":[{\"queryRef\":\"fact_positions.AuM\"}],\"Y\":[{\"queryRef\":\"fact_positions.Sum PnL (EUR)\"}],\"Size\":[{\"queryRef\":\"fact_transactions.Count Distinct TransactionID\"}]},\"columnProperties\":{\"dim_clients.Nom Complet Client\":{\"roles\":{\"Category\":{}}},\"fact_positions.AuM\":{\"roles\":{\"X\":{}}},\"fact_positions.Sum PnL (EUR)\":{\"roles\":{\"Y\":{}}},\"fact_transactions.Count Distinct TransactionID\":{\"roles\":{\"Size\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0},{\"Name\":\"ft\",\"Entity\":\"fact_transactions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Nom Complet Client\"},\"Name\":\"dim_clients.Nom Complet Client\",\"NativeReferenceName\":\"Nom Complet Client\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM\"},\"Name\":\"fact_positions.AuM\",\"NativeReferenceName\":\"AuM\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum PnL (EUR)\"},\"Name\":\"fact_positions.Sum PnL (EUR)\",\"NativeReferenceName\":\"Sum PnL (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"ft\"}},\"Property\":\"Count Distinct TransactionID\"},\"Name\":\"fact_transactions.Count Distinct TransactionID\",\"NativeReferenceName\":\"Count Distinct TransactionID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'AuM vs PnL par Client (Bubble = Nb Tx)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 240.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 288.0,
+          "z": 9000
+        },
+        {
+          "config": "{\"name\":\"BKDctLR\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":576.0,\"z\":10000,\"width\":1024.0,\"height\":288.0,\"tabOrder\":10000}}],\"singleVisual\":{\"visualType\":\"tableEx\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_clients.ClientID\",\"active\":true},{\"queryRef\":\"dim_clients.Nom Complet Client\"},{\"queryRef\":\"dim_clients.Segment Client\"},{\"queryRef\":\"dim_clients.Pays Client\"},{\"queryRef\":\"dim_clients.ProfilRisque\"},{\"queryRef\":\"dim_clients.StatutKYC\"},{\"queryRef\":\"dim_clients.Nom Complet Conseiller\"},{\"queryRef\":\"fact_positions.AuM\"},{\"queryRef\":\"fact_positions.Sum PnL (EUR)\"},{\"queryRef\":\"fact_transactions.Count Distinct TransactionID\"}]},\"columnProperties\":{\"dim_clients.ClientID\":{\"roles\":{\"Values\":{}}},\"dim_clients.Nom Complet Client\":{\"roles\":{\"Values\":{}}},\"dim_clients.Segment Client\":{\"roles\":{\"Values\":{}}},\"dim_clients.Pays Client\":{\"roles\":{\"Values\":{}}},\"dim_clients.ProfilRisque\":{\"roles\":{\"Values\":{}}},\"dim_clients.StatutKYC\":{\"roles\":{\"Values\":{}}},\"dim_clients.Nom Complet Conseiller\":{\"roles\":{\"Values\":{}}},\"fact_positions.AuM\":{\"roles\":{\"Values\":{}}},\"fact_positions.Sum PnL (EUR)\":{\"roles\":{\"Values\":{}}},\"fact_transactions.Count Distinct TransactionID\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_clients\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0},{\"Name\":\"ft\",\"Entity\":\"fact_transactions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"ClientID\"},\"Name\":\"dim_clients.ClientID\",\"NativeReferenceName\":\"ClientID\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Nom Complet Client\"},\"Name\":\"dim_clients.Nom Complet Client\",\"NativeReferenceName\":\"Nom Complet Client\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Segment Client\"},\"Name\":\"dim_clients.Segment Client\",\"NativeReferenceName\":\"Segment Client\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Pays Client\"},\"Name\":\"dim_clients.Pays Client\",\"NativeReferenceName\":\"Pays Client\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"ProfilRisque\"},\"Name\":\"dim_clients.ProfilRisque\",\"NativeReferenceName\":\"ProfilRisque\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"StatutKYC\"},\"Name\":\"dim_clients.StatutKYC\",\"NativeReferenceName\":\"StatutKYC\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Nom Complet Conseiller\"},\"Name\":\"dim_clients.Nom Complet Conseiller\",\"NativeReferenceName\":\"Nom Complet Conseiller\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM\"},\"Name\":\"fact_positions.AuM\",\"NativeReferenceName\":\"AuM\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum PnL (EUR)\"},\"Name\":\"fact_positions.Sum PnL (EUR)\",\"NativeReferenceName\":\"Sum PnL (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"ft\"}},\"Property\":\"Count Distinct TransactionID\"},\"Name\":\"fact_transactions.Count Distinct TransactionID\",\"NativeReferenceName\":\"Count Distinct TransactionID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Fiche Complete Clients'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 576.0,
+          "z": 10000
+        }
+      ],
+      "width": 1280.0
+    },
+    {
+      "config": "{}",
+      "displayName": "01 - Executive Overview",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "898b820edf1b4ea891a0",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"maRyZ\",\"layouts\":[{\"id\":0,\"position\":{\"x\":512.0,\"y\":96.0,\"z\":1000,\"width\":512.0,\"height\":192.0,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"lineChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_calendrier.Annee-Mois\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_positions.Sum Valeur Marche (EUR)\"},{\"queryRef\":\"fact_performances.Sum Flux Nets (EUR)\"}]},\"columnProperties\":{\"dim_calendrier.Annee-Mois\":{\"roles\":{\"Category\":{}}},\"fact_positions.Sum Valeur Marche (EUR)\":{\"roles\":{\"Y\":{}}},\"fact_performances.Sum Flux Nets (EUR)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_calendrier\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0},{\"Name\":\"fp2\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Annee-Mois\"},\"Name\":\"dim_calendrier.Annee-Mois\",\"NativeReferenceName\":\"Annee-Mois\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Valeur Marche (EUR)\"},\"Name\":\"fact_positions.Sum Valeur Marche (EUR)\",\"NativeReferenceName\":\"Sum Valeur Marche (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp2\"}},\"Property\":\"Sum Flux Nets (EUR)\"},\"Name\":\"fact_performances.Sum Flux Nets (EUR)\",\"NativeReferenceName\":\"Sum Flux Nets (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Evolution AuM & Flux Nets - Mensuel'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 512.0,
+          "x": 512.0,
+          "y": 96.0,
+          "z": 1000
+        },
+        {
+          "config": "{\"name\":\"Jjrcrq\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":0.0,\"z\":2000,\"width\":341.3,\"height\":96.0,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.AuM Total (EUR)\"}]},\"columnProperties\":{\"fact_positions.AuM Total (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM Total (EUR)\"},\"Name\":\"fact_positions.AuM Total (EUR)\",\"NativeReferenceName\":\"AuM Total (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'AuM Total (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 341.3,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 2000
+        },
+        {
+          "config": "{\"name\":\"KamTat\",\"layouts\":[{\"id\":0,\"position\":{\"x\":341.3,\"y\":0.0,\"z\":3000,\"width\":298.7,\"height\":96.0,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.PnL Total (EUR)\"}]},\"columnProperties\":{\"fact_positions.PnL Total (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"PnL Total (EUR)\"},\"Name\":\"fact_positions.PnL Total (EUR)\",\"NativeReferenceName\":\"PnL Total (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL Total (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 298.7,
+          "x": 341.3,
+          "y": 0.0,
+          "z": 3000
+        },
+        {
+          "config": "{\"name\":\"mcJZMf\",\"layouts\":[{\"id\":0,\"position\":{\"x\":640.0,\"y\":0.0,\"z\":4000,\"width\":170.7,\"height\":96.0,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_portefeuilles.Nb Portefeuilles\"}]},\"columnProperties\":{\"dim_portefeuilles.Nb Portefeuilles\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"Nb Portefeuilles\"},\"Name\":\"dim_portefeuilles.Nb Portefeuilles\",\"NativeReferenceName\":\"Nb Portefeuilles\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Portefeuilles'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 640.0,
+          "y": 0.0,
+          "z": 4000
+        },
+        {
+          "config": "{\"name\":\"xFxc\",\"layouts\":[{\"id\":0,\"position\":{\"x\":810.7,\"y\":0.0,\"z\":5000,\"width\":213.3,\"height\":96.0,\"tabOrder\":5000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_portefeuilles.Nb Portefeuilles\"}]},\"columnProperties\":{\"dim_portefeuilles.Nb Portefeuilles\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"Nb Portefeuilles\"},\"Name\":\"dim_portefeuilles.Nb Portefeuilles\",\"NativeReferenceName\":\"Nb Portefeuilles\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Portefeuilles'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 810.7,
+          "y": 0.0,
+          "z": 5000
+        },
+        {
+          "config": "{\"name\":\"DShYMgp\",\"layouts\":[{\"id\":0,\"position\":{\"x\":512.0,\"y\":288.0,\"z\":6000,\"width\":512.0,\"height\":288.0,\"tabOrder\":6000}}],\"singleVisual\":{\"visualType\":\"donutChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_instruments.Macro Classe Actif\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_positions.AuM\"}]},\"columnProperties\":{\"dim_instruments.Macro Classe Actif\":{\"roles\":{\"Category\":{}}},\"fact_positions.AuM\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Macro Classe Actif\"},\"Name\":\"dim_instruments.Macro Classe Actif\",\"NativeReferenceName\":\"Macro Classe Actif\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM\"},\"Name\":\"fact_positions.AuM\",\"NativeReferenceName\":\"AuM\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Allocation par Macro-Classe d'Actif'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 512.0,
+          "x": 512.0,
+          "y": 288.0,
+          "z": 6000
+        },
+        {
+          "config": "{\"name\":\"Pgmfmmp\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":96.0,\"z\":7000,\"width\":512.0,\"height\":480.0,\"tabOrder\":7000}}],\"singleVisual\":{\"visualType\":\"barChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_instruments.Classe Actif\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_positions.AuM\"},{\"queryRef\":\"fact_positions.Sum PnL (EUR)\"},{\"queryRef\":\"fact_positions.Avg PnL (%)\"}]},\"columnProperties\":{\"dim_instruments.Classe Actif\":{\"roles\":{\"Category\":{}}},\"fact_positions.AuM\":{\"roles\":{\"Y\":{}}},\"fact_positions.Sum PnL (EUR)\":{\"roles\":{\"Y\":{}}},\"fact_positions.Avg PnL (%)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Classe Actif\"},\"Name\":\"dim_instruments.Classe Actif\",\"NativeReferenceName\":\"Classe Actif\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"AuM\"},\"Name\":\"fact_positions.AuM\",\"NativeReferenceName\":\"AuM\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum PnL (EUR)\"},\"Name\":\"fact_positions.Sum PnL (EUR)\",\"NativeReferenceName\":\"Sum PnL (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg PnL (%)\"},\"Name\":\"fact_positions.Avg PnL (%)\",\"NativeReferenceName\":\"Avg PnL (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'AuM et PnL par Classe d'Actif'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 480.0,
+          "width": 512.0,
+          "x": 0.0,
+          "y": 96.0,
+          "z": 7000
+        }
+      ],
+      "width": 1280.0,
+      "ordinal": 1
+    },
+    {
+      "config": "{}",
+      "displayName": "02 - Performance & Alpha",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "3116bd6df0754b4189ef",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"vXUkBT\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":0.0,\"z\":1000,\"width\":213.3,\"height\":96.0,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Rendement Moyen (%)\"}]},\"columnProperties\":{\"fact_performances.Rendement Moyen (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Rendement Moyen (%)\"},\"Name\":\"fact_performances.Rendement Moyen (%)\",\"NativeReferenceName\":\"Rendement Moyen (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Rendement Moyen (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1000
+        },
+        {
+          "config": "{\"name\":\"XZjum\",\"layouts\":[{\"id\":0,\"position\":{\"x\":213.3,\"y\":0.0,\"z\":2000,\"width\":213.3,\"height\":96.0,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Benchmark Moyen (%)\"}]},\"columnProperties\":{\"fact_performances.Benchmark Moyen (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Benchmark Moyen (%)\"},\"Name\":\"fact_performances.Benchmark Moyen (%)\",\"NativeReferenceName\":\"Benchmark Moyen (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Benchmark Moyen (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 213.3,
+          "y": 0.0,
+          "z": 2000
+        },
+        {
+          "config": "{\"name\":\"YBJre\",\"layouts\":[{\"id\":0,\"position\":{\"x\":426.7,\"y\":0.0,\"z\":3000,\"width\":213.3,\"height\":96.0,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Benchmark Moyen (%)\"}]},\"columnProperties\":{\"fact_performances.Benchmark Moyen (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Benchmark Moyen (%)\"},\"Name\":\"fact_performances.Benchmark Moyen (%)\",\"NativeReferenceName\":\"Benchmark Moyen (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Benchmark Moyen (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 426.7,
+          "y": 0.0,
+          "z": 3000
+        },
+        {
+          "config": "{\"name\":\"dhdXuS\",\"layouts\":[{\"id\":0,\"position\":{\"x\":640.0,\"y\":0.0,\"z\":4000,\"width\":213.3,\"height\":96.0,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Ratio Sharpe Moyen\"}]},\"columnProperties\":{\"fact_performances.Ratio Sharpe Moyen\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Ratio Sharpe Moyen\"},\"Name\":\"fact_performances.Ratio Sharpe Moyen\",\"NativeReferenceName\":\"Ratio Sharpe Moyen\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Ratio Sharpe Moyen'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 640.0,
+          "y": 0.0,
+          "z": 4000
+        },
+        {
+          "config": "{\"name\":\"jeAUQS\",\"layouts\":[{\"id\":0,\"position\":{\"x\":853.3,\"y\":0.0,\"z\":5000,\"width\":170.7,\"height\":96.0,\"tabOrder\":5000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Max Drawdown (%)\"}]},\"columnProperties\":{\"fact_performances.Max Drawdown (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Max Drawdown (%)\"},\"Name\":\"fact_performances.Max Drawdown (%)\",\"NativeReferenceName\":\"Max Drawdown (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Max Drawdown (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 853.3,
+          "y": 0.0,
+          "z": 5000
+        },
+        {
+          "config": "{\"name\":\"zgjN\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":144.0,\"z\":6000,\"width\":298.7,\"height\":192.0,\"tabOrder\":6000}}],\"singleVisual\":{\"visualType\":\"barChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Y\":[{\"queryRef\":\"fact_performances.Sum Flux Nets (EUR)\"}]},\"columnProperties\":{\"fact_performances.Sum Flux Nets (EUR)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Flux Nets (EUR)\"},\"Name\":\"fact_performances.Sum Flux Nets (EUR)\",\"NativeReferenceName\":\"Sum Flux Nets (EUR)\"}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 298.7,
+          "x": 0.0,
+          "y": 144.0,
+          "z": 6000
+        },
+        {
+          "config": "{\"name\":\"AxJLCbB\",\"layouts\":[{\"id\":0,\"position\":{\"x\":298.7,\"y\":144.0,\"z\":7000,\"width\":725.3,\"height\":192.0,\"tabOrder\":7000}}],\"singleVisual\":{\"visualType\":\"columnChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_calendrier.Annee-Mois\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_performances.Avg Rendement (%)\"},{\"queryRef\":\"fact_performances.Avg Benchmark (%)\"},{\"queryRef\":\"fact_performances.Avg Alpha (%)\"}]},\"columnProperties\":{\"dim_calendrier.Annee-Mois\":{\"roles\":{\"Category\":{}}},\"fact_performances.Avg Rendement (%)\":{\"roles\":{\"Y\":{}}},\"fact_performances.Avg Benchmark (%)\":{\"roles\":{\"Y\":{}}},\"fact_performances.Avg Alpha (%)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_calendrier\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Annee-Mois\"},\"Name\":\"dim_calendrier.Annee-Mois\",\"NativeReferenceName\":\"Annee-Mois\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Rendement (%)\"},\"Name\":\"fact_performances.Avg Rendement (%)\",\"NativeReferenceName\":\"Avg Rendement (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Benchmark (%)\"},\"Name\":\"fact_performances.Avg Benchmark (%)\",\"NativeReferenceName\":\"Avg Benchmark (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Alpha (%)\"},\"Name\":\"fact_performances.Avg Alpha (%)\",\"NativeReferenceName\":\"Avg Alpha (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Rendement vs Benchmark - Mensuel'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 725.3,
+          "x": 298.7,
+          "y": 144.0,
+          "z": 7000
+        },
+        {
+          "config": "{\"name\":\"eTpjNRw\",\"layouts\":[{\"id\":0,\"position\":{\"x\":768.0,\"y\":336.0,\"z\":8000,\"width\":256.0,\"height\":240.0,\"tabOrder\":8000}}],\"singleVisual\":{\"visualType\":\"donutChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"fact_performances.Vs Benchmark\",\"active\":true}],\"Y\":[{\"queryRef\":\"dim_portefeuilles.Count PortefeuilleID\"}]},\"columnProperties\":{\"fact_performances.Vs Benchmark\":{\"roles\":{\"Category\":{}}},\"dim_portefeuilles.Count PortefeuilleID\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0},{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Vs Benchmark\"},\"Name\":\"fact_performances.Vs Benchmark\",\"NativeReferenceName\":\"Vs Benchmark\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"Count PortefeuilleID\"},\"Name\":\"dim_portefeuilles.Count PortefeuilleID\",\"NativeReferenceName\":\"Count PortefeuilleID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Surperforme vs Sous-performe'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 240.0,
+          "width": 256.0,
+          "x": 768.0,
+          "y": 336.0,
+          "z": 8000
+        },
+        {
+          "config": "{\"name\":\"cUT\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":336.0,\"z\":9000,\"width\":384.0,\"height\":240.0,\"tabOrder\":9000}}],\"singleVisual\":{\"visualType\":\"lineChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_calendrier.Annee-Mois\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_performances.Max Drawdown (%)\"}]},\"columnProperties\":{\"dim_calendrier.Annee-Mois\":{\"roles\":{\"Category\":{}}},\"fact_performances.Max Drawdown (%)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_calendrier\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Annee-Mois\"},\"Name\":\"dim_calendrier.Annee-Mois\",\"NativeReferenceName\":\"Annee-Mois\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Max Drawdown (%)\"},\"Name\":\"fact_performances.Max Drawdown (%)\",\"NativeReferenceName\":\"Max Drawdown (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Max Drawdown & Volatilite - Mensuel'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 240.0,
+          "width": 384.0,
+          "x": 0.0,
+          "y": 336.0,
+          "z": 9000
+        },
+        {
+          "config": "{\"name\":\"NwNMeU\",\"layouts\":[{\"id\":0,\"position\":{\"x\":384.0,\"y\":336.0,\"z\":10000,\"width\":384.0,\"height\":240.0,\"tabOrder\":10000}}],\"singleVisual\":{\"visualType\":\"lineChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_calendrier.Annee-Mois\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_performances.Avg Volatilite (%)\"}]},\"columnProperties\":{\"dim_calendrier.Annee-Mois\":{\"roles\":{\"Category\":{}}},\"fact_performances.Avg Volatilite (%)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dc\",\"Entity\":\"dim_calendrier\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Annee-Mois\"},\"Name\":\"dim_calendrier.Annee-Mois\",\"NativeReferenceName\":\"Annee-Mois\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Volatilite (%)\"},\"Name\":\"fact_performances.Avg Volatilite (%)\",\"NativeReferenceName\":\"Avg Volatilite (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Max Drawdown & Volatilite - Mensuel'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 240.0,
+          "width": 384.0,
+          "x": 384.0,
+          "y": 336.0,
+          "z": 10000
+        },
+        {
+          "config": "{\"name\":\"Teumgy\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":96.0,\"z\":11000,\"width\":1024.0,\"height\":96.0,\"tabOrder\":11000}}],\"singleVisual\":{\"visualType\":\"slicer\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"prototypeQuery\":{\"Version\":2,\"From\":[],\"Select\":[]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 96.0,
+          "z": 11000
+        },
+        {
+          "config": "{\"name\":\"vHgWjG\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":576.0,\"z\":12000,\"width\":1024.0,\"height\":288.0,\"tabOrder\":12000}}],\"singleVisual\":{\"visualType\":\"pivotTable\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Rows\":[{\"queryRef\":\"dim_portefeuilles.PortefeuilleID\",\"active\":true},{\"queryRef\":\"dim_calendrier.Annee-Trimestre\"}],\"Values\":[{\"queryRef\":\"fact_performances.Avg Rendement (%)\"},{\"queryRef\":\"fact_performances.Avg Benchmark (%)\"},{\"queryRef\":\"fact_performances.Avg Alpha (%)\"},{\"queryRef\":\"fact_performances.Avg Rendement Cumule (%)\"},{\"queryRef\":\"fact_performances.Avg Ratio Sharpe\"},{\"queryRef\":\"fact_performances.Max Drawdown (%)\"}]},\"columnProperties\":{\"dim_portefeuilles.PortefeuilleID\":{\"roles\":{\"Rows\":{}}},\"dim_calendrier.Annee-Trimestre\":{\"roles\":{\"Rows\":{}}},\"fact_performances.Avg Rendement (%)\":{\"roles\":{\"Values\":{}}},\"fact_performances.Avg Benchmark (%)\":{\"roles\":{\"Values\":{}}},\"fact_performances.Avg Alpha (%)\":{\"roles\":{\"Values\":{}}},\"fact_performances.Avg Rendement Cumule (%)\":{\"roles\":{\"Values\":{}}},\"fact_performances.Avg Ratio Sharpe\":{\"roles\":{\"Values\":{}}},\"fact_performances.Max Drawdown (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0},{\"Name\":\"dc\",\"Entity\":\"dim_calendrier\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"PortefeuilleID\"},\"Name\":\"dim_portefeuilles.PortefeuilleID\",\"NativeReferenceName\":\"PortefeuilleID\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dc\"}},\"Property\":\"Annee-Trimestre\"},\"Name\":\"dim_calendrier.Annee-Trimestre\",\"NativeReferenceName\":\"Annee-Trimestre\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Rendement (%)\"},\"Name\":\"fact_performances.Avg Rendement (%)\",\"NativeReferenceName\":\"Avg Rendement (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Benchmark (%)\"},\"Name\":\"fact_performances.Avg Benchmark (%)\",\"NativeReferenceName\":\"Avg Benchmark (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Alpha (%)\"},\"Name\":\"fact_performances.Avg Alpha (%)\",\"NativeReferenceName\":\"Avg Alpha (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Rendement Cumule (%)\"},\"Name\":\"fact_performances.Avg Rendement Cumule (%)\",\"NativeReferenceName\":\"Avg Rendement Cumule (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Ratio Sharpe\"},\"Name\":\"fact_performances.Avg Ratio Sharpe\",\"NativeReferenceName\":\"Avg Ratio Sharpe\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Max Drawdown (%)\"},\"Name\":\"fact_performances.Max Drawdown (%)\",\"NativeReferenceName\":\"Max Drawdown (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Rendements par Portefeuille x Trimestre'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 576.0,
+          "z": 12000
+        }
+      ],
+      "width": 1280.0,
+      "ordinal": 2
+    },
+    {
+      "config": "{}",
+      "displayName": "03 - Positions & PnL",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "5762df165db4404785fc",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"CMGNa\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":96.0,\"z\":1000,\"width\":597.3,\"height\":480.0,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"barChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_instruments.Classe Actif\",\"active\":true}],\"Y\":[{\"queryRef\":\"fact_positions.Sum Valeur Marche (EUR)\"},{\"queryRef\":\"fact_positions.Sum PnL (EUR)\"}]},\"columnProperties\":{\"dim_instruments.Classe Actif\":{\"roles\":{\"Category\":{}}},\"fact_positions.Sum Valeur Marche (EUR)\":{\"roles\":{\"Y\":{}}},\"fact_positions.Sum PnL (EUR)\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Classe Actif\"},\"Name\":\"dim_instruments.Classe Actif\",\"NativeReferenceName\":\"Classe Actif\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Valeur Marche (EUR)\"},\"Name\":\"fact_positions.Sum Valeur Marche (EUR)\",\"NativeReferenceName\":\"Sum Valeur Marche (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum PnL (EUR)\"},\"Name\":\"fact_positions.Sum PnL (EUR)\",\"NativeReferenceName\":\"Sum PnL (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL et Valeur Marche par Classe d'Actif'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 480.0,
+          "width": 597.3,
+          "x": 0.0,
+          "y": 96.0,
+          "z": 1000
+        },
+        {
+          "config": "{\"name\":\"aBQmrJK\",\"layouts\":[{\"id\":0,\"position\":{\"x\":597.3,\"y\":192.0,\"z\":2000,\"width\":426.7,\"height\":384.0,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"donutChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"fact_positions.Signe PnL\",\"active\":true}],\"Y\":[{\"queryRef\":\"dim_instruments.Count InstrumentID\"}]},\"columnProperties\":{\"fact_positions.Signe PnL\":{\"roles\":{\"Category\":{}}},\"dim_instruments.Count InstrumentID\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0},{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Signe PnL\"},\"Name\":\"fact_positions.Signe PnL\",\"NativeReferenceName\":\"Signe PnL\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Count InstrumentID\"},\"Name\":\"dim_instruments.Count InstrumentID\",\"NativeReferenceName\":\"Count InstrumentID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL Positif vs Negatif'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 384.0,
+          "width": 426.7,
+          "x": 597.3,
+          "y": 192.0,
+          "z": 2000
+        },
+        {
+          "config": "{\"name\":\"Ebtz\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":0.0,\"z\":3000,\"width\":213.3,\"height\":96.0,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.Sum Valeur Marche (EUR)\"}]},\"columnProperties\":{\"fact_positions.Sum Valeur Marche (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Valeur Marche (EUR)\"},\"Name\":\"fact_positions.Sum Valeur Marche (EUR)\",\"NativeReferenceName\":\"Sum Valeur Marche (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Valeur Marche Totale (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 3000
+        },
+        {
+          "config": "{\"name\":\"GGYLGaq\",\"layouts\":[{\"id\":0,\"position\":{\"x\":640.0,\"y\":0.0,\"z\":4000,\"width\":213.3,\"height\":96.0,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.Sum PnL (EUR)\"}]},\"columnProperties\":{\"fact_positions.Sum PnL (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum PnL (EUR)\"},\"Name\":\"fact_positions.Sum PnL (EUR)\",\"NativeReferenceName\":\"Sum PnL (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL Total (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 640.0,
+          "y": 0.0,
+          "z": 4000
+        },
+        {
+          "config": "{\"name\":\"PPaQk\",\"layouts\":[{\"id\":0,\"position\":{\"x\":597.3,\"y\":96.0,\"z\":5000,\"width\":426.7,\"height\":96.0,\"tabOrder\":5000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"dim_instruments.Count InstrumentID\"}]},\"columnProperties\":{\"dim_instruments.Count InstrumentID\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Count InstrumentID\"},\"Name\":\"dim_instruments.Count InstrumentID\",\"NativeReferenceName\":\"Count InstrumentID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Instruments'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 426.7,
+          "x": 597.3,
+          "y": 96.0,
+          "z": 5000
+        },
+        {
+          "config": "{\"name\":\"PAZjYvV\",\"layouts\":[{\"id\":0,\"position\":{\"x\":853.3,\"y\":0.0,\"z\":6000,\"width\":170.7,\"height\":96.0,\"tabOrder\":6000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.Avg PnL (%)\"}]},\"columnProperties\":{\"fact_positions.Avg PnL (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg PnL (%)\"},\"Name\":\"fact_positions.Avg PnL (%)\",\"NativeReferenceName\":\"Avg PnL (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL Moyen (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 170.7,
+          "x": 853.3,
+          "y": 0.0,
+          "z": 6000
+        },
+        {
+          "config": "{\"name\":\"ApcUHQ\",\"layouts\":[{\"id\":0,\"position\":{\"x\":213.3,\"y\":0.0,\"z\":7000,\"width\":213.3,\"height\":96.0,\"tabOrder\":7000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_positions.Sum Valeur Achat (EUR)\"}]},\"columnProperties\":{\"fact_positions.Sum Valeur Achat (EUR)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Valeur Achat (EUR)\"},\"Name\":\"fact_positions.Sum Valeur Achat (EUR)\",\"NativeReferenceName\":\"Sum Valeur Achat (EUR)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Valeur Achat Totale (EUR)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 213.3,
+          "y": 0.0,
+          "z": 7000
+        },
+        {
+          "config": "{\"name\":\"mwARR\",\"layouts\":[{\"id\":0,\"position\":{\"x\":426.7,\"y\":0.0,\"z\":8000,\"width\":213.3,\"height\":96.0,\"tabOrder\":8000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_cours_historiques.Sum Volume\"}]},\"columnProperties\":{\"fact_cours_historiques.Sum Volume\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fch\",\"Entity\":\"fact_cours_historiques\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fch\"}},\"Property\":\"Sum Volume\"},\"Name\":\"fact_cours_historiques.Sum Volume\",\"NativeReferenceName\":\"Sum Volume\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Volume Total (cours)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 426.7,
+          "y": 0.0,
+          "z": 8000
+        },
+        {
+          "config": "{\"name\":\"PmDcd\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":576.0,\"z\":9000,\"width\":1024.0,\"height\":288.0,\"tabOrder\":9000}}],\"singleVisual\":{\"visualType\":\"scatterChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"dim_instruments.Classe Actif\",\"active\":true}],\"X\":[{\"queryRef\":\"fact_positions.Avg PnL (%)\"}],\"Y\":[{\"queryRef\":\"fact_positions.Sum Valeur Marche (EUR)\"}],\"Size\":[{\"queryRef\":\"fact_positions.Avg Poids Portefeuille (%)\"}]},\"columnProperties\":{\"dim_instruments.Classe Actif\":{\"roles\":{\"Category\":{}}},\"fact_positions.Avg PnL (%)\":{\"roles\":{\"X\":{}}},\"fact_positions.Sum Valeur Marche (EUR)\":{\"roles\":{\"Y\":{}}},\"fact_positions.Avg Poids Portefeuille (%)\":{\"roles\":{\"Size\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"di\",\"Entity\":\"dim_instruments\",\"Type\":0},{\"Name\":\"fp\",\"Entity\":\"fact_positions\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"di\"}},\"Property\":\"Classe Actif\"},\"Name\":\"dim_instruments.Classe Actif\",\"NativeReferenceName\":\"Classe Actif\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg PnL (%)\"},\"Name\":\"fact_positions.Avg PnL (%)\",\"NativeReferenceName\":\"Avg PnL (%)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Sum Valeur Marche (EUR)\"},\"Name\":\"fact_positions.Sum Valeur Marche (EUR)\",\"NativeReferenceName\":\"Sum Valeur Marche (EUR)\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Poids Portefeuille (%)\"},\"Name\":\"fact_positions.Avg Poids Portefeuille (%)\",\"NativeReferenceName\":\"Avg Poids Portefeuille (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'PnL(%) vs Valeur Marche par Classe d'Actif'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 576.0,
+          "z": 9000
+        }
+      ],
+      "width": 1280.0,
+      "ordinal": 3
+    },
+    {
+      "config": "{}",
+      "displayName": "04 - Risk & Alertes",
+      "displayOption": 1,
+      "filters": "[]",
+      "height": 720.0,
+      "name": "d2afddfd7fb04993abd5",
+      "visualContainers": [
+        {
+          "config": "{\"name\":\"RcAWdj\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":0.0,\"z\":1000,\"width\":213.3,\"height\":96.0,\"tabOrder\":1000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Avg Volatilite (%)\"}]},\"columnProperties\":{\"fact_performances.Avg Volatilite (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Avg Volatilite (%)\"},\"Name\":\"fact_performances.Avg Volatilite (%)\",\"NativeReferenceName\":\"Avg Volatilite (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Volatilite Moy. (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 0.0,
+          "y": 0.0,
+          "z": 1000
+        },
+        {
+          "config": "{\"name\":\"Ybtxt\",\"layouts\":[{\"id\":0,\"position\":{\"x\":213.3,\"y\":0.0,\"z\":2000,\"width\":256.0,\"height\":96.0,\"tabOrder\":2000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Ratio Sharpe Moyen\"}]},\"columnProperties\":{\"fact_performances.Ratio Sharpe Moyen\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Ratio Sharpe Moyen\"},\"Name\":\"fact_performances.Ratio Sharpe Moyen\",\"NativeReferenceName\":\"Ratio Sharpe Moyen\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Ratio Sharpe Moyen'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 256.0,
+          "x": 213.3,
+          "y": 0.0,
+          "z": 2000
+        },
+        {
+          "config": "{\"name\":\"zUjSV\",\"layouts\":[{\"id\":0,\"position\":{\"x\":469.3,\"y\":0.0,\"z\":3000,\"width\":213.3,\"height\":96.0,\"tabOrder\":3000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_performances.Max Drawdown (%)\"}]},\"columnProperties\":{\"fact_performances.Max Drawdown (%)\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"fp\",\"Entity\":\"fact_performances\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"fp\"}},\"Property\":\"Max Drawdown (%)\"},\"Name\":\"fact_performances.Max Drawdown (%)\",\"NativeReferenceName\":\"Max Drawdown (%)\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Max Drawdown (%)'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 469.3,
+          "y": 0.0,
+          "z": 3000
+        },
+        {
+          "config": "{\"name\":\"qJngZ\",\"layouts\":[{\"id\":0,\"position\":{\"x\":682.7,\"y\":0.0,\"z\":4000,\"width\":213.3,\"height\":96.0,\"tabOrder\":4000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_alertes_risque.Count AlerteID\"}]},\"columnProperties\":{\"fact_alertes_risque.Count AlerteID\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Count AlerteID\"},\"Name\":\"fact_alertes_risque.Count AlerteID\",\"NativeReferenceName\":\"Count AlerteID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Nb Alertes'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 213.3,
+          "x": 682.7,
+          "y": 0.0,
+          "z": 4000
+        },
+        {
+          "config": "{\"name\":\"juYFSv\",\"layouts\":[{\"id\":0,\"position\":{\"x\":896.0,\"y\":0.0,\"z\":5000,\"width\":128.0,\"height\":96.0,\"tabOrder\":5000}}],\"singleVisual\":{\"visualType\":\"card\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_alertes_risque.Count Critique AlerteID\"}]},\"columnProperties\":{\"fact_alertes_risque.Count Critique AlerteID\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0}],\"Select\":[{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Count Critique AlerteID\"},\"Name\":\"fact_alertes_risque.Count Critique AlerteID\",\"NativeReferenceName\":\"Count Critique AlerteID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Alertes Critiques'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 96.0,
+          "width": 128.0,
+          "x": 896.0,
+          "y": 0.0,
+          "z": 5000
+        },
+        {
+          "config": "{\"name\":\"NvaP\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":96.0,\"z\":6000,\"width\":512.0,\"height\":288.0,\"tabOrder\":6000}}],\"singleVisual\":{\"visualType\":\"barChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"fact_alertes_risque.Type Alerte\",\"active\":true},{\"queryRef\":\"fact_alertes_risque.Severite\"}],\"Y\":[{\"queryRef\":\"fact_alertes_risque.Count AlerteID\"}]},\"columnProperties\":{\"fact_alertes_risque.Type Alerte\":{\"roles\":{\"Category\":{}}},\"fact_alertes_risque.Severite\":{\"roles\":{\"Category\":{}}},\"fact_alertes_risque.Count AlerteID\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Type Alerte\"},\"Name\":\"fact_alertes_risque.Type Alerte\",\"NativeReferenceName\":\"Type Alerte\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Severite\"},\"Name\":\"fact_alertes_risque.Severite\",\"NativeReferenceName\":\"Severite\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Count AlerteID\"},\"Name\":\"fact_alertes_risque.Count AlerteID\",\"NativeReferenceName\":\"Count AlerteID\"}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 512.0,
+          "x": 0.0,
+          "y": 96.0,
+          "z": 6000
+        },
+        {
+          "config": "{\"name\":\"qKuGVa\",\"layouts\":[{\"id\":0,\"position\":{\"x\":512.0,\"y\":96.0,\"z\":7000,\"width\":512.0,\"height\":288.0,\"tabOrder\":7000}}],\"singleVisual\":{\"visualType\":\"barChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"fact_alertes_risque.Severite\",\"active\":true},{\"queryRef\":\"fact_alertes_risque.Statut Alerte\"}],\"Y\":[{\"queryRef\":\"fact_alertes_risque.Count AlerteID\"}]},\"columnProperties\":{\"fact_alertes_risque.Severite\":{\"roles\":{\"Category\":{}}},\"fact_alertes_risque.Statut Alerte\":{\"roles\":{\"Category\":{}}},\"fact_alertes_risque.Count AlerteID\":{\"roles\":{\"Y\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Severite\"},\"Name\":\"fact_alertes_risque.Severite\",\"NativeReferenceName\":\"Severite\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Statut Alerte\"},\"Name\":\"fact_alertes_risque.Statut Alerte\",\"NativeReferenceName\":\"Statut Alerte\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Count AlerteID\"},\"Name\":\"fact_alertes_risque.Count AlerteID\",\"NativeReferenceName\":\"Count AlerteID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Alertes par sévèrité et statuts'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 512.0,
+          "x": 512.0,
+          "y": 96.0,
+          "z": 7000
+        },
+        {
+          "config": "{\"name\":\"dYKmvn\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":384.0,\"z\":8000,\"width\":1024.0,\"height\":192.0,\"tabOrder\":8000}}],\"singleVisual\":{\"visualType\":\"scatterChart\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Category\":[{\"queryRef\":\"fact_alertes_risque.Severite\",\"active\":true}],\"X\":[{\"queryRef\":\"fact_alertes_risque.Count AlerteID\"}]},\"columnProperties\":{\"fact_alertes_risque.Severite\":{\"roles\":{\"Category\":{}}},\"fact_alertes_risque.Count AlerteID\":{\"roles\":{\"X\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Severite\"},\"Name\":\"fact_alertes_risque.Severite\",\"NativeReferenceName\":\"Severite\"},{\"Measure\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Count AlerteID\"},\"Name\":\"fact_alertes_risque.Count AlerteID\",\"NativeReferenceName\":\"Count AlerteID\"}]},\"vcObjects\":{\"title\":[{\"properties\":{\"text\":{\"expr\":{\"Literal\":{\"Value\":\"'Distribution des alertes'\"}}},\"show\":{\"expr\":{\"Literal\":{\"Value\":\"'True'\"}}}}}]}}}",
+          "filters": "[]",
+          "height": 192.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 384.0,
+          "z": 8000
+        },
+        {
+          "config": "{\"name\":\"nfdakc\",\"layouts\":[{\"id\":0,\"position\":{\"x\":0.0,\"y\":576.0,\"z\":9000,\"width\":1024.0,\"height\":288.0,\"tabOrder\":9000}}],\"singleVisual\":{\"visualType\":\"tableEx\",\"drillFilterOtherVisuals\":true,\"objects\":{},\"projections\":{\"Values\":[{\"queryRef\":\"fact_alertes_risque.PortefeuilleID\",\"active\":true},{\"queryRef\":\"dim_portefeuilles.Type Portefeuille\"},{\"queryRef\":\"fact_alertes_risque.Type Alerte\"}]},\"columnProperties\":{\"fact_alertes_risque.PortefeuilleID\":{\"roles\":{\"Values\":{}}},\"dim_portefeuilles.Type Portefeuille\":{\"roles\":{\"Values\":{}}},\"fact_alertes_risque.Type Alerte\":{\"roles\":{\"Values\":{}}}},\"prototypeQuery\":{\"Version\":2,\"From\":[{\"Name\":\"far\",\"Entity\":\"fact_alertes_risque\",\"Type\":0},{\"Name\":\"dp\",\"Entity\":\"dim_portefeuilles\",\"Type\":0}],\"Select\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"PortefeuilleID\"},\"Name\":\"fact_alertes_risque.PortefeuilleID\",\"NativeReferenceName\":\"PortefeuilleID\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"dp\"}},\"Property\":\"Type Portefeuille\"},\"Name\":\"dim_portefeuilles.Type Portefeuille\",\"NativeReferenceName\":\"Type Portefeuille\"},{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"far\"}},\"Property\":\"Type Alerte\"},\"Name\":\"fact_alertes_risque.Type Alerte\",\"NativeReferenceName\":\"Type Alerte\"}]}}}",
+          "filters": "[]",
+          "height": 288.0,
+          "width": 1024.0,
+          "x": 0.0,
+          "y": 576.0,
+          "z": 9000
+        }
+      ],
+      "width": 1280.0,
+      "ordinal": 4
+    }
+  ]
+}

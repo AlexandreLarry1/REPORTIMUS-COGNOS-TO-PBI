@@ -7,156 +7,179 @@ REPORTIMUS-QLIK-TO-POWERBI/
 │
 ├── examples/
 │   └── <example-name>/
-│       ├── input/                 # CSVs source (QVD exportés)
+│       ├── input/                    # CSVs source (exported from Qlik/QVD)
 │       ├── intermediate/
-│       │   ├── extraction.json    # Script Qlik + variables (jalon 1)
-│       │   ├── schema_prompt.txt  # Prompt LLM2 (schéma)
-│       │   ├── schema_response.json  # Réponse LLM2 (relations + types)
+│       │   ├── extraction.json       # Qlik script + variables (step 0 output)
+│       │   ├── visual_extraction.json
+│       │   ├── visual_response.json
 │       │   └── sql/
-│       │       ├── prompt.txt        # Prompt LLM1 (SQL)
-│       │       ├── generated.sql     # SQL DuckDB produit par LLM1
-│       │       └── etl_context.json  # Tables + colonnes post-ETL
-│       └── pbip/                  # Artefacts Power BI générés
+│       │       ├── prompt.txt        # LLM1 prompt (SQL generation)
+│       │       ├── generated.sql     # SQL DuckDB produced by LLM1
+│       │       └── etl_context.json  # Tables + columns post-ETL
+│       └── pbip/                     # Generated Power BI artifacts
 │           ├── MigrationQlikPBI.SemanticModel/model.bim
 │           └── MigrationQlikPBI.Report/report.json
 │
 ├── src/
+│   ├── extract/
+│   │   ├── Extract_Data.py           # Step 0a: extract CSVs from Qlik via websocket
+│   │   └── Extract_QLik_Elements.py  # Step 0b: extract script + variables → extraction.json
 │   ├── pipeline/
-│   │   └── run_pipeline.py        # Orchestrateur ETL (LLM1 SQL + LLM2 schéma)
+│   │   └── run_pipeline.py           # Orchestrator: LLM1 (SQL) + LLM2 (schema)
 │   └── pbip/
-│       ├── schema_builder.py      # LLM2 : inférence relations + types
-│       ├── pbip_builder.py        # Génère model.bim depuis CSVs + schema
-│       └── visual_translator.py   # LLM3 : mesures DAX + report.json
+│       ├── schema_builder.py         # LLM2: infer relations + types
+│       ├── pbip_builder.py           # Generate model.bim from CSVs + schema
+│       └── visual_translator.py      # LLM3: DAX measures + report.json
 │
 ├── requirements.txt
-├── .env                           # EXAMPLE_NAME, Azure OpenAI keys (gitignored)
+├── .env                              # gitignored — copy from .env.example
 └── .env.example
 ```
 
 ---
 
-## Pipeline complète (version schéma)
+## Getting started
 
-3 LLM calls dans l'ordre : **SQL → Schéma → Visuels**
+### 1. Setup
 
-### Étape 1 — ETL + inférence schéma
-
-```bash
-# Mode api (entièrement automatique — LLM1 SQL + LLM2 schéma)
-python -m pipeline.run_pipeline --mode api
-
-# Mode paste (manuel — coller les réponses LLM dans les fichiers intermédiaires)
-python -m pipeline.run_pipeline --mode paste
-
-# Mode skip-llm (relance ETL uniquement, schema_response.json existant réutilisé)
-python -m pipeline.run_pipeline --mode skip-llm
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-Sorties : `intermediate/sql/etl_context.json`, `intermediate/schema_response.json`, CSVs dans `input/`
+Copy `.env.example` to `.env` and fill in your Azure OpenAI credentials:
 
-### Étape 2 — Génération du modèle BIM
+```
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
+AZURE_OPENAI_API_VERSION=2025-01-01-preview
+```
 
-```bash
+---
+
+### Option A — Mock data (no Qlik required)
+
+The `examples/edr-demo` folder contains preloaded mock data and `extraction.json`.
+
+```
+EXAMPLE_NAME=edr-demo
+```
+
+Then jump directly to step 2 below.
+
+---
+
+### Option B — Real Qlik data
+
+Requires Qlik Sense Desktop running locally with your `.qvf` loaded.
+
+```
+EXAMPLE_NAME=<your-example-name>
+QLIK_WS_URL=ws://localhost:4848/app/
+QLIK_QVF_NAME=YourApp.qvf
+```
+
+**Step 0 — Extract from Qlik**
+
+```powershell
+cd src
+python extract/Extract_Data.py          # exports CSVs to examples/<name>/input/
+python extract/Extract_QLik_Elements.py # generates examples/<name>/intermediate/extraction.json
+```
+
+Then continue with step 1 below.
+
+---
+
+### Step 1 — ETL + schema inference (LLM1 + LLM2)
+
+```powershell
+cd src
+
+# Auto mode (Azure OpenAI generates SQL automatically)
+python pipeline/run_pipeline.py --mode api
+
+# Manual mode (paste LLM response yourself into generated.sql)
+python pipeline/run_pipeline.py --mode paste
+
+# Skip LLM (re-run ETL with existing generated.sql)
+python pipeline/run_pipeline.py --mode skip-llm
+```
+
+Outputs: `intermediate/sql/etl_context.json`, `intermediate/schema_response.json`, CSVs in `intermediate/final/`
+
+### Step 2 — Generate semantic model (BIM)
+
+```powershell
 python src/pbip/pbip_builder.py
 ```
 
-Lit `schema_response.json` si présent (relations LLM) ou bascule sur heuristiques.
-Sortie : `pbip/MigrationQlikPBI.SemanticModel/model.bim`
+Output: `pbip/MigrationQlikPBI.SemanticModel/model.bim`
 
-### Étape 3 — Traduction des visuels
+### Step 3 — Translate visuals (LLM3)
 
-```bash
-# Mode api (entièrement automatique — LLM3 mesures DAX + patches report.json)
+```powershell
+# Auto mode
 python src/pbip/visual_translator.py --mode api
 
-# Mode paste (coller la réponse JSON dans intermediate/visual_response.json)
+# Manual mode (paste response into intermediate/visual_response.json)
 python src/pbip/visual_translator.py --mode paste
 
-# Mode apply (réappliquer visual_response.json existant sans rappeler le LLM)
+# Re-apply existing visual_response.json without LLM call
 python src/pbip/visual_translator.py --mode apply
 ```
 
-Sortie : `pbip/MigrationQlikPBI.Report/report.json` + mesures/calc cols dans `model.bim`
-
-### Relancer une étape isolée
-
-```bash
-# Regénérer uniquement le BIM (sans retoucher le SQL ni le schéma)
-python src/pbip/pbip_builder.py
-
-# Regénérer uniquement les visuels (sans retoucher le BIM)
-python src/pbip/visual_translator.py --mode skip-llm
-```
-
-### Config `.env`
-
-```
-EXAMPLE_NAME=edr-demo-schema
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_ENDPOINT=...
-AZURE_OPENAI_API_VERSION=2024-12-01-preview
-AZURE_OPENAI_DEPLOYMENT=gpt-4.1
-```
+Output: `pbip/MigrationQlikPBI.Report/report.json` + DAX measures in `model.bim`
 
 ---
 
-## Prompt builder
+## Optional: LLM observability (Langfuse)
 
-Le prompt LLM1 (SQL) est construit dynamiquement :
+Add to `.env`:
 
-| Composant | Source |
-|---|---|
-| Tables disponibles + colonnes | scan de `input/*.csv` |
-| Variables résolues | `extraction.json` → champ `variables` |
-| Script Qlik | `extraction.json` → champ `script` |
-| Règles de traduction | template fixe dans `run_pipeline.py` |
+```
+LANGFUSE_ENABLED=true
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+Install: `pip install langfuse`
 
 ---
 
-## Bugs corrigés
+## Bug fixes reference
 
-### `generated.sql` — `AnneeMois` : mois `00` au lieu du mois réel
+### `generated.sql` — `AnneeMois` : month `00` instead of real month
 
-**Symptôme** : colonne `AnneeMois` produisait `2023-00`, `2024-00`, etc. (~70 % des lignes).
+**Cause**: `SUBSTR(LPAD(...), -2)` — negative index returns empty in DuckDB.
 
-**Cause** : `SUBSTR(LPAD(CAST(PERIO AS VARCHAR), 2, '0'), -2)` — index négatif retourne vide en DuckDB.
-
-**Fix** :
+**Fix**:
 ```sql
--- Avant
+-- Before
 GJAHR || '-' || SUBSTR(LPAD(CAST(PERIO AS VARCHAR), 2, '0'), -2) AS AnneeMois
--- Après
+-- After
 GJAHR || '-' || LPAD(CAST(CAST(PERIO AS INTEGER) AS VARCHAR), 2, '0') AS AnneeMois
 ```
 
-> Ce bug est aussi corrigé dans le template SYSTEM du `prompt_builder.py` :
-> `right(str, n) → RIGHT(str, n)` (et non `SUBSTR(str, -n)`).
+### `sql_runner.py` — 3 CSV format gaps vs Qlik ground truth
 
-### `sql_runner.py` — 3 écarts de format sur l'export CSV (vs GT Qlik)
+Fixed in `_postprocess()` applied to each final exported table.
 
-Corrigés dans `_postprocess()` appliqué à chaque table finale exportée.
+#### 1. `Date comptable`: Excel serial → ISO date
 
-#### 1. `Date comptable` : serial Excel → date ISO
+**Cause**: `BUDAT` stored as Excel serial (days since 30/12/1899).
 
-**Symptôme** : `45746` au lieu de `2025-03-30`.
+**Fix**: `pd.to_datetime(numeric[mask], unit="D", origin=pd.Timestamp("1899-12-30")).dt.strftime("%Y-%m-%d")`
 
-**Cause** : `BUDAT` stocké comme serial Excel (jours depuis 30/12/1899).
+#### 2. Integer columns stored as float (`1.0` → `1`)
 
-**Fix** :
-```python
-pd.to_datetime(numeric[mask], unit="D", origin=pd.Timestamp("1899-12-30")).dt.strftime("%Y-%m-%d")
-```
+**Cause**: DuckDB returns float64 when columns contain NULLs.
 
-#### 2. Colonnes entières stockées en float (`1.0` → `1`)
+**Fix**: auto-detect float columns where all non-null values are integers → cast to int string.
 
-**Symptôme** : `Est un Ordre Interne`, `Numéro de commande` exportés avec `.0`.
+#### 3. Null values: `NaN` → `'-'`
 
-**Cause** : DuckDB retourne ces colonnes en `float64` dès qu'elles contiennent des NULL.
-
-**Fix** : détection automatique des colonnes float dont toutes les valeurs non-nulles sont entières → cast en `int` string.
-
-#### 3. Valeurs nulles : `NaN` → `'-'`
-
-**Symptôme** : colonnes optionnelles vides, le GT Qlik utilise `'-'`.
-
-**Fix** : `df.astype(object).fillna("-")`.
+**Fix**: `df.astype(object).fillna("-")`
