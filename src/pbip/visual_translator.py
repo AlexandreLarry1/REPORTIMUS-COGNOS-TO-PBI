@@ -59,11 +59,53 @@ def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", s.lower())
 
 
+def _fix_concatenate(expression: str) -> str:
+    """Rewrite CONCATENATE(a, b, c, ...) with 3+ args to a & b & c & ... (DAX limit = 2 args)."""
+    pattern = re.compile(r'\bCONCATENATE\s*\(', re.IGNORECASE)
+    result = []
+    i = 0
+    while i < len(expression):
+        m = pattern.search(expression, i)
+        if not m:
+            result.append(expression[i:])
+            break
+        result.append(expression[i:m.start()])
+        # Extract top-level arguments by tracking parenthesis depth
+        depth = 1
+        j = m.end()
+        args: list[str] = []
+        cur: list[str] = []
+        while j < len(expression) and depth > 0:
+            ch = expression[j]
+            if ch == '(':
+                depth += 1
+                cur.append(ch)
+            elif ch == ')':
+                depth -= 1
+                if depth == 0:
+                    args.append(''.join(cur).strip())
+                else:
+                    cur.append(ch)
+            elif ch == ',' and depth == 1:
+                args.append(''.join(cur).strip())
+                cur = []
+            else:
+                cur.append(ch)
+            j += 1
+        if len(args) > 2:
+            result.append(' & '.join(args))
+        else:
+            result.append(f"CONCATENATE({', '.join(args)})")
+        i = j
+    return ''.join(result)
+
+
 def _fix_dax_refs(expression: str, bim_idx: dict) -> tuple[str, list[str]]:
     """Auto-correct Table[Column] references in a DAX expression against bim_idx.
 
     Returns (fixed_expression, list_of_substitutions_made).
     """
+    expression = _fix_concatenate(expression)
     fixes: list[str] = []
 
     def _resolve_table(raw: str) -> tuple[str, dict[str, str]] | None:
@@ -212,6 +254,11 @@ _SYSTEM = (
     "  puis measures: {expression: 'AVERAGE(dim_clients[Anciennete (ans)])'}\n"
     "- Si une dimension Qlik est une expression calculee, ajoute-la dans calculated_columns.\n"
     "  Ne la mets pas dans dimensions si elle n'existe pas comme colonne physique.\n"
+    "- N'utilise JAMAIS CONCATENATE() avec plus de 2 arguments — DAX l'interdit.\n"
+    "  Utilise l'operateur & a la place : [Prenom] & \" \" & [Nom].\n"
+    "- Ne cree JAMAIS une mesure avec le meme nom qu'une colonne calculee de la meme table.\n"
+    "  Si le concept est deja dans calculated_columns, reference la colonne directement dans visuals\n"
+    "  (via dimensions[]) plutot que de creer une mesure redondante.\n"
     "- Chaque objet Qlik (y compris les enfants de containers) doit avoir une entree dans visuals.\n"
     "- Les noms de mesures dans visuals[].measures doivent matcher measures[].name exactement.\n"
     "- Pour filterpane/listbox : renseigne slicer_field, laisse dimensions et measures vides.\n"
@@ -433,6 +480,18 @@ def apply_translation(response: dict, paths: dict) -> None:
     # build {table_lower: actual_table_name}
     tbl_name_map = {k: v[0] for k, v in bim_idx.items()}
 
+    # Pre-index LLM calc col names per table (absent from BIM when measures loop runs).
+    llm_calc_col_names: dict[str, set[str]] = {}
+    for cc in response.get("calculated_columns", []):
+        tbl = tbl_name_map.get(cc.get("table", "").lower(), cc.get("table", ""))
+        llm_calc_col_names.setdefault(tbl, set()).add(cc["name"].lower())
+
+    # Pre-index LLM measure names per table so calc col loop can skip redundant fact aliases.
+    llm_measure_names: dict[str, set[str]] = {}
+    for m in all_measures:
+        tbl = tbl_name_map.get(m.get("table", "").lower(), m.get("table", ""))
+        llm_measure_names.setdefault(tbl, set()).add(m["name"].lower())
+
     rename: dict[str, str] = {}
     added = 0
     skipped = 0
@@ -455,11 +514,17 @@ def apply_translation(response: dict, paths: dict) -> None:
         m["expression"] = fixed_expr
         for t in bim["model"]["tables"]:
             if t["name"] == actual_tbl:
-                col_names_lower = {c["name"].lower() for c in t.get("columns", [])}
+                col_names_lower = (
+                    {c["name"].lower() for c in t.get("columns", [])}
+                    | llm_calc_col_names.get(actual_tbl, set())
+                )
                 meas_name = m["name"]
-                if meas_name.lower() in col_names_lower:
-                    meas_name = meas_name + " M"
-                    rename[m["name"]] = meas_name
+                # On dim tables: calc col takes priority (display column), skip measure.
+                # On fact tables: measure takes priority (aggregation), calc col will be skipped later.
+                if meas_name.lower() in col_names_lower and actual_tbl.startswith("dim_"):
+                    print(f"  [SKIP-MEASURE] '{meas_name}' (dim) — calc col prioritaire, mesure ignoree")
+                    skipped += 1
+                    break
                 existing_map = {x["name"]: x for x in t.get("measures", [])}
                 if meas_name in existing_map:
                     # update only if the fixed expression resolves all Table[Col] refs
@@ -494,6 +559,10 @@ def apply_translation(response: dict, paths: dict) -> None:
         actual_tbl = tbl_name_map.get(req_tbl.lower())
         if not actual_tbl:
             print(f"  [WARN] calc_col table '{req_tbl}' introuvable")
+            continue
+        # On fact tables: if a measure with same name exists, skip the calc col (raw alias, redundant).
+        if actual_tbl.startswith("fact_") and cc["name"].lower() in llm_measure_names.get(actual_tbl, set()):
+            print(f"  [SKIP-CALC-COL] '{cc['name']}' (fact) — mesure prioritaire, calc col ignoree")
             continue
         expr, dax_fixes = _fix_dax_refs(cc.get("expression", "\"\""), bim_idx)
         if dax_fixes:

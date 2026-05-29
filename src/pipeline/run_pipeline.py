@@ -77,6 +77,7 @@ def main() -> None:
 
     from pipeline.prompt_builder import build as build_prompt
     from pipeline.sql_runner import run as run_sql
+    from pbip.schema_builder import build as build_schema
 
     with obs.trace("pipeline_run", example=example, mode=args.mode) as trace:
         if args.mode == "skip-llm":
@@ -99,6 +100,12 @@ def main() -> None:
         sql_sp = trace.span(name="sql_execution")
         run_sql(example=example, debug=args.debug)
         sql_sp.end()
+
+        if args.mode in ("paste", "api"):
+            print("\n=== Schéma sémantique ===")
+            schema_sp = trace.span(name="schema_build")
+            build_schema(example=example, mode=args.mode, trace=schema_sp)
+            schema_sp.end()
 
 
 if __name__ == "__main__":

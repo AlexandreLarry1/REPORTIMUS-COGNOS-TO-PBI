@@ -149,10 +149,14 @@ def _m_expression(csv_path: pathlib.Path, n_cols: int, col_types: dict[str, str]
 
 _NUMERIC_SUMMARIZE = {"int64": "sum", "double": "sum"}
 
-def _bim_column(name: str, data_type: str = "string") -> dict:
+def _clean_col_name(h: str) -> str:
+    """Strip TABLE. prefix (SAP/Qlik convention) so DAX names don't contain dots."""
+    return h.split(".", 1)[1] if "." in h else h
+
+def _bim_column(name: str, data_type: str = "string", source_col: str | None = None) -> dict:
     summarize = _NUMERIC_SUMMARIZE.get(data_type, "none")
     col: dict = {"name": name, "lineageTag": _uid(), "dataType": data_type,
-                 "sourceColumn": name, "summarizeBy": summarize}
+                 "sourceColumn": source_col or name, "summarizeBy": summarize}
     if data_type == "dateTime":
         col["formatString"] = "General Date"
     return col
@@ -162,7 +166,7 @@ def _bim_table(csv_path: pathlib.Path) -> dict | None:
     if not headers:
         return None
     types = _infer_col_types(csv_path)
-    cols  = [_bim_column(h, types.get(h, "string")) for h in headers]
+    cols  = [_bim_column(_clean_col_name(h), types.get(h, "string"), source_col=h) for h in headers]
     type_summary = {}
     for c in cols:
         type_summary.setdefault(c["dataType"], 0)
@@ -219,6 +223,59 @@ def _reachable(from_tbl: str, rels: list) -> set[str]:
                     visited.add(neighbor)
                     queue.append(neighbor)
     return visited
+
+
+def _deactivate_ambiguous_paths(relationships: list) -> None:
+    """Deactivate fact↔dim relations that create ambiguous filter paths in Power BI.
+
+    An indirect path exists when another dim, reachable from dim_X via dim→dim bridges,
+    also connects directly to fact_Y. Works regardless of fact↔dim direction in BIM.
+    """
+    def _canonical_score(rel: dict) -> int:
+        if rel["fromTable"].startswith("dim_"):
+            fk_col, dim_tbl = rel["toColumn"], rel["fromTable"]
+        else:
+            fk_col, dim_tbl = rel["fromColumn"], rel["toTable"]
+        col_base  = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', fk_col).lower().replace("_", "")
+        to_entity = dim_tbl.removeprefix("dim_").lower().replace("_", "").rstrip("s")
+        return sum(1 for a, b in zip(col_base, to_entity) if a == b)
+
+    def _dim_reachable(start: str, rels: list) -> set:
+        """BFS over dim→dim bridges only (undirected)."""
+        visited = {start}
+        queue   = [start]
+        while queue:
+            cur = queue.pop()
+            for r in rels:
+                if not r.get("isActive", True):
+                    continue
+                if not (r["fromTable"].startswith("dim_") and r["toTable"].startswith("dim_")):
+                    continue
+                nbr = r["toTable"] if r["fromTable"] == cur else (r["fromTable"] if r["toTable"] == cur else None)
+                if nbr and nbr not in visited:
+                    visited.add(nbr)
+                    queue.append(nbr)
+        return visited
+
+    fact_dim = [
+        r for r in relationships
+        if (r["fromTable"].startswith("fact_") and r["toTable"].startswith("dim_"))
+        or (r["fromTable"].startswith("dim_")  and r["toTable"].startswith("fact_"))
+    ]
+    # Ascending score: try deactivating least canonical first so the direct link survives.
+    for rel in sorted(fact_dim, key=_canonical_score):
+        dim_tbl  = rel["fromTable"] if rel["fromTable"].startswith("dim_") else rel["toTable"]
+        fact_tbl = rel["toTable"]   if rel["fromTable"].startswith("dim_") else rel["fromTable"]
+        others   = [r for r in relationships if r is not rel and r.get("isActive", True)]
+        reachable_dims = _dim_reachable(dim_tbl, others)
+        indirect = any(
+            r for r in others
+            if (r["fromTable"] in reachable_dims and r["toTable"] == fact_tbl)
+            or (r["toTable"] in reachable_dims   and r["fromTable"] == fact_tbl)
+        )
+        if indirect:
+            rel["isActive"] = False
+            print(f"  ~ deactivated (indirect path): {dim_tbl}[via {rel['fromColumn']}] ->{fact_tbl}")
 
 
 def _infer_relationships(tables: list) -> list:
@@ -290,33 +347,7 @@ def _infer_relationships(tables: list) -> list:
     for rel in relationships:
         print(f"  ~ relation: {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}[{rel['toColumn']}]")
 
-    # Post-pass: deactivate fact→dim_X when fromTable is reachable from toTable via
-    # directed filter propagation (toTable filters fromTable through other active rels).
-    # Process most-canonical-match first so the "direct PK" link is deactivated before
-    # the "bridge dim" link, ensuring the bridge is kept active.
-    def _canonical_score(rel: dict) -> int:
-        col_base = _re_rel.sub(r'(?i)(ID|Key|Ref|Code)$', '', rel.get("fromColumn", "")).lower().replace("_", "")
-        to_entity = rel["toTable"].removeprefix("dim_").lower().replace("_", "").rstrip("s")
-        return sum(1 for a, b in zip(col_base, to_entity) if a == b)
-
-    def _directed_reachable(from_tbl: str, rels: list) -> set:
-        """Tables reachable from from_tbl following filter direction (toTable→fromTable)."""
-        visited = {from_tbl}
-        queue = [from_tbl]
-        while queue:
-            cur = queue.pop()
-            for r in rels:
-                if r.get("isActive", True) and r["toTable"] == cur and r["fromTable"] not in visited:
-                    visited.add(r["fromTable"])
-                    queue.append(r["fromTable"])
-        return visited
-
-    fact_dim = [r for r in relationships if r["fromTable"].startswith("fact_") and r["toTable"].startswith("dim_")]
-    for rel in sorted(fact_dim, key=_canonical_score, reverse=True):
-        others = [r for r in relationships if r is not rel and r.get("isActive", True)]
-        if rel["fromTable"] in _directed_reachable(rel["toTable"], others):
-            rel["isActive"] = False
-            print(f"  ~ deactivated (indirect path): {rel['fromTable']}[{rel['fromColumn']}] ->{rel['toTable']}")
+    _deactivate_ambiguous_paths(relationships)
 
     # Calendar pass: link each fact table's first dateTime column to the calendar dim.
     cal_tbl = next(
@@ -398,16 +429,97 @@ def _infer_relationships(tables: list) -> list:
     return relationships
 
 
+def _apply_col_overrides(
+    tables: list,
+    csv_path_map: dict[str, pathlib.Path],
+    overrides: list,
+) -> None:
+    """Patch dataType + summarizeBy on BIM columns and rebuild M expression."""
+    by_table: dict[str, list] = {}
+    for ov in overrides:
+        by_table.setdefault(ov["table"], []).append(ov)
+
+    for tbl in tables:
+        tbl_overrides = by_table.get(tbl["name"])
+        if not tbl_overrides:
+            continue
+        col_map = {c["name"]: c for c in tbl["columns"]}
+        for ov in tbl_overrides:
+            col = col_map.get(ov["column"])
+            if col is None:
+                print(f"  [schema] override ignoré : colonne inconnue {tbl['name']}[{ov['column']}]")
+                continue
+            old = col["dataType"]
+            col["dataType"]    = ov["dataType"]
+            col["summarizeBy"] = _NUMERIC_SUMMARIZE.get(ov["dataType"], "none")
+            print(f"  [schema] {tbl['name']}[{ov['column']}] {old} -> {ov['dataType']}")
+
+        # Rebuild M expression so TransformColumnTypes reflects patched types.
+        csv_path = csv_path_map.get(tbl["name"])
+        if csv_path:
+            col_types = {c["name"]: c["dataType"] for c in tbl["columns"]}
+            tbl["partitions"][0]["source"]["expression"] = _m_expression(
+                csv_path, len(tbl["columns"]), col_types
+            )
+
+
+def _relationships_from_schema(rels: list, tables: list) -> list:
+    """Convert LLM relationship dicts to BIM format, dropping any with unknown columns."""
+    col_index: dict[str, set[str]] = {
+        t["name"]: {c["name"] for c in t.get("columns", [])} for t in tables
+    }
+    result = []
+    for r in rels:
+        ft, fc, tt, tc = r["fromTable"], r["fromColumn"], r["toTable"], r["toColumn"]
+        if ft not in col_index:
+            print(f"  ~ [LLM] ignoré (table inconnue): {ft}")
+            continue
+        if tt not in col_index:
+            print(f"  ~ [LLM] ignoré (table inconnue): {tt}")
+            continue
+        if fc not in col_index[ft]:
+            print(f"  ~ [LLM] ignoré (colonne inconnue): {ft}[{fc}]")
+            continue
+        if tc not in col_index[tt]:
+            print(f"  ~ [LLM] ignoré (colonne inconnue): {tt}[{tc}]")
+            continue
+        # BIM many-to-one: fromTable=many(fact), toTable=one(dim).
+        # Flip if LLM output is dim→fact so the dim stays on the "one" side.
+        if ft.startswith("dim_") and tt.startswith("fact_"):
+            ft, fc, tt, tc = tt, tc, ft, fc
+        result.append({
+            "name": f"{ft}_{tt}_{fc}",
+            "fromTable": ft, "fromColumn": fc,
+            "toTable": tt,  "toColumn": tc,
+        })
+        print(f"  ~ [LLM] {ft}[{fc}] -> {tt}[{tc}]")
+    return result
+
+
 def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[str]:
     sm_dir  = out_root / f"{REPORT_NAME}.SemanticModel"
     tables  = []
+    csv_path_map: dict[str, pathlib.Path] = {}
     for csv_path in sorted(csv_dir.glob("*.csv")):
         t = _bim_table(csv_path)
         if t:
             tables.append(t)
+            csv_path_map[t["name"]] = csv_path
             print(f"  + table '{t['name']}' ({len(t['columns'])} cols) <- {csv_path.name}")
 
-    relationships = _infer_relationships(tables)
+    # Load LLM schema if present (schema_builder.py output).
+    schema_path = csv_dir.parent / "intermediate" / "schema_response.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8")) if schema_path.exists() else None
+
+    if schema:
+        print("  [schema] schema_response.json trouve -> application des overrides")
+        _apply_col_overrides(tables, csv_path_map, schema.get("column_types_overrides", []))
+        relationships = _relationships_from_schema(schema.get("relationships", []), tables)
+        _deactivate_ambiguous_paths(relationships)
+        print(f"  [schema] {len(relationships)} relations LLM")
+    else:
+        relationships = _infer_relationships(tables)
+
     bim = {
         "name": "SemanticModel",
         "compatibilityLevel": 1550,

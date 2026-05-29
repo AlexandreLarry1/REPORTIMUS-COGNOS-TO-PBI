@@ -5,89 +5,111 @@
 ```
 REPORTIMUS-QLIK-TO-POWERBI/
 │
-├── Extract_elements_Qlik/
-│   └── Extract_QLik_Elements.py   # WebSocket Qlik → extraction.json
+├── examples/
+│   └── <example-name>/
+│       ├── input/                 # CSVs source (QVD exportés)
+│       ├── intermediate/
+│       │   ├── extraction.json    # Script Qlik + variables (jalon 1)
+│       │   ├── schema_prompt.txt  # Prompt LLM2 (schéma)
+│       │   ├── schema_response.json  # Réponse LLM2 (relations + types)
+│       │   └── sql/
+│       │       ├── prompt.txt        # Prompt LLM1 (SQL)
+│       │       ├── generated.sql     # SQL DuckDB produit par LLM1
+│       │       └── etl_context.json  # Tables + colonnes post-ETL
+│       └── pbip/                  # Artefacts Power BI générés
+│           ├── MigrationQlikPBI.SemanticModel/model.bim
+│           └── MigrationQlikPBI.Report/report.json
 │
-├── inputs/                        # CSV SAP (gitignorés, volumineuse)
-│   ├── COOI.csv                   # Engagements
-│   ├── EKKN.csv                   # Imputations commandes
-│   ├── FMIOI.csv                  # Données FM
-│   └── PRPS.csv                   # OTP / projets
-│
-├── extraction/
-│   └── extraction.json            # Script Qlik + variables (sortie jalon 1)
-│
-├── sql/
-│   ├── prompt.txt                 # Prompt LLM généré dynamiquement (gitignored)
-│   └── generated.sql              # SQL DuckDB produit par le LLM (gitignored)
-│
-├── output/
-│   ├── final/                     # Tables finales exportées en CSV
-│   └── debug/                     # Tables intermédiaires (optionnel, --debug)
-│
-├── pipeline/
-│   ├── prompt_builder.py          # Génère le prompt depuis inputs/ + extraction.json
-│   ├── sql_runner.py              # Exécute generated.sql + postprocess + export
-│   └── run_pipeline.py            # Orchestrateur CLI
+├── src/
+│   ├── pipeline/
+│   │   └── run_pipeline.py        # Orchestrateur ETL (LLM1 SQL + LLM2 schéma)
+│   └── pbip/
+│       ├── schema_builder.py      # LLM2 : inférence relations + types
+│       ├── pbip_builder.py        # Génère model.bim depuis CSVs + schema
+│       └── visual_translator.py   # LLM3 : mesures DAX + report.json
 │
 ├── requirements.txt
-├── .env                           # ANTHROPIC_API_KEY, QLIK_WS_URL (gitignored)
+├── .env                           # EXAMPLE_NAME, Azure OpenAI keys (gitignored)
 └── .env.example
 ```
 
 ---
 
-## Pipeline complète
+## Pipeline complète (version schéma)
 
-### Jalon 1 — Extraire le script Qlik
+3 LLM calls dans l'ordre : **SQL → Schéma → Visuels**
 
-Prérequis : Qlik Desktop ouvert avec l'app chargée.
-
-```bash
-python Extract_elements_Qlik/Extract_QLik_Elements.py
-# → extraction/extraction.json
-```
-
-### Jalon 2 — Générer et exécuter le SQL
-
-#### Mode `paste` (sans API, par défaut)
+### Étape 1 — ETL + inférence schéma
 
 ```bash
-python -m pipeline.run_pipeline --mode paste
-# 1. Génère sql/prompt.txt automatiquement
-# 2. Attend que vous colliez la réponse du LLM dans sql/generated.sql
-# 3. Exécute et exporte vers output/final/
-```
-
-#### Mode `api` (entièrement automatique)
-
-```bash
-# Ajouter ANTHROPIC_API_KEY dans .env
+# Mode api (entièrement automatique — LLM1 SQL + LLM2 schéma)
 python -m pipeline.run_pipeline --mode api
-# Génère le prompt → appelle Claude API → exécute → exporte
+
+# Mode paste (manuel — coller les réponses LLM dans les fichiers intermédiaires)
+python -m pipeline.run_pipeline --mode paste
+
+# Mode skip-llm (relance ETL uniquement, schema_response.json existant réutilisé)
+python -m pipeline.run_pipeline --mode skip-llm
 ```
 
-#### Mode `skip-llm` (relance uniquement le runner)
+Sorties : `intermediate/sql/etl_context.json`, `intermediate/schema_response.json`, CSVs dans `input/`
+
+### Étape 2 — Génération du modèle BIM
 
 ```bash
-python -m pipeline.run_pipeline --mode skip-llm
-python -m pipeline.run_pipeline --mode skip-llm --debug  # inclut tables intermédiaires
+python src/pbip/pbip_builder.py
+```
+
+Lit `schema_response.json` si présent (relations LLM) ou bascule sur heuristiques.
+Sortie : `pbip/MigrationQlikPBI.SemanticModel/model.bim`
+
+### Étape 3 — Traduction des visuels
+
+```bash
+# Mode api (entièrement automatique — LLM3 mesures DAX + patches report.json)
+python src/pbip/visual_translator.py --mode api
+
+# Mode paste (coller la réponse JSON dans intermediate/visual_response.json)
+python src/pbip/visual_translator.py --mode paste
+
+# Mode apply (réappliquer visual_response.json existant sans rappeler le LLM)
+python src/pbip/visual_translator.py --mode apply
+```
+
+Sortie : `pbip/MigrationQlikPBI.Report/report.json` + mesures/calc cols dans `model.bim`
+
+### Relancer une étape isolée
+
+```bash
+# Regénérer uniquement le BIM (sans retoucher le SQL ni le schéma)
+python src/pbip/pbip_builder.py
+
+# Regénérer uniquement les visuels (sans retoucher le BIM)
+python src/pbip/visual_translator.py --mode skip-llm
+```
+
+### Config `.env`
+
+```
+EXAMPLE_NAME=edr-demo-schema
+AZURE_OPENAI_API_KEY=...
+AZURE_OPENAI_ENDPOINT=...
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1
 ```
 
 ---
 
 ## Prompt builder
 
-Le prompt est construit dynamiquement :
+Le prompt LLM1 (SQL) est construit dynamiquement :
 
 | Composant | Source |
 |---|---|
-| Tables disponibles + colonnes | scan de `inputs/*.csv` |
-| Variables résolues | `extraction/extraction.json` → champ `variables` |
-| Script Qlik | `extraction/extraction.json` → champ `script` |
-| Règles de traduction | template fixe dans `pipeline/prompt_builder.py` |
-
-Les tables cibles sont **déduites du script Qlik** par le LLM — pas besoin de les lister explicitement.
+| Tables disponibles + colonnes | scan de `input/*.csv` |
+| Variables résolues | `extraction.json` → champ `variables` |
+| Script Qlik | `extraction.json` → champ `script` |
+| Règles de traduction | template fixe dans `run_pipeline.py` |
 
 ---
 

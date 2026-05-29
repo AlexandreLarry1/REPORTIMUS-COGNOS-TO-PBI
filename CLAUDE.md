@@ -26,3 +26,22 @@ visual_translator.py  → BIM: measures + calc cols + report.json visuals
 
 Each stage rewrites its outputs from scratch (or updates them). A direct patch to
 `model.bim` or `report.json` will be overwritten on the next pipeline run.
+
+## Error triage policy
+
+When an error appears during a pipeline run, always:
+1. **Explain the cause** — why it happens mechanically (not just what the message says)
+2. **Classify the fix**:
+   - `prompt` — LLM system/user prompt needs updated rules or examples
+   - `code` — Python logic in pipeline/pbip/visual_translator is wrong
+   - `other` — data issue, env config, Power BI constraint
+3. **Implement durable fix** in the source file (not a one-off patch on the example).
+   A fix is durable if it works for any future example, not just the current one.
+
+| Error class | Durable fix location |
+|---|---|
+| LLM hallucinates bad SQL | `run_pipeline.py` system prompt rules |
+| LLM produces wrong relations/types | `schema_builder.py` `_SYSTEM` prompt rules |
+| LLM produces wrong DAX/visuals | `visual_translator.py` system prompt or `_infer_calc_expr` |
+| BIM relationship direction wrong | `pbip_builder.py` `_deactivate_ambiguous_paths` or `_apply_schema_relationships` |
+| Power BI import error (ambiguous path, etc.) | `pbip_builder.py` structural guards |
