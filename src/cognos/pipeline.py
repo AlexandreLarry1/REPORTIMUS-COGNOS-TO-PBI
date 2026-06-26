@@ -1,9 +1,13 @@
-"""Orchestrateur principal de la pipeline Cognos vers Power BI.
+"""Orchestrateur principal de la pipeline Cognos vers Power BI (1-prompt architecture).
 
-Coordonne les 3 phases de la pipeline hybride:
-- Phase 1: Parseur Déterministe (0 LLM)
-- Phase 2: Traduction LLM Ciblée (3 appels LLM)
-- Phase 3: Générateur Déterministe (0 LLM)
+Coordonne les phases de la pipeline:
+- Phase 1: Parseur Déterministe (0 LLM) — XML + classification
+- Phase 2: Traduction unifiée (1 appel LLM) — déterministe + LLM ciblé
+- Phase 3: Générateur Déterministe (0 LLM) — assemblage .pbip
+
+Per BRIEF.md: remplace l'ancienne architecture à 3 appels LLM par un seul
+appel unifié. Les traductions déterministes sont effectuées localement et
+seules les expressions non résolues (types D & H) sont envoyées au LLM.
 
 Avec observabilité Langfuse complète.
 """
@@ -24,25 +28,33 @@ import observability as obs
 
 # Imports des modules Cognos
 from cognos import xml_parser, layout_parser, expression_parser
-from cognos.llm import time_intelligence, parameter_logic, variance_formatting
+from cognos import deterministic_translator
+from cognos.llm import unified_translation
 from cognos import pbip_generator, validator
 
 # Imports des modules existants pour réutilisation
 from pbip import pbip_builder
 
 
-def run_phase1_deterministic(xml_path: pathlib.Path, output_dir: pathlib.Path, trace=None) -> dict:
+def run_phase1_deterministic(
+    xml_path: pathlib.Path,
+    output_dir: pathlib.Path,
+    example_name: str = "",
+    trace=None,
+) -> dict:
     """Phase 1: Parseur Déterministe (0 appel LLM).
 
-    Extrait et convertit le XML Cognos vers JSON intermédiaire.
+    Extrait et convertit le XML Cognos vers JSON intermédiaire + classifie
+    les expressions par structure (report-agnostic).
 
     Args:
         xml_path: Chemin vers le XML Cognos
         output_dir: Répertoire de sortie
+        example_name: Nom de l'exemple (pour localiser le dossier input/CSV)
         trace: Observability trace
 
     Returns:
-        Dict avec xml_data + visual_data
+        Dict avec xml_data + visual_data + classified + prompt_context + csv_schema
     """
     parser_sp = (trace or obs._Noop()).span(name="Deterministic_Parser")
 
@@ -65,12 +77,27 @@ def run_phase1_deterministic(xml_path: pathlib.Path, output_dir: pathlib.Path, t
     print(f"   -> {visual_json_path}")
     print(f"   {len(visual_data['sheets'])} pages")
 
-    # 3. Classifier les expressions pour LLM
+    # 3. Classifier les expressions (report-agnostic — no hardcoded keywords)
     print("3. Classification des expressions...")
     classified = expression_parser.classify_expressions_from_queries(xml_data)
-    llm_context = expression_parser.build_prompt_context(classified, xml_data)
-    print(f"   {len(classified['time_logic'])} expressions time_logic")
-    print(f"   {len(classified['variance'])} expressions variance")
+    prompt_context = expression_parser.build_prompt_context(classified, xml_data)
+    print(f"   {len(classified['unresolved'])} expressions unresolved (types D & H → LLM)")
+    print(f"   {len(classified['param_switches'])} expressions param_switches (→ deterministic SWITCH)")
+    print(f"   {len(classified['variance'])} expressions variance (→ deterministic)")
+
+    # 4. Read CSV schema for deterministic translation + TI column check
+    print("4. Lecture schéma CSV...")
+    if example_name:
+        example_dir = ROOT / "examples" / example_name
+    else:
+        example_dir = xml_path.parent.parent  # fallback
+    input_dir = example_dir / "input"
+    csv_schema = {}
+    if input_dir.exists():
+        csv_schema = deterministic_translator.read_csv_schema(input_dir)
+    csv_schema_path = output_dir / "csv_schema.json"
+    csv_schema_path.write_text(json.dumps(csv_schema, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"   -> {csv_schema_path} ({len(csv_schema)} tables)")
 
     parser_sp.end()
 
@@ -78,12 +105,13 @@ def run_phase1_deterministic(xml_path: pathlib.Path, output_dir: pathlib.Path, t
         "xml_data": xml_data,
         "visual_data": visual_data,
         "classified": classified,
-        "llm_context": llm_context
+        "prompt_context": prompt_context,
+        "csv_schema": csv_schema,
     }
 
 
-def run_phase2_llm(phase1_output: dict, output_dir: pathlib.Path, mode: str = "api", trace=None) -> dict:
-    """Phase 2: Traduction LLM Ciblée (3 appels LLM).
+def run_phase2_translation(phase1_output: dict, output_dir: pathlib.Path, mode: str = "api", trace=None) -> dict:
+    """Phase 2: Traduction unifiée (déterministe + 1 appel LLM).
 
     Args:
         phase1_output: Dict produit par run_phase1_deterministic
@@ -92,80 +120,81 @@ def run_phase2_llm(phase1_output: dict, output_dir: pathlib.Path, mode: str = "a
         trace: Observability trace
 
     Returns:
-        Dict avec les outputs des 3 appels LLM
+        Dict avec {measures: [...], parameter_tables: [...]}
     """
-    print("\n=== Phase 2: Traduction LLM Ciblée ===")
+    print("\n=== Phase 2: Traduction Unifiée ===")
 
-    llm_outputs = {}
+    # --- Deterministic translation (0 LLM) ---
+    print("\n[1/2] Traduction déterministe...")
+    det_sp = (trace or obs._Noop()).span(name="Deterministic_Translation")
 
-    # Call 1: Time Intelligence
-    print("\n[Call 1/3] Time Intelligence Foundation...")
-    time_sp = (trace or obs._Noop()).span(name="LLM_Time_Intelligence")
-
-    time_intel_path = output_dir / "time_intelligence.json"
-    time_intelligence.run(
-        etl_context={},  # Sera rempli si CSV disponibles
-        output_path=time_intel_path,
-        mode=mode,
-        trace=trace
+    det_result = deterministic_translator.translate_deterministic(
+        classified=phase1_output["classified"],
+        named_styles=phase1_output["xml_data"].get("namedStyles", {}),
+        csv_schema=phase1_output["csv_schema"],
+        parameters=phase1_output["xml_data"].get("parameters", []),
     )
-    llm_outputs["time_intelligence"] = json.loads(time_intel_path.read_text(encoding="utf-8"))
 
-    time_sp.end()
+    print(f"   {len(det_result['measures'])} mesures déterministes générées")
+    print(f"   {len(det_result['deferred'])} expressions différées vers le LLM")
 
-    # Call 2: Parameter Logic
-    print("\n[Call 2/3] Parameter Switching Logic...")
-    param_sp = (trace or obs._Noop()).span(name="LLM_Switch_Logic")
+    det_sp.end()
 
-    param_logic_path = output_dir / "parameter_logic.json"
-    parameter_logic.run(
-        xml_data=phase1_output["xml_data"],
-        time_intel_path=time_intel_path,
-        output_path=param_logic_path,
+    # --- Single unified LLM call ---
+    print("\n[2/2] Appel LLM unifié (expressions non résolues)...")
+    llm_sp = (trace or obs._Noop()).span(name="LLM_Unified_Translation")
+
+    det_measure_names = [m["name"] for m in det_result["measures"]]
+    unified_output_path = output_dir / "unified_translation.json"
+
+    llm_result = unified_translation.run(
+        prompt_context=phase1_output["prompt_context"],
+        deferred=det_result["deferred"],
+        csv_schema=phase1_output["csv_schema"],
+        deterministic_measure_names=det_measure_names,
+        output_path=unified_output_path,
         mode=mode,
-        trace=trace
+        trace=trace,
     )
-    llm_outputs["parameter_logic"] = json.loads(param_logic_path.read_text(encoding="utf-8"))
 
-    param_sp.end()
+    llm_sp.end()
 
-    # Call 3: Variance & Formatting
-    print("\n[Call 3/3] Variance & Formatting Rules...")
-    var_sp = (trace or obs._Noop()).span(name="LLM_Variance_Formatting")
+    # --- Merge deterministic + LLM measures ---
+    all_measures = det_result["measures"] + llm_result.get("measures", [])
+    all_param_tables = det_result["parameter_tables"] + llm_result.get("parameter_tables", [])
 
-    var_fmt_path = output_dir / "variance_formatting.json"
-    variance_formatting.run(
-        xml_data=phase1_output["xml_data"],
-        param_logic_path=param_logic_path,
-        output_path=var_fmt_path,
-        mode=mode,
-        trace=trace
-    )
-    llm_outputs["variance_formatting"] = json.loads(var_fmt_path.read_text(encoding="utf-8"))
+    merged = {
+        "measures": all_measures,
+        "parameter_tables": all_param_tables,
+    }
 
-    var_sp.end()
+    # Write merged output for Phase 3
+    merged_path = output_dir / "merged_translation.json"
+    merged_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\n   Total: {len(all_measures)} mesures, {len(all_param_tables)} tables paramètres")
+    print(f"   -> {merged_path}")
 
-    return llm_outputs
+    return merged
 
 
 def run_phase3_generator(
     example: str,
     phase1_output: dict,
-    llm_outputs: dict,
+    merged_translation: dict,
     output_dir: pathlib.Path,
     report_name: str = "MigrationCognosPBI",
     trace=None
 ) -> None:
     """Phase 3: Générateur Déterministe (0 appel LLM).
 
-    Génère le projet .pbip final.
+    Génère le projet .pbip final avec la nouvelle architecture.
 
     Args:
         example: Nom de l'exemple
         phase1_output: Dict de Phase 1
-        llm_outputs: Dict de Phase 2
+        merged_translation: Dict de Phase 2 (measures + parameter_tables)
         output_dir: Répertoire de sortie
-        report_name: Nom du rapport (défaut: MigrationCognosPBI)
+        report_name: Nom du rapport
         trace: Observability trace
     """
     gen_sp = (trace or obs._Noop()).span(name="PBI_Generator")
@@ -188,7 +217,6 @@ def run_phase3_generator(
 
     # 2. Générer le rapport de base depuis visual_extraction.json
     print("2. Génération rapport depuis visual_extraction.json...")
-    visual_json_path = output_dir / "visual_extraction.json"
     pbip_builder.build_report(output_dir, pbip_dir)
     print(f"   Rapport généré")
 
@@ -201,7 +229,6 @@ def run_phase3_generator(
     final_report_path = pbip_dir / f"{report_name}.Report" / "report.json"
 
     if bim_path != final_bim_path:
-        # Déplacer le dossier
         old_sm = pbip_dir / f"{pbip_builder.REPORT_NAME}.SemanticModel"
         new_sm = pbip_dir / f"{report_name}.SemanticModel"
         if old_sm.exists():
@@ -232,30 +259,40 @@ def run_phase3_generator(
         bim_path.parent.mkdir(parents=True, exist_ok=True)
         bim_path.write_text(json.dumps(bim, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # Fusionner tables paramètres et mesures LLM
+    xml_data = phase1_output["xml_data"]
+    visual_data = phase1_output["visual_data"]
+    csv_schema = phase1_output["csv_schema"]
+
+    # 4. Tables paramètres (derived from XML + CSV, NOT hardcoded)
     print("   Tables paramètres...")
-
-    # Charger les données XML
-    xml_data = json.loads((output_dir / "cognos_extraction.json").read_text(encoding="utf-8"))
-
-    # Créer et fusionner les tables paramètres
-    param_tables = pbip_generator.create_parameter_tables(xml_data)
+    param_tables = pbip_generator.create_parameter_tables(xml_data, csv_schema)
     param_rels = pbip_generator.create_parameter_relationships(param_tables)
+    # Merge LLM-provided parameter tables if any
+    for pt in merged_translation.get("parameter_tables", []):
+        # Convert LLM param table spec to BIM table
+        if not any(t["name"] == pt["name"] for t in param_tables):
+            rows = [{pt["column"]: v, f"{pt['column']}_Label": v} for v in pt.get("values", [])]
+            param_tables.append(
+                pbip_generator._build_disconnected_table(pt["name"], pt["column"], rows)
+            )
     pbip_generator.merge_parameter_tables_to_bim(bim_path, param_tables, param_rels)
 
-    # Fusionner les mesures LLM
-    llm_outputs = {
-        "time_intelligence": json.loads((output_dir / "time_intelligence.json").read_text(encoding="utf-8")),
-        "parameter_logic": json.loads((output_dir / "parameter_logic.json").read_text(encoding="utf-8")),
-        "variance_formatting": json.loads((output_dir / "variance_formatting.json").read_text(encoding="utf-8"))
-    }
-    pbip_generator.merge_measures_to_bim(bim_path, llm_outputs)
+    # 5. Mesures (flat contract — deterministic + LLM)
+    print("   Mesures...")
+    pbip_generator.merge_measures_to_bim(bim_path, merged_translation.get("measures", []))
 
-    # Créer et appliquer les bookmarks
-    bookmarks = pbip_generator.create_bookmarks(xml_data)
+    # 6. Conditional formatting (link color measures to visuals)
+    color_measures = [m for m in merged_translation.get("measures", []) if m.get("type") == "color"]
+    if color_measures:
+        print("   Conditional formatting...")
+        pbip_generator.apply_conditional_formatting_to_report(report_path, color_measures)
+
+    # 7. Bookmarks (real dual-matrix + selection-pane toggle)
+    print("   Bookmarks...")
+    bookmarks = pbip_generator.create_bookmarks(xml_data, visual_data)
     pbip_generator.apply_bookmarks_to_report(report_path, bookmarks)
 
-    # 4. Créer le fichier .pbip entry point
+    # 8. Créer le fichier .pbip entry point
     entry_point = pbip_dir / f"{report_name}.pbip"
     entry_point.write_text(json.dumps({
         "version": "1.0",
@@ -266,8 +303,8 @@ def run_phase3_generator(
 
     print(f"\n   -> {entry_point}")
 
-    # 5. Valider le modèle avant ouverture
-    print("5. Validation model.bim...")
+    # 9. Valider le modèle
+    print("9. Validation model.bim...")
     validation_errors = validator.validate_model(bim_path)
     exit_code = validator.print_validation_report(validation_errors)
     if exit_code != 0:
@@ -278,12 +315,12 @@ def run_phase3_generator(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Pipeline Cognos vers Power BI"
+        description="Pipeline Cognos vers Power BI (1-prompt architecture)"
     )
     parser.add_argument("--example", required=True, help="Nom de l'exemple (répertoire)")
     parser.add_argument("--xml", required=True, help="Chemin vers le XML Cognos")
     parser.add_argument("--mode", choices=["api", "paste"], default="api", help="Mode LLM")
-    parser.add_argument("--skip-llm", action="store_true", help="Sauter les appels LLM (réutiliser outputs existants)")
+    parser.add_argument("--skip-llm", action="store_true", help="Sauter l'appel LLM (réutiliser outputs existants)")
     args = parser.parse_args()
 
     example = args.example
@@ -305,22 +342,33 @@ def main() -> None:
     # Trace principale
     with obs.trace("Cognos_to_PBI_Migration", example=example, mode=args.mode) as trace:
         # Phase 1: Parseur Déterministe
-        phase1_output = run_phase1_deterministic(xml_path, intermediate_dir, trace)
+        phase1_output = run_phase1_deterministic(xml_path, intermediate_dir, example, trace)
 
-        # Phase 2: LLM (optionnel)
-        llm_outputs = {}
+        # Phase 2: Traduction (déterministe + LLM)
         if not args.skip_llm:
-            llm_outputs = run_phase2_llm(phase1_output, intermediate_dir, args.mode, trace)
+            merged_translation = run_phase2_translation(phase1_output, intermediate_dir, args.mode, trace)
         else:
             print("\n=== Phase 2: Skip LLM (réutilisation outputs existants) ===")
-            for name in ["time_intelligence", "parameter_logic", "variance_formatting"]:
-                json_path = intermediate_dir / f"{name}.json"
-                if json_path.exists():
-                    llm_outputs[name] = json.loads(json_path.read_text(encoding="utf-8"))
-                    print(f"   {name}.json chargé")
+            merged_path = intermediate_dir / "merged_translation.json"
+            if merged_path.exists():
+                merged_translation = json.loads(merged_path.read_text(encoding="utf-8"))
+                print(f"   merged_translation.json chargé ({len(merged_translation.get('measures', []))} mesures)")
+            else:
+                # Rebuild from deterministic only (no LLM)
+                print("   merged_translation.json introuvable - reconstruction déterministe seule")
+                det_result = deterministic_translator.translate_deterministic(
+                    classified=phase1_output["classified"],
+                    named_styles=phase1_output["xml_data"].get("namedStyles", {}),
+                    csv_schema=phase1_output["csv_schema"],
+                    parameters=phase1_output["xml_data"].get("parameters", []),
+                )
+                merged_translation = {
+                    "measures": det_result["measures"],
+                    "parameter_tables": det_result["parameter_tables"],
+                }
 
         # Phase 3: Générateur
-        run_phase3_generator(example, phase1_output, llm_outputs, intermediate_dir, "MigrationCognosPBI", trace)
+        run_phase3_generator(example, phase1_output, merged_translation, intermediate_dir, "MigrationCognosPBI", trace)
 
     print(f"\nOK Pipeline terminée -> {example_dir / 'pbip'}")
     print(f"  Ouvrez {example_dir / 'pbip' / 'MigrationCognosPBI.pbip'} dans Power BI Desktop")
