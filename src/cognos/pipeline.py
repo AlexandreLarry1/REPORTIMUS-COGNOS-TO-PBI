@@ -205,42 +205,28 @@ def run_phase3_generator(
     example_dir = ROOT / "examples" / example
     input_dir = example_dir / "input"
     pbip_dir = example_dir / "pbip"
+
+    # Clean output directory to avoid stale/duplicate artifacts across runs
+    if pbip_dir.exists():
+        shutil.rmtree(pbip_dir, ignore_errors=True)
     pbip_dir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Générer le modèle sémantique de base depuis CSV
+    # 1. Générer le modèle sémantique de base depuis CSV (avec report_name)
     print("1. Génération modèle sémantique depuis CSV...")
     if input_dir.exists() and list(input_dir.glob("*.csv")):
-        table_names = pbip_builder.build_semantic_model(input_dir, pbip_dir)
+        table_names = pbip_builder.build_semantic_model(input_dir, pbip_dir, report_name)
         print(f"   {len(table_names)} tables créées")
     else:
         print("   Pas de CSV - modèle vide")
 
-    # 2. Générer le rapport de base depuis visual_extraction.json
+    # 2. Générer le rapport de base depuis visual_extraction.json (avec report_name)
     print("2. Génération rapport depuis visual_extraction.json...")
-    pbip_builder.build_report(output_dir, pbip_dir)
+    pbip_builder.build_report(output_dir, pbip_dir, report_name)
     print(f"   Rapport généré")
 
-    # 3. Appliquer les spécificités Cognos
-    bim_path = pbip_dir / f"{pbip_builder.REPORT_NAME}.SemanticModel" / "model.bim"
-    report_path = pbip_dir / f"{pbip_builder.REPORT_NAME}.Report" / "report.json"
-
-    # Renommer vers le bon nom de rapport Cognos
-    final_bim_path = pbip_dir / f"{report_name}.SemanticModel" / "model.bim"
-    final_report_path = pbip_dir / f"{report_name}.Report" / "report.json"
-
-    if bim_path != final_bim_path:
-        old_sm = pbip_dir / f"{pbip_builder.REPORT_NAME}.SemanticModel"
-        new_sm = pbip_dir / f"{report_name}.SemanticModel"
-        if old_sm.exists():
-            shutil.move(str(old_sm), str(new_sm))
-
-        old_report = pbip_dir / f"{pbip_builder.REPORT_NAME}.Report"
-        new_report = pbip_dir / f"{report_name}.Report"
-        if old_report.exists():
-            shutil.move(str(old_report), str(new_report))
-
-        bim_path = new_sm / "model.bim"
-        report_path = new_report / "report.json"
+    # 3. Chemins vers les fichiers générés (avec report_name correct dès le départ)
+    bim_path = pbip_dir / f"{report_name}.SemanticModel" / "model.bim"
+    report_path = pbip_dir / f"{report_name}.Report" / "report.json"
 
     print("3. Application spécificités Cognos...")
 

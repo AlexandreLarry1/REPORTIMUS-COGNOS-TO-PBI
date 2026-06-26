@@ -79,7 +79,7 @@ def _infer_col_types(path: pathlib.Path, sample: int = 200) -> dict[str, str]:
     _NULL_VALS = {"", "-", "n/a", "null", "none", "#n/a", "#value!", "#ref!"}
 
     def _clean(v: str) -> str:
-        return v.strip().lstrip("$€£").translate(_STRIP).lstrip("-")
+        return v.strip().lstrip('$€£').translate(_STRIP).lstrip("-")
 
     def _ratio(vals: list, pred) -> float:
         hits = sum(1 for v in vals if pred(v))
@@ -496,8 +496,8 @@ def _relationships_from_schema(rels: list, tables: list) -> list:
     return result
 
 
-def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[str]:
-    sm_dir  = out_root / f"{REPORT_NAME}.SemanticModel"
+def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path, report_name: str = REPORT_NAME) -> list[str]:
+    sm_dir  = out_root / f"{report_name}.SemanticModel"
     tables  = []
     csv_path_map: dict[str, pathlib.Path] = {}
     for csv_path in sorted(csv_dir.glob("*.csv")):
@@ -534,7 +534,7 @@ def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path) -> list[
     }
     _write(sm_dir / "model.bim", bim)
     _write(sm_dir / "definition.pbism", {"version": "1.0", "settings": {}})
-    _write(sm_dir / ".platform", _platform("SemanticModel", REPORT_NAME))
+    _write(sm_dir / ".platform", _platform("SemanticModel", report_name))
     print(f"  -> {sm_dir / 'model.bim'}  ({len(relationships)} relations)")
     return [t["name"] for t in tables]
 
@@ -635,8 +635,8 @@ def _section(sheet: dict, ordinal: int) -> dict:
     return section
 
 
-def build_report(intermediate: pathlib.Path, out_root: pathlib.Path) -> None:
-    report_dir  = out_root / f"{REPORT_NAME}.Report"
+def build_report(intermediate: pathlib.Path, out_root: pathlib.Path, report_name: str = REPORT_NAME) -> None:
+    report_dir  = out_root / f"{report_name}.Report"
     visual_json = intermediate / "visual_extraction.json"
 
     sheets = []
@@ -677,9 +677,9 @@ def build_report(intermediate: pathlib.Path, out_root: pathlib.Path) -> None:
     _write(report_dir / "report.json", report)
     _write(report_dir / "definition.pbir", {
         "version": "1.0",
-        "datasetReference": {"byPath": {"path": f"../{REPORT_NAME}.SemanticModel"}},
+        "datasetReference": {"byPath": {"path": f"../{report_name}.SemanticModel"}},
     })
-    _write(report_dir / ".platform", _platform("Report", REPORT_NAME))
+    _write(report_dir / ".platform", _platform("Report", report_name))
 
     for s in sections:
         print(f"    section '{s['displayName']}' — {len(s['visualContainers'])} visuals")
@@ -689,9 +689,11 @@ def build_report(intermediate: pathlib.Path, out_root: pathlib.Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", default=os.getenv("EXAMPLE_NAME", ""))
+    parser.add_argument("--report-name", default=REPORT_NAME)
     args = parser.parse_args()
 
     example      = args.example
+    report_name  = args.report_name
     example_dir  = ROOT / "examples" / example
     intermediate = example_dir / "intermediate"
     out_dir      = example_dir / "pbip"
@@ -699,15 +701,15 @@ def main() -> None:
     print(f"Output: {out_dir}\n")
 
     print("=== Semantic model ===")
-    build_semantic_model(example_dir / "input", out_dir)
+    build_semantic_model(example_dir / "input", out_dir, report_name)
     print("\n=== Report ===")
-    build_report(intermediate, out_dir)
+    build_report(intermediate, out_dir, report_name)
     print("\n=== Entry point ===")
-    _write(out_dir / f"{REPORT_NAME}.pbip", {
+    _write(out_dir / f"{report_name}.pbip", {
         "version": "1.0",
-        "artifacts": [{"report": {"path": f"{REPORT_NAME}.Report"}}],
+        "artifacts": [{"report": {"path": f"{report_name}.Report"}}],
     })
-    print(f"\nDone -> {out_dir / f'{REPORT_NAME}.pbip'}")
+    print(f"\nDone -> {out_dir / f'{report_name}.pbip'}")
 
 
 if __name__ == "__main__":
