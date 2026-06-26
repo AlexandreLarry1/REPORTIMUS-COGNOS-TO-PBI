@@ -135,20 +135,41 @@ Output: `pbip/MigrationQlikPBI.Report/report.json` + DAX measures in `model.bim`
 
 ---
 
-## Optional: LLM observability (Langfuse)
+## LLM observability & iterative debugging (Langfuse)
 
-Add to `.env`:
+Set `LANGFUSE_ENABLED=true` in `.env` (keys in `.env.example`) and `pip install langfuse`.
+**Every pipeline run — `api` or `paste` mode — is fully traced:** each LLM call's prompt + output,
+SQL execution errors, DAX validation errors, and translation warnings are attached to a single trace.
+
+### Iterative debugging workflow
+
+This is the recommended loop for improving the pipeline:
 
 ```
-LANGFUSE_ENABLED=true
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_BASE_URL=https://cloud.langfuse.com
+1. Run the pipeline          →  python src/pipeline/run_pipeline.py --mode paste|api
+                                python src/pbip/visual_translator.py --mode paste|api
+2. Open the .pbip in PBI     →  copy the error details ("Copy details" in the error dialog)
+3. Paste the error here      →  "PBI says: <error text>"
+4. Pull the trace            →  python scripts/fetch_langfuse_traces.py
+                                  (dumps full prompt + LLM output + attached errors
+                                   to stdout + intermediate/last_trace_dump.json)
+5. Diagnose                  →  the trace shows which LLM call produced the broken artifact
+                                  and whether it's a `prompt` or `code` fix (see CLAUDE.md triage)
+6. Fix in source             →  apply durable fix in the source file, re-run from step 1
 ```
 
-Install: `pip install langfuse`
+**Why this works:** in `paste` mode the pipeline now logs the pasted response to Langfuse just like
+in `api` mode, and all internal errors (`[DAX-ERR]`, `[WARN]`, `[PLACEHOLDER]`, SQL errors) are
+attached to the same trace. So when you paste a PBI error, the full LLM context that produced the
+broken output is one script away.
 
----
+`scripts/fetch_langfuse_traces.py` options:
+```
+python scripts/fetch_langfuse_traces.py             # full dump of the last trace
+python scripts/fetch_langfuse_traces.py --last 5    # summary of the last 5 traces
+python scripts/fetch_langfuse_traces.py --id <id>   # full dump of a specific trace
+```
+
 
 ## Bug fixes reference
 

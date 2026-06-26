@@ -1,4 +1,5 @@
 duckdb
+lxml
 openai
 pandas
 python-dotenv

@@ -50,6 +50,39 @@ if ENABLED:
     _lf = Langfuse()
 
 
+def log_errors(errors: list, *, kind: str = "errors") -> None:
+    """Attach a list of errors to the current trace as a dedicated child observation.
+
+    Pass structured dicts or strings. No-op when Langfuse is disabled or the list
+    is empty. Must be called within an active ``with obs.trace(...)`` block so the
+    observation nests under the current trace.
+    """
+    if not ENABLED or not _lf or not errors:
+        return
+    try:
+        _lf.start_observation(
+            name=kind,
+            as_type="span",
+            metadata={"errors": errors, "count": len(errors)},
+        )
+    except Exception:
+        pass
+
+
+def log_event(name: str, **metadata) -> None:
+    """Attach a named event (e.g. warning, info) to the current trace.
+
+    No-op when Langfuse is disabled. Must be called within an active
+    ``with obs.trace(...)`` block.
+    """
+    if not ENABLED or not _lf:
+        return
+    try:
+        _lf.start_observation(name=name, as_type="span", metadata=metadata)
+    except Exception:
+        pass
+
+
 @contextmanager
 def trace(name: str, **metadata):
     """Top-level trace. Children (span/generation) auto-nest via OTel context."""

@@ -1,5 +1,7 @@
 """Translate Qlik visual objects to Power BI visual JSON + DAX measures."""
 import argparse
+import contextlib
+import io
 import json
 import os
 import pathlib
@@ -446,8 +448,11 @@ def _add_calc_col(bim: dict, table: str, name: str, expression: str, data_type: 
     return False
 
 
-def _validate_dax_refs(bim: dict, bim_idx: dict) -> None:
-    """Scan all measure/calculated-column expressions and warn on unresolved Table[Col] refs."""
+def _validate_dax_refs(bim: dict, bim_idx: dict) -> list[str]:
+    """Scan all measure/calculated-column expressions and warn on unresolved Table[Col] refs.
+
+    Returns the list of unresolved-reference error messages (empty if all OK).
+    """
     ref_re = re.compile(r"(\w[\w\s]*?)\[([^\]]+)\]")
     errors: list[str] = []
     for t in bim["model"]["tables"]:
@@ -458,20 +463,25 @@ def _validate_dax_refs(bim: dict, bim_idx: dict) -> None:
                 raw_tbl, raw_col = match.group(1).strip(), match.group(2).strip()
                 entry = bim_idx.get(raw_tbl.lower())
                 if not entry:
-                    errors.append(f"  [DAX-ERR][llm] {tbl}::{m['name']} — table '{raw_tbl}' inconnue")
+                    errors.append(f"[DAX-ERR][llm] {tbl}::{m['name']} — table '{raw_tbl}' inconnue")
                     continue
                 actual_tbl, cols = entry
                 if raw_col.lower() not in cols:
-                    errors.append(f"  [DAX-ERR][llm] {tbl}::{m['name']} — colonne '{actual_tbl}[{raw_col}]' introuvable")
+                    errors.append(f"[DAX-ERR][llm] {tbl}::{m['name']} — colonne '{actual_tbl}[{raw_col}]' introuvable")
     if errors:
         print(f"\n  {len(errors)} reference(s) DAX non resolues — a corriger dans le prompt ou via calculated_columns :")
         for e in errors:
-            print(e)
+            print("  " + e)
     else:
         print("  DAX validation OK — toutes les references resolues")
+    return errors
 
 
-def apply_translation(response: dict, paths: dict) -> None:
+def apply_translation(response: dict, paths: dict) -> list[str]:
+    """Apply the LLM translation response to model.bim + report.json.
+
+    Returns the list of DAX validation errors (from `_validate_dax_refs`).
+    """
     all_measures = response.get("measures", [])
     visuals_map  = {v["qlik_id"]: v for v in response.get("visuals", [])}
 
@@ -698,7 +708,7 @@ def apply_translation(response: dict, paths: dict) -> None:
     paths["bim"].write_text(json.dumps(bim, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # --- post-LLM DAX validation: scan all measure/calc-col expressions ---
-    _validate_dax_refs(bim, bim_idx)
+    return _validate_dax_refs(bim, bim_idx)
 
 
 # ---------------------------------------------------------------------------
@@ -767,7 +777,8 @@ def main() -> None:
         if not paths["response"].exists():
             print(f"Introuvable : {paths['response']}")
             sys.exit(1)
-        apply_translation(json.loads(paths["response"].read_text(encoding="utf-8")), paths)
+        with obs.trace("visual_translation_run", example=args.example, mode=args.mode):
+            _capture_and_apply(json.loads(paths["response"].read_text(encoding="utf-8")), paths)
         return
 
     system, user = build_prompt(bim, sheets, script_data, etl_context)
@@ -782,6 +793,13 @@ def main() -> None:
             if not paths["response"].exists():
                 print("Fichier introuvable. Abandon.")
                 sys.exit(1)
+            # Log the pasted visual response to Langfuse so paste-mode runs are traceable.
+            pasted = paths["response"].read_text(encoding="utf-8")
+            gen = trace.generation(
+                name="visual_translation",
+                input=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+            )
+            gen.end(output=pasted)
 
         elif args.mode == "api":
             raw     = _call_api(system, user, trace=trace)
@@ -791,11 +809,40 @@ def main() -> None:
 
         response = json.loads(paths["response"].read_text(encoding="utf-8"))
         print("\nApplication de la traduction...")
-        apply_sp = trace.span(name="apply_translation")
-        apply_translation(response, paths)
-        apply_sp.end()
+        _capture_and_apply(response, paths)
 
     print(f"\nDone. Ouvrez {paths['bim'].parent.parent / REPORT_NAME}.pbip dans Power BI Desktop.")
+
+
+def _capture_and_apply(response: dict, paths: dict) -> None:
+    """Run apply_translation while capturing stdout to extract warning lines, then log to trace.
+
+    Keeps all existing print() output visible (via tee) and additionally attaches the
+    captured warnings + DAX validation errors to the current Langfuse trace.
+    """
+    real_stdout = sys.stdout
+    captured = io.StringIO()
+
+    class _Tee(io.TextIOBase):
+        def write(self, s):
+            real_stdout.write(s)
+            captured.write(s)
+            return len(s)
+        def flush(self):
+            real_stdout.flush()
+
+    tee = _Tee()
+    with contextlib.redirect_stdout(tee):
+        dax_errors = apply_translation(response, paths)
+
+    # Extract warning lines from captured output.
+    raw = captured.getvalue()
+    warnings = [ln.strip() for ln in raw.splitlines()
+                if re.search(r"\[(WARN|PLACEHOLDER|SKIP-|DAX-SKIP|DAX-ERR)", ln)]
+    if warnings:
+        obs.log_errors(warnings, kind="translation_warnings")
+    if dax_errors:
+        obs.log_errors(dax_errors, kind="dax_validation_errors")
 
 
 if __name__ == "__main__":

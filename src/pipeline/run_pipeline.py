@@ -32,6 +32,18 @@ def _wait_for_sql(sql_file: pathlib.Path) -> None:
         sys.exit(1)
 
 
+def _log_paste_generation(system: str, user: str, output: str, trace) -> None:
+    """In paste mode, log the prompt + pasted output to Langfuse as a generation.
+
+    Ensures paste-mode runs are as traceable as api-mode runs.
+    """
+    gen = (trace or obs._Noop()).generation(
+        name="sql_generation",
+        input=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    gen.end(output=output)
+
+
 def _call_api(system: str, user: str, trace=None) -> str:
     from openai import AzureOpenAI
     client = AzureOpenAI(
@@ -87,8 +99,11 @@ def main() -> None:
             print("Mode skip-llm : generated.sql existant utilisé.")
 
         elif args.mode == "paste":
-            build_prompt(example=example, write=True)
+            system, user = build_prompt(example=example, write=True)
             _wait_for_sql(sql_file)
+            # Log the pasted SQL to Langfuse so paste-mode runs are traceable.
+            pasted_sql = sql_file.read_text(encoding="utf-8")
+            _log_paste_generation(system, user, pasted_sql, trace)
 
         elif args.mode == "api":
             system, user = build_prompt(example=example, write=True)
@@ -99,6 +114,17 @@ def main() -> None:
 
         sql_sp = trace.span(name="sql_execution")
         run_sql(example=example, debug=args.debug)
+        # Attach any SQL execution errors to the trace for correlation with the LLM output.
+        etl_ctx_path = ROOT / "examples" / example / "intermediate" / "sql" / "etl_context.json"
+        if etl_ctx_path.exists():
+            import json as _json
+            try:
+                _etl = _json.loads(etl_ctx_path.read_text(encoding="utf-8"))
+                if _etl.get("errors"):
+                    obs.log_errors(_etl["errors"], kind="sql_execution_errors")
+                    print(f"  [trace] {len(_etl['errors'])} erreur(s) SQL attachée(s) au trace")
+            except Exception:
+                pass
         sql_sp.end()
 
         if args.mode in ("paste", "api"):
