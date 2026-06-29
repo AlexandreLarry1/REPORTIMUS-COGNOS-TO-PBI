@@ -66,18 +66,13 @@ DAX rules:
 2. _add_months(date, -N) → EDATE(date, -N)
 3. date('YYYY-MM-DD') → DATE(YYYY, MM, DD)
 4. String2date('YYYY-MM-DD') → DATE(YYYY, MM, DD)
-5. total(CASE WHEN ?p? contains 'X' AND [Col] = 'Y' THEN [Val].[Period] END) →
-   Use this VAR pattern (NEVER use SUMX/SWITCH — it is an anti-pattern that breaks context):
-   VAR _p = SELECTEDVALUE('Param_<p>'[<p>], "Full")
-   VAR _base = CALCULATE(SUM(fact_table[value_col]), fact_table[Col] = "csv_value_Y")
-   RETURN SWITCH(_p,
-       "MTD", CALCULATE(_base, DATESMTD('dim_time'[Date])),
-       "QTD", CALCULATE(_base, DATESQTD('dim_time'[Date])),
-       "YTD", CALCULATE(_base, DATESYTD('dim_time'[Date])),
-       _base)
-   IMPORTANT: The filter value "csv_value_Y" must come from the CSV sample values
-   provided in the prompt, NOT from the Cognos expression literal. Cognos names like
-   "Version 1" or "Actual PY" may differ from CSV values like "Budget" or "Actual".
+5. total(CASE WHEN ?p? contains 'X' AND [dim_col] = 'Y' THEN [...] END) →
+   Use this VAR pattern (NEVER use SUMX/SWITCH — anti-pattern that breaks row context):
+   VAR _p = SELECTEDVALUE('Param_<p>'[<p>], "All")
+   VAR _base = CALCULATE(SUM(fact_tbl[value_col]), fact_tbl[dim_col] = "csv_value")
+   RETURN SWITCH(_p, "branch1", CALCULATE(_base, ...), _base)
+   IMPORTANT: Filter values MUST come from the CSV sample values in the prompt — map
+   Cognos display labels to actual CSV column values using the csv_schema samples provided.
 6. Use DIVIDE(a, b, 0) for any division
 7. For time-shifted measures (SAMEPERIODLASTYEAR / prior year), wrap the base measure:
    CALCULATE(_base, SAMEPERIODLASTYEAR('dim_time'[Date]))

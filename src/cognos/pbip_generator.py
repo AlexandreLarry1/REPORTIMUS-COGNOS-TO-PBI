@@ -1114,7 +1114,7 @@ def _make_header_textbox(
         "singleVisual": {
             "visualType": "textbox",
             "drillFilterOtherVisuals": False,
-            # For textbox, ALL styling lives in singleVisual.objects (not vcObjects)
+            # Paragraphs (text content) live in singleVisual.objects.general
             "objects": {
                 "general": [{"properties": {
                     "paragraphs": [{
@@ -1122,14 +1122,18 @@ def _make_header_textbox(
                         "horizontalTextAlignment": "Left",
                     }],
                 }}],
-                "background": [{"properties": {
-                    "show": _lit("true"),
-                    "color": _solid(primary_color),
-                    "transparency": _lit("0"),
-                }}],
-                "border": [{"properties": {"show": _lit("false")}}],
-                "shadow": [{"properties": {"show": _lit("false")}}],
             },
+        },
+        # Background/border/shadow are CONTAINER properties → vcObjects (not singleVisual.objects)
+        # PBI Desktop stores textbox container formatting here, same as all other visual types.
+        "vcObjects": {
+            "background": [{"properties": {
+                "show": _lit("true"),
+                "color": _solid(primary_color),
+                "transparency": _lit("0"),
+            }}],
+            "border": [{"properties": {"show": _lit("false")}}],
+            "shadow": [{"properties": {"show": _lit("false")}}],
         },
     }, ensure_ascii=False, separators=(",", ":"))
 
@@ -1292,29 +1296,36 @@ def apply_visual_styles_to_report(
     _header_style = [{"properties": {
         "fontColor": _solid("#FFFFFF"),
         "backColor": _solid(primary_color),
+        "fontBold": _lit("true"),
+        "fontSize": _lit("11"),
+        "fontFamily": _lit("'Segoe UI'"),
     }}]
     _totals_style = [{"properties": {
         "fontColor": _solid(primary_color),
         "backColor": _solid("#EBF3FB"),
+        "fontBold": _lit("true"),
+        "fontFamily": _lit("'Segoe UI'"),
+    }}]
+    _cell_style = [{"properties": {
+        "fontColor": _solid("#252525"),
+        "fontFamily": _lit("'Segoe UI'"),
+        "fontSize": _lit("11"),
     }}]
 
     # Table visual content styling: goes into singleVisual.objects
     TABLE_CONTENT: dict = {
         "grid": [{"properties": {
             "gridVertical": _lit("false"),
-            "rowPadding": _lit("8"),
-            "outlineColor": _solid("#E0E0E0"),
+            "rowPadding": _lit("6"),
+            "outlineColor": _solid("#D0D0D0"),
+            "outlineWeight": _lit("1"),
         }}],
         "columnHeaders": _header_style,  # matrix column headers
         "header": _header_style,          # tableEx column headers (different key name)
-        "rowHeaders": [{"properties": {
-            "fontColor": _solid("#252525"),
-        }}],
+        "rowHeaders": _cell_style,
         "subTotals": _totals_style,  # matrix totals
         "totals": _totals_style,      # tableEx totals (different key name)
-        "values": [{"properties": {
-            "fontColor": _solid("#252525"),
-        }}],
+        "values": _cell_style,
     }
 
     TABLE_VISUAL_TYPES = {"matrix", "tableEx", "pivotTable"}

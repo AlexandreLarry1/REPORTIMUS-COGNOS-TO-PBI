@@ -453,8 +453,8 @@ def conditional_time_intel(
             resolved_value = col
             break
 
-    # Resolve date table: prefer dim_time, then any table with a Date column
-    resolved_date_table = date_table
+    # Resolve date table: any table with a recognisable date column
+    resolved_date_table: str | None = None
     resolved_date_col = date_column
     for tbl, cols in csv_schema.items():
         for col in cols:
@@ -462,6 +462,13 @@ def conditional_time_intel(
                 resolved_date_table = tbl
                 resolved_date_col = col
                 break
+        if resolved_date_table:
+            break
+
+    # Guard: no real date dimension found → skip TI measures entirely
+    if not resolved_date_table:
+        print("  TI measures skipped — no date column found in CSV schema (no dim_time equivalent)")
+        return []
 
     date_ref = f"'{resolved_date_table}'[{resolved_date_col}]"
     base = f"SUM('{fact_table}'[{resolved_value}])"
