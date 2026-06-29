@@ -24,6 +24,7 @@ Output contract (flat JSON, per brief):
     }
 """
 import json
+import os
 import pathlib
 import sys
 
