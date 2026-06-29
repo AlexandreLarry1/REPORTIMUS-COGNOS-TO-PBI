@@ -315,6 +315,8 @@ def run_phase3_generator(
     # 7. Apply viz wiring spec → prototypeQuery + projections
     print("   Visual wiring...")
     pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+    # Fallback: wire any visual the LLM missed using IBM slots deterministically
+    pbip_generator.wire_slots_fallback(report_path, visual_data, bim_path)
 
     # 7b. LLM layout improvement — positions + titles + header textboxes (1 call/page)
     print("   Layout LLM...")
@@ -439,6 +441,7 @@ def main() -> None:
                 trace=trace,
             )
             pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+            pbip_generator.wire_slots_fallback(report_path, visual_data, bim_path)
 
             # Reapply theme + layout + visual styles
             theme_builder.apply_theme_to_report(xml_data, pbip_dir, report_path, report_name)
