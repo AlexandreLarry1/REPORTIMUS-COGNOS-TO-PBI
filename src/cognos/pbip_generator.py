@@ -939,6 +939,83 @@ def wire_from_spec(
 
 
 # ---------------------------------------------------------------------------
+# 7. Visual styling — per-visual objects for a modern look
+# ---------------------------------------------------------------------------
+
+def apply_visual_styles_to_report(
+    report_path: pathlib.Path,
+    primary_color: str = "#0078D4",
+) -> None:
+    """Inject styling objects into each visual for a clean, modern appearance.
+
+    Applies to all visuals: no background, no border, no shadow.
+    Adds header + grid styling for matrix/table/pivotTable visuals.
+    Merges with existing objects (existing keys are preserved).
+    """
+    def _lit(v: str) -> dict:
+        return {"expr": {"Literal": {"Value": v}}}
+
+    def _solid(color: str) -> dict:
+        return {"solid": {"color": color}}
+
+    BASE_OBJECTS: dict = {
+        "background": [{"properties": {"show": _lit("false")}}],
+        "border": [{"properties": {"show": _lit("false")}}],
+        "shadow": [{"properties": {"show": _lit("false")}}],
+    }
+
+    TABLE_EXTRA: dict = {
+        "grid": [{"properties": {
+            "gridVertical": _lit("false"),
+            "rowPadding": _lit("5"),
+            "outlineColor": _solid("#E0E0E0"),
+        }}],
+        "columnHeaders": [{"properties": {
+            "fontColor": _solid("#FFFFFF"),
+            "backColor": _solid(primary_color),
+            "outline": "LeftRight",
+        }}],
+        "rowHeaders": [{"properties": {
+            "outline": "LeftRight",
+            "fontColor": _solid("#252525"),
+        }}],
+    }
+
+    TABLE_VISUAL_TYPES = {"matrix", "tableEx", "pivotTable"}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    styled = 0
+
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg_str = vc.get("config", "{}")
+            try:
+                cfg = json.loads(cfg_str) if isinstance(cfg_str, str) else cfg_str
+            except json.JSONDecodeError:
+                continue
+
+            sv = cfg.get("singleVisual", {})
+            if not sv:
+                continue
+
+            vtype = sv.get("visualType", "")
+            if vtype in TABLE_VISUAL_TYPES:
+                new_objects = {**BASE_OBJECTS, **TABLE_EXTRA}
+            else:
+                new_objects = dict(BASE_OBJECTS)
+
+            # Merge: new_objects are base; existing keys (e.g. from conditional
+            # formatting passes) override so we don't clobber them.
+            sv["objects"] = {**new_objects, **sv.get("objects", {})}
+            cfg["singleVisual"] = sv
+            vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+            styled += 1
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  Visual styles injectés: {styled} visual(s)")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 

@@ -30,7 +30,7 @@ import observability as obs
 from cognos import xml_parser, layout_parser, expression_parser
 from cognos import deterministic_translator, data_dictionary
 from cognos.llm import unified_translation, viz_translation
-from cognos import pbip_generator, validator
+from cognos import pbip_generator, validator, theme_builder
 
 # Imports des modules existants pour réutilisation
 from pbip import pbip_builder
@@ -243,6 +243,15 @@ def run_phase3_generator(
     pbip_builder.build_report(output_dir, pbip_dir, report_name)
     print(f"   Rapport généré")
 
+    # 2b. Thème Cognos (palette CSS → PBI theme JSON)
+    print("2b. Application thème Cognos...")
+    theme_builder.apply_theme_to_report(
+        xml_data=phase1_output["xml_data"],
+        pbip_dir=pbip_dir,
+        report_path=pbip_dir / f"{report_name}.Report" / "report.json",
+        report_name=report_name,
+    )
+
     # 3. Chemins vers les fichiers générés (avec report_name correct dès le départ)
     bim_path = pbip_dir / f"{report_name}.SemanticModel" / "model.bim"
     report_path = pbip_dir / f"{report_name}.Report" / "report.json"
@@ -306,6 +315,12 @@ def run_phase3_generator(
     # 7. Apply viz wiring spec → prototypeQuery + projections
     print("   Visual wiring...")
     pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+
+    # 7b. Visual styling — inject per-visual objects (background, border, grid)
+    print("   Visual styling...")
+    palette = theme_builder.extract_color_palette(xml_data)
+    primary_color = palette[0] if palette else "#0078D4"
+    pbip_generator.apply_visual_styles_to_report(report_path, primary_color)
 
     # 8. Bookmarks (real dual-matrix + selection-pane toggle)
     print("   Bookmarks...")
@@ -414,6 +429,11 @@ def main() -> None:
                 trace=trace,
             )
             pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+
+            # Reapply theme + visual styles
+            theme_builder.apply_theme_to_report(xml_data, pbip_dir, report_path, report_name)
+            _palette = theme_builder.extract_color_palette(xml_data)
+            pbip_generator.apply_visual_styles_to_report(report_path, _palette[0] if _palette else "#0078D4")
 
             # Reapply bookmarks
             merged_path = intermediate_dir / "merged_translation.json"
