@@ -1083,8 +1083,8 @@ def _make_header_textbox(
     text_runs = [{
         "value": header_text,
         "textStyle": {
-            "bold": True,
-            "fontSize": "20",  # PBI textbox: numeric string, no "pt" suffix
+            "fontWeight": "bold",  # PBI textbox uses CSS-style fontWeight string
+            "fontSize": "20pt",    # PBI textbox paragraphs require "pt" suffix
             "fontFamily": "Segoe UI",
             "color": text_color,
         },
@@ -1093,7 +1093,7 @@ def _make_header_textbox(
         text_runs.append({
             "value": f"  |  {header_subtitle}",
             "textStyle": {
-                "fontSize": "11",
+                "fontSize": "11pt",
                 "fontFamily": "Segoe UI",
                 "color": text_color,
             },
@@ -1195,12 +1195,21 @@ def apply_layout_to_report(
             x, y = float(vs["x"]), float(vs["y"])
             w, h = float(vs["width"]), float(vs["height"])
 
-            # Force full-width + min-height for table/matrix visuals
             sv_type = cfg.get("singleVisual", {}).get("visualType", "")
+
+            # Force full-width + min-height for table/matrix visuals
             if sv_type in ("matrix", "tableEx", "pivotTable"):
                 w = canvas_w
                 x = 0.0
                 h = max(h, 320.0)
+
+            # Enforce per-type minimum heights to avoid invisible visuals
+            _MIN_H: dict[str, float] = {
+                "map": 300.0, "shapeMap": 300.0, "filledMap": 300.0,
+                "pieChart": 280.0, "donutChart": 280.0,
+                "scatterChart": 280.0, "gauge": 180.0,
+            }
+            h = max(h, _MIN_H.get(sv_type, 0.0))
 
             layouts = cfg.get("layouts", [{}])
             if layouts:
@@ -1239,9 +1248,13 @@ def apply_layout_to_report(
         # Prepend header (appears first in tab order)
         section["visualContainers"] = [header_vc] + section["visualContainers"]
 
-        # Update canvas height
+        # Update canvas height — at least as tall as the lowest visual bottom edge
         canvas_h = float(spec.get("canvas_height", section.get("height", 720.0)))
-        section["height"] = max(canvas_h, float(section.get("height", 720.0)))
+        max_bottom = max(
+            (float(vc["y"]) + float(vc["height"]) for vc in section["visualContainers"]),
+            default=canvas_h,
+        )
+        section["height"] = max(canvas_h, max_bottom + 20.0)
 
         print(f"   Layout '{page_name}': {repositioned} repositioned, header added")
 
@@ -1275,6 +1288,16 @@ def apply_visual_styles_to_report(
         "shadow": [{"properties": {"show": _lit("false")}}],
     }
 
+    # Shared header style for both matrix (columnHeaders) and tableEx (header)
+    _header_style = [{"properties": {
+        "fontColor": _solid("#FFFFFF"),
+        "backColor": _solid(primary_color),
+    }}]
+    _totals_style = [{"properties": {
+        "fontColor": _solid(primary_color),
+        "backColor": _solid("#EBF3FB"),
+    }}]
+
     # Table visual content styling: goes into singleVisual.objects
     TABLE_CONTENT: dict = {
         "grid": [{"properties": {
@@ -1282,17 +1305,13 @@ def apply_visual_styles_to_report(
             "rowPadding": _lit("8"),
             "outlineColor": _solid("#E0E0E0"),
         }}],
-        "columnHeaders": [{"properties": {
-            "fontColor": _solid("#FFFFFF"),
-            "backColor": _solid(primary_color),
-        }}],
+        "columnHeaders": _header_style,  # matrix column headers
+        "header": _header_style,          # tableEx column headers (different key name)
         "rowHeaders": [{"properties": {
             "fontColor": _solid("#252525"),
         }}],
-        "subTotals": [{"properties": {
-            "fontColor": _solid(primary_color),
-            "backColor": _solid("#EBF3FB"),
-        }}],
+        "subTotals": _totals_style,  # matrix totals
+        "totals": _totals_style,      # tableEx totals (different key name)
         "values": [{"properties": {
             "fontColor": _solid("#252525"),
         }}],
