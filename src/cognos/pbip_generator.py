@@ -956,14 +956,14 @@ def _make_header_textbox(
     text_runs = [{
         "value": header_text,
         "textStyle": {
-            "fontWeight": "bold",
+            "bold": True,
             "fontSize": "20pt",
             "color": text_color,
         },
     }]
     if header_subtitle:
         text_runs.append({
-            "value": f"  —  {header_subtitle}",
+            "value": f"  |  {header_subtitle}",
             "textStyle": {
                 "fontSize": "11pt",
                 "color": text_color,
@@ -1076,8 +1076,8 @@ def apply_layout_to_report(
                     sv.setdefault("objects", {})["title"] = [{"properties": {
                         "show": _lit("true"),
                         "text": _lit(f"'{title_text}'"),
-                        "fontColor": _solid("#252525"),
-                        "fontSize": _lit("12"),
+                        "fontColor": _solid(primary_color),
+                        "fontSize": _lit("14"),
                     }}]
                     cfg["singleVisual"] = sv
 
