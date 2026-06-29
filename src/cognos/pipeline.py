@@ -28,8 +28,8 @@ import observability as obs
 
 # Imports des modules Cognos
 from cognos import xml_parser, layout_parser, expression_parser
-from cognos import deterministic_translator
-from cognos.llm import unified_translation
+from cognos import deterministic_translator, data_dictionary
+from cognos.llm import unified_translation, viz_translation
 from cognos import pbip_generator, validator
 
 # Imports des modules existants pour réutilisation
@@ -81,9 +81,9 @@ def run_phase1_deterministic(
     print("3. Classification des expressions...")
     classified = expression_parser.classify_expressions_from_queries(xml_data)
     prompt_context = expression_parser.build_prompt_context(classified, xml_data)
-    print(f"   {len(classified['unresolved'])} expressions unresolved (types D & H → LLM)")
-    print(f"   {len(classified['param_switches'])} expressions param_switches (→ deterministic SWITCH)")
-    print(f"   {len(classified['variance'])} expressions variance (→ deterministic)")
+    print(f"   {len(classified['unresolved'])} expressions unresolved (types D & H -> LLM)")
+    print(f"   {len(classified['param_switches'])} expressions param_switches (-> deterministic SWITCH)")
+    print(f"   {len(classified['variance'])} expressions variance (-> deterministic)")
 
     # 4. Read CSV schema for deterministic translation + TI column check
     print("4. Lecture schéma CSV...")
@@ -93,11 +93,22 @@ def run_phase1_deterministic(
         example_dir = xml_path.parent.parent  # fallback
     input_dir = example_dir / "input"
     csv_schema = {}
+    csv_schema_with_samples = {}
     if input_dir.exists():
         csv_schema = deterministic_translator.read_csv_schema(input_dir)
+        csv_schema_with_samples = deterministic_translator.read_csv_schema_with_samples(input_dir)
     csv_schema_path = output_dir / "csv_schema.json"
     csv_schema_path.write_text(json.dumps(csv_schema, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"   -> {csv_schema_path} ({len(csv_schema)} tables)")
+
+    # 5. Read DATA_DICTIONARY.md if present (business context + explicit relationships)
+    print("5. Lecture DATA_DICTIONARY...")
+    dd_path = example_dir / "DATA_DICTIONARY.md"
+    data_dict = data_dictionary.parse_data_dictionary(dd_path)
+    if data_dict["table_map"]:
+        print(f"   {len(data_dict['table_map'])} tables, {len(data_dict['relationships'])} relations, {len(data_dict['shared_keys'])} clés partagées")
+    else:
+        print("   (absent)")
 
     parser_sp.end()
 
@@ -107,6 +118,8 @@ def run_phase1_deterministic(
         "classified": classified,
         "prompt_context": prompt_context,
         "csv_schema": csv_schema,
+        "csv_schema_with_samples": csv_schema_with_samples,
+        "data_dict": data_dict,
     }
 
 
@@ -150,11 +163,12 @@ def run_phase2_translation(phase1_output: dict, output_dir: pathlib.Path, mode: 
     llm_result = unified_translation.run(
         prompt_context=phase1_output["prompt_context"],
         deferred=det_result["deferred"],
-        csv_schema=phase1_output["csv_schema"],
+        csv_schema=phase1_output.get("csv_schema_with_samples") or phase1_output["csv_schema"],
         deterministic_measure_names=det_measure_names,
         output_path=unified_output_path,
         mode=mode,
         trace=trace,
+        data_dictionary_text=phase1_output.get("data_dict", {}).get("raw_text", ""),
     )
 
     llm_sp.end()
@@ -183,7 +197,8 @@ def run_phase3_generator(
     merged_translation: dict,
     output_dir: pathlib.Path,
     report_name: str = "MigrationCognosPBI",
-    trace=None
+    mode: str = "api",
+    trace=None,
 ) -> None:
     """Phase 3: Générateur Déterministe (0 appel LLM).
 
@@ -213,8 +228,12 @@ def run_phase3_generator(
 
     # 1. Générer le modèle sémantique de base depuis CSV (avec report_name)
     print("1. Génération modèle sémantique depuis CSV...")
+    data_dict = phase1_output.get("data_dict", {})
     if input_dir.exists() and list(input_dir.glob("*.csv")):
-        table_names = pbip_builder.build_semantic_model(input_dir, pbip_dir, report_name)
+        table_names = pbip_builder.build_semantic_model(
+            input_dir, pbip_dir, report_name,
+            explicit_relationships=data_dict.get("relationships"),
+        )
         print(f"   {len(table_names)} tables créées")
     else:
         print("   Pas de CSV - modèle vide")
@@ -273,7 +292,22 @@ def run_phase3_generator(
         print("   Conditional formatting...")
         pbip_generator.apply_conditional_formatting_to_report(report_path, color_measures)
 
-    # 7. Bookmarks (real dual-matrix + selection-pane toggle)
+    # 6b. VIZ LLM — map Cognos fields → PBI wells (runs after BIM is complete)
+    print("   VIZ wiring (LLM)...")
+    viz_wiring_path = output_dir / "visual_wiring.json"
+    visual_wiring = viz_translation.run(
+        visual_extraction=phase1_output["visual_data"],
+        bim_path=bim_path,
+        output_path=viz_wiring_path,
+        mode=mode,
+        trace=trace,
+    )
+
+    # 7. Apply viz wiring spec → prototypeQuery + projections
+    print("   Visual wiring...")
+    pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+
+    # 8. Bookmarks (real dual-matrix + selection-pane toggle)
     print("   Bookmarks...")
     bookmarks = pbip_generator.create_bookmarks(xml_data, visual_data)
     pbip_generator.apply_bookmarks_to_report(report_path, bookmarks)
@@ -303,20 +337,31 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Pipeline Cognos vers Power BI (1-prompt architecture)"
     )
-    parser.add_argument("--example", required=True, help="Nom de l'exemple (répertoire)")
-    parser.add_argument("--xml", required=True, help="Chemin vers le XML Cognos")
+    parser.add_argument("--example", default=None, help="Nom de l'exemple (répertoire) [défaut: COGNOS_EXAMPLE_NAME dans .env]")
+    parser.add_argument("--xml", default=None, help="Chemin vers le XML Cognos [défaut: COGNOS_XML_PATH dans .env]")
     parser.add_argument("--mode", choices=["api", "paste"], default="api", help="Mode LLM")
-    parser.add_argument("--skip-llm", action="store_true", help="Sauter l'appel LLM (réutiliser outputs existants)")
+    parser.add_argument("--skip-llm", action="store_true", help="Sauter l'appel LLM data (réutiliser merged_translation.json)")
+    parser.add_argument("--skip-data", action="store_true", help="Sauter la génération BIM — ne relancer que la viz LLM sur le BIM existant")
     args = parser.parse_args()
 
-    example = args.example
-    xml_path = pathlib.Path(args.xml)
+    example = args.example or os.environ.get("COGNOS_EXAMPLE_NAME")
+    xml_raw = args.xml or os.environ.get("COGNOS_XML_PATH")
+
+    if not example:
+        print("Erreur: --example requis ou COGNOS_EXAMPLE_NAME manquant dans .env")
+        sys.exit(1)
+    if not xml_raw:
+        print("Erreur: --xml requis ou COGNOS_XML_PATH manquant dans .env")
+        sys.exit(1)
+
+    xml_path = pathlib.Path(xml_raw)
+    if not xml_path.is_absolute():
+        xml_path = ROOT / xml_path
 
     if not xml_path.exists():
         print(f"Erreur: XML introuvable {xml_path}")
         sys.exit(1)
 
-    # Répertoires
     example_dir = ROOT / "examples" / example
     intermediate_dir = example_dir / "intermediate"
     intermediate_dir.mkdir(parents=True, exist_ok=True)
@@ -325,36 +370,91 @@ def main() -> None:
     print(f"XML: {xml_path}")
     print(f"Output: {example_dir / 'pbip'}\n")
 
-    # Trace principale
     with obs.trace("Cognos_to_PBI_Migration", example=example, mode=args.mode) as trace:
-        # Phase 1: Parseur Déterministe
-        phase1_output = run_phase1_deterministic(xml_path, intermediate_dir, example, trace)
 
-        # Phase 2: Traduction (déterministe + LLM)
-        if not args.skip_llm:
-            merged_translation = run_phase2_translation(phase1_output, intermediate_dir, args.mode, trace)
-        else:
-            print("\n=== Phase 2: Skip LLM (réutilisation outputs existants) ===")
+        if args.skip_data:
+            # ── VIZ-ONLY MODE ───────────────────────────────────────────────
+            # Reload phase1 outputs from disk (no XML re-parse, no LLM data call)
+            print("=== Mode --skip-data : viz seule ===")
+            cognos_json = intermediate_dir / "cognos_extraction.json"
+            visual_json = intermediate_dir / "visual_extraction.json"
+            if not cognos_json.exists() or not visual_json.exists():
+                print("Erreur: intermediate files manquants — lance d'abord sans --skip-data")
+                sys.exit(1)
+
+            xml_data = json.loads(cognos_json.read_text(encoding="utf-8"))
+
+            # Re-parse layout with fixed layout_parser (crosstab fix)
+            from cognos import layout_parser as _lp
+            visual_data = _lp.parse_cognos_layout(xml_data)
+            visual_data = _lp.add_slicers_to_sheets(visual_data, xml_data)
+            visual_json.write_text(json.dumps(visual_data, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"   visual_extraction.json régénéré ({sum(len(s['objects']) for s in visual_data['sheets'])} objects)")
+
+            report_name = "MigrationCognosPBI"
+            pbip_dir = example_dir / "pbip"
+            bim_path = pbip_dir / f"{report_name}.SemanticModel" / "model.bim"
+            report_path = pbip_dir / f"{report_name}.Report" / "report.json"
+
+            if not bim_path.exists():
+                print(f"Erreur: BIM introuvable {bim_path} — lance d'abord sans --skip-data")
+                sys.exit(1)
+
+            # Rebuild report.json containers from updated visual_extraction
+            pbip_builder.build_report(intermediate_dir, pbip_dir, report_name)
+
+            # VIZ LLM
+            print("\n=== VIZ LLM ===")
+            viz_wiring_path = intermediate_dir / "visual_wiring.json"
+            visual_wiring = viz_translation.run(
+                visual_extraction=visual_data,
+                bim_path=bim_path,
+                output_path=viz_wiring_path,
+                mode=args.mode,
+                trace=trace,
+            )
+            pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
+
+            # Reapply bookmarks
             merged_path = intermediate_dir / "merged_translation.json"
             if merged_path.exists():
-                merged_translation = json.loads(merged_path.read_text(encoding="utf-8"))
-                print(f"   merged_translation.json chargé ({len(merged_translation.get('measures', []))} mesures)")
-            else:
-                # Rebuild from deterministic only (no LLM)
-                print("   merged_translation.json introuvable - reconstruction déterministe seule")
-                det_result = deterministic_translator.translate_deterministic(
-                    classified=phase1_output["classified"],
-                    named_styles=phase1_output["xml_data"].get("namedStyles", {}),
-                    csv_schema=phase1_output["csv_schema"],
-                    parameters=phase1_output["xml_data"].get("parameters", []),
-                )
-                merged_translation = {
-                    "measures": det_result["measures"],
-                    "parameter_tables": det_result["parameter_tables"],
-                }
+                merged = json.loads(merged_path.read_text(encoding="utf-8"))
+                color_measures = [m for m in merged.get("measures", []) if m.get("type") == "color"]
+                if color_measures:
+                    pbip_generator.apply_conditional_formatting_to_report(report_path, color_measures)
+            bookmarks = pbip_generator.create_bookmarks(xml_data, visual_data)
+            pbip_generator.apply_bookmarks_to_report(report_path, bookmarks)
 
-        # Phase 3: Générateur
-        run_phase3_generator(example, phase1_output, merged_translation, intermediate_dir, "MigrationCognosPBI", trace)
+            print(f"\nOK VIZ terminée -> {pbip_dir}")
+
+        else:
+            # ── FULL PIPELINE ────────────────────────────────────────────────
+            # Phase 1
+            phase1_output = run_phase1_deterministic(xml_path, intermediate_dir, example, trace)
+
+            # Phase 2
+            if not args.skip_llm:
+                merged_translation = run_phase2_translation(phase1_output, intermediate_dir, args.mode, trace)
+            else:
+                print("\n=== Phase 2: Skip LLM (réutilisation outputs existants) ===")
+                merged_path = intermediate_dir / "merged_translation.json"
+                if merged_path.exists():
+                    merged_translation = json.loads(merged_path.read_text(encoding="utf-8"))
+                    print(f"   merged_translation.json chargé ({len(merged_translation.get('measures', []))} mesures)")
+                else:
+                    det_result = deterministic_translator.translate_deterministic(
+                        classified=phase1_output["classified"],
+                        named_styles=phase1_output["xml_data"].get("namedStyles", {}),
+                        csv_schema=phase1_output["csv_schema"],
+                        parameters=phase1_output["xml_data"].get("parameters", []),
+                    )
+                    merged_translation = {
+                        "measures": det_result["measures"],
+                        "parameter_tables": det_result["parameter_tables"],
+                    }
+
+            # Phase 3
+            run_phase3_generator(example, phase1_output, merged_translation, intermediate_dir, "MigrationCognosPBI", args.mode, trace)
 
     print(f"\nOK Pipeline terminée -> {example_dir / 'pbip'}")
     print(f"  Ouvrez {example_dir / 'pbip' / 'MigrationCognosPBI.pbip'} dans Power BI Desktop")

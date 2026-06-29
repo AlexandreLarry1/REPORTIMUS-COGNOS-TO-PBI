@@ -51,8 +51,12 @@ AGG_FUNCS = re.compile(
 # Row context (Type G) — zebra striping
 ROW_CONTEXT_PATTERN = re.compile(r'mod\s*\(\s*RowNumber\s*\(\s*\)\s*,', re.IGNORECASE)
 
-# [C].[Module].[Table].[Col] → fully-qualified Cognos column reference
-COLUMN_REF_PATTERN = re.compile(r'\[C\]\.\[[^\]]+\]\.\[[^\]]+\]\.\[[^\]]+\]')
+# Matches 4-level Cognos column refs: [C].[Module].[Table].[Col]
+# Optionally followed by a 5th-level member ref .[Member] — e.g. [Value_].[MTD].
+COLUMN_REF_PATTERN = re.compile(
+    r'\[C\]\.\[[^\]]+\]\.\[[^\]]+\]\.\[[^\]]+\]'
+    r'(?:\.\[([^\]]+)\])?'
+)
 
 
 # ---------------------------------------------------------------------------

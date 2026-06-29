@@ -66,8 +66,21 @@ DAX rules:
 2. _add_months(date, -N) → EDATE(date, -N)
 3. date('YYYY-MM-DD') → DATE(YYYY, MM, DD)
 4. String2date('YYYY-MM-DD') → DATE(YYYY, MM, DD)
-5. total(CASE WHEN ... THEN [Val]) → CALCULATE(SUM([Val]), FILTER(...))
+5. total(CASE WHEN ?p? contains 'X' AND [Col] = 'Y' THEN [Val].[Period] END) →
+   Use this VAR pattern (NEVER use SUMX/SWITCH — it is an anti-pattern that breaks context):
+   VAR _p = SELECTEDVALUE('Param_<p>'[<p>], "Full")
+   VAR _base = CALCULATE(SUM(fact_table[value_col]), fact_table[Col] = "csv_value_Y")
+   RETURN SWITCH(_p,
+       "MTD", CALCULATE(_base, DATESMTD('dim_time'[Date])),
+       "QTD", CALCULATE(_base, DATESQTD('dim_time'[Date])),
+       "YTD", CALCULATE(_base, DATESYTD('dim_time'[Date])),
+       _base)
+   IMPORTANT: The filter value "csv_value_Y" must come from the CSV sample values
+   provided in the prompt, NOT from the Cognos expression literal. Cognos names like
+   "Version 1" or "Actual PY" may differ from CSV values like "Budget" or "Actual".
 6. Use DIVIDE(a, b, 0) for any division
+7. For time-shifted measures (SAMEPERIODLASTYEAR / prior year), wrap the base measure:
+   CALCULATE(_base, SAMEPERIODLASTYEAR('dim_time'[Date]))
 """
 
 
@@ -78,14 +91,29 @@ def build_user_prompt(
     named_styles: dict,
     csv_schema: dict,
     deterministic_measure_names: list[str],
+    data_dictionary_text: str = "",
 ) -> str:
     """Build the user prompt with ONLY unresolved expressions + context."""
     lines: list[str] = []
 
-    # CSV schema (for correct table/column references in DAX)
-    lines.append("## CSV schema (use these exact table/column names):\n")
+    # Business data dictionary (table descriptions, relationships, assumptions)
+    if data_dictionary_text:
+        lines.append("## Business data dictionary (source of truth for table/column semantics):\n")
+        lines.append(data_dictionary_text)
+        lines.append("")
+
+    # CSV schema + sample distinct values (for correct table/column refs and value mapping)
+    lines.append("## CSV schema with sample values (use these exact names and values):\n")
     for table, cols in csv_schema.items():
-        lines.append(f"Table '{table}': {', '.join(cols)}")
+        if isinstance(cols, dict):
+            # enriched schema: {col: [sample_values]}
+            for col, samples in cols.items():
+                if samples:
+                    lines.append(f"Table '{table}', column '{col}': sample values = {samples[:8]}")
+                else:
+                    lines.append(f"Table '{table}', column '{col}'")
+        else:
+            lines.append(f"Table '{table}': {', '.join(cols)}")
     lines.append("")
 
     # Parameters (for SELECTEDVALUE targets + disconnected tables)
@@ -195,6 +223,57 @@ def call_api(system: str, user: str, trace=None) -> str:
     return result
 
 
+def _save_llm_trace(
+    output_path: pathlib.Path,
+    system: str,
+    user: str,
+    raw_response: str,
+    parsed: dict,
+    mode: str,
+) -> pathlib.Path:
+    """Save a versioned snapshot of the LLM call under intermediate/llm_traces/.
+
+    Layout:
+        intermediate/llm_traces/
+            20260626_142301/
+                system_prompt.txt
+                user_prompt.txt
+                raw_response.txt
+                parsed_output.json
+                meta.json          ← model, mode, counts, timestamp
+
+    Returns the snapshot directory path.
+    """
+    import datetime
+
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    trace_dir = output_path.parent / "llm_traces" / ts
+    trace_dir.mkdir(parents=True, exist_ok=True)
+
+    (trace_dir / "system_prompt.txt").write_text(system, encoding="utf-8")
+    (trace_dir / "user_prompt.txt").write_text(user, encoding="utf-8")
+    (trace_dir / "raw_response.txt").write_text(raw_response, encoding="utf-8")
+    (trace_dir / "parsed_output.json").write_text(
+        json.dumps(parsed, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    meta = {
+        "timestamp": ts,
+        "mode": mode,
+        "model": os.environ.get("AZURE_OPENAI_DEPLOYMENT", "unknown"),
+        "n_measures": len(parsed.get("measures", [])),
+        "n_parameter_tables": len(parsed.get("parameter_tables", [])),
+        "prompt_chars": len(user),
+        "response_chars": len(raw_response),
+    }
+    (trace_dir / "meta.json").write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    print(f"   LLM trace -> {trace_dir}")
+    return trace_dir
+
+
 def run(
     prompt_context: dict,
     deferred: list[dict],
@@ -203,6 +282,7 @@ def run(
     output_path: pathlib.Path,
     mode: str = "api",
     trace=None,
+    data_dictionary_text: str = "",
 ) -> dict:
     """Execute the SINGLE unified LLM call.
 
@@ -226,6 +306,7 @@ def run(
         named_styles=prompt_context.get("namedStyles", {}),
         csv_schema=csv_schema,
         deterministic_measure_names=deterministic_measure_names,
+        data_dictionary_text=data_dictionary_text,
     )
 
     if mode == "paste":
@@ -238,7 +319,10 @@ def run(
 
         if not output_path.exists():
             raise FileNotFoundError(f"File not found: {output_path}")
-        return json.loads(output_path.read_text(encoding="utf-8"))
+        raw_response = output_path.read_text(encoding="utf-8")
+        data = json.loads(raw_response)
+        _save_llm_trace(output_path, system, user, raw_response, data, mode)
+        return data
 
     # API mode
     raw = call_api(system, user, trace)
@@ -248,6 +332,7 @@ def run(
     n_meas = len(data.get("measures", []))
     n_tabs = len(data.get("parameter_tables", []))
     print(f"Unified translation -> {output_path} ({n_meas} measures, {n_tabs} param tables)")
+    _save_llm_trace(output_path, system, user, raw, data, mode)
 
     return data
 

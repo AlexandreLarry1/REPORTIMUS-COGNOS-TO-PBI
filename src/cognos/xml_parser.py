@@ -419,6 +419,148 @@ def _parse_table_object(table: etree._Element) -> dict:
     }
 
 
+def parse_data_stores(xml_root: etree._Element) -> dict:
+    """Extrait les reportDataStore → {dataStoreN: {refQuery, fields}}.
+
+    Chaîne de résolution utilisée par vizControl et listControl :
+      vizControl.refDataStore → reportDataStore.name → dsV5ListQuery.refQuery + dsV5DataItem.refDataItem
+    """
+    stores: dict[str, dict] = {}
+    for rds in xml_root.findall(".//c:reportDataStore", NS):
+        name = rds.get("name", "")
+        if not name:
+            continue
+        ref_query = ""
+        q = rds.find(".//c:dsV5ListQuery", NS)
+        if q is not None:
+            ref_query = q.get("refQuery", "")
+        fields = [
+            item.get("refDataItem", "")
+            for item in rds.findall(".//c:dsV5DataItem", NS)
+            if item.get("refDataItem", "")
+        ]
+        stores[name] = {"refQuery": ref_query, "fields": fields}
+    return stores
+
+
+def parse_viz_controls(xml_root: etree._Element) -> list[dict]:
+    """Extrait les vizControl IBM avec page d'appartenance et slots de données.
+
+    Structure extraite par vizControl :
+      name, ibm_type (ex: "floatingBar"), page, ref_data_store,
+      slots: {idSlot: [refDsColumn, ...]}, height, width
+    """
+    result: list[dict] = []
+    seen: set[str] = set()
+
+    for page in xml_root.findall(".//c:reportPages/c:page", NS):
+        page_name = page.get("name", "Page1")
+        for vc in page.findall(".//c:vizControl", NS):
+            name = vc.get("name", "")
+            if name in seen:
+                continue
+            seen.add(name)
+
+            ibm_type = vc.get("type", "").split(".")[-1]
+
+            ds = vc.find(".//c:vcDataSet", NS)
+            ref_data_store = ds.get("refDataStore", "") if ds is not None else ""
+
+            slots: dict[str, list[str]] = {}
+            for slot in vc.findall(".//c:vcSlotData", NS):
+                slot_id = slot.get("idSlot", "")
+                fields = [
+                    col.get("refDsColumn", "")
+                    for col in slot.findall("c:vcSlotDsColumns/c:vcSlotDsColumn", NS)
+                    if col.get("refDsColumn", "")
+                ]
+                if fields:
+                    slots[slot_id] = fields
+
+            height = width = ""
+            for prop in vc.findall(".//c:vizPropertyLengthValue", NS):
+                pname = prop.get("name", "")
+                if pname == "vcHeight":
+                    height = prop.text or ""
+                elif pname == "vcWidth":
+                    width = prop.text or ""
+
+            result.append({
+                "name": name,
+                "ibm_type": ibm_type,
+                "page": page_name,
+                "ref_data_store": ref_data_store,
+                "slots": slots,
+                "height": height,
+                "width": width,
+            })
+
+    return result
+
+
+def parse_select_values(xml_root: etree._Element) -> list[dict]:
+    """Extrait les selectValue (slicers dropdown) avec leur page et query source.
+
+    Contrairement aux <parameter> (qui ont des options statiques), les selectValue
+    pointent vers une query Cognos pour leurs valeurs dynamiques.
+    """
+    result: list[dict] = []
+    seen: set[str] = set()
+
+    for page in xml_root.findall(".//c:reportPages/c:page", NS):
+        page_name = page.get("name", "Page1")
+        for sv in page.findall(".//c:selectValue", NS):
+            name = sv.get("name", "")
+            ref_query = sv.get("refQuery", "")
+            param_ref = sv.find(".//c:parameterReference", NS)
+            param_name = param_ref.get("name", "") if param_ref is not None else ""
+
+            key = name or ref_query
+            if key in seen:
+                continue
+            seen.add(key)
+
+            result.append({
+                "name": name or f"slicer_{ref_query}",
+                "page": page_name,
+                "ref_query": ref_query,
+                "param_name": param_name,
+            })
+
+    return result
+
+
+def parse_list_controls(xml_root: etree._Element) -> list[dict]:
+    """Extrait les listControl (tableaux tabulaires Cognos).
+
+    Les colonnes sont résolues via le reportDataStore associé
+    (lcColumn.refDataItem est souvent absent — on utilise dsV5DataItem à la place).
+    """
+    result: list[dict] = []
+
+    for page in xml_root.findall(".//c:reportPages/c:page", NS):
+        page_name = page.get("name", "Page1")
+        for lc in page.findall(".//c:listControl", NS):
+            name = lc.get("name", "")
+            ref_data_store = lc.get("refDataStore", "")
+
+            # Try explicit column refs first; fallback to data store
+            columns = [
+                col.get("refDataItem", "")
+                for col in lc.findall(".//c:lcColumn", NS)
+                if col.get("refDataItem", "")
+            ]
+
+            result.append({
+                "name": name,
+                "page": page_name,
+                "ref_data_store": ref_data_store,
+                "columns": columns,
+            })
+
+    return result
+
+
 def parse_cognos_xml(xml_path: pathlib.Path) -> dict:
     """Point d'entrée principal: parse un fichier XML Cognos complet.
 
@@ -437,7 +579,11 @@ def parse_cognos_xml(xml_path: pathlib.Path) -> dict:
         "queries": parse_queries(root),
         "crosstabs": [parse_crosstab_node(cb) for cb in root.findall(".//c:crosstab", NS)],
         "namedStyles": parse_named_styles(root),
-        "layouts": parse_layouts(root)
+        "layouts": parse_layouts(root),
+        "data_stores": parse_data_stores(root),
+        "viz_controls": parse_viz_controls(root),
+        "list_controls": parse_list_controls(root),
+        "select_values": parse_select_values(root),
     }
 
 

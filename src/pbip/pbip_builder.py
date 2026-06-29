@@ -278,68 +278,79 @@ def _deactivate_ambiguous_paths(relationships: list) -> None:
             print(f"  ~ deactivated (indirect path): {dim_tbl}[via {rel['fromColumn']}] ->{fact_tbl}")
 
 
-def _infer_relationships(tables: list) -> list:
-    """Infer fact→dim relationships using canonical dim matching per FK column.
+def _col_is_unique(csv_path: pathlib.Path, col_name: str) -> bool:
+    """Return True if col_name has no duplicate values in the CSV."""
+    import csv as _csv
+    try:
+        seen: set = set()
+        with csv_path.open(encoding="utf-8-sig", newline="") as f:
+            reader = _csv.DictReader(f)
+            for row in reader:
+                val = row.get(col_name)
+                if val in seen:
+                    return False
+                seen.add(val)
+        return True
+    except Exception:
+        return False  # safe fallback: skip the relationship
 
-    Each FK column maps to exactly ONE dim table (by name similarity).
-    After building all candidate links, redundant direct fact→dim paths are dropped
-    when the dim is already reachable via another intermediate table — preventing
-    Power BI ambiguous-path errors at refresh.
+
+def _infer_relationships(tables: list, csv_path_map: dict | None = None) -> list:
+    """Infer relationships from shared column names between tables.
+
+    Heuristics (no dependency on table name prefixes):
+      - Column shared by exactly 2 tables → candidate (3+ = generic attribute)
+      - One-side: table with unique values in that column (verified from CSV)
+      - Fallback to fewer-column table if CSV not available
+      - One relationship per (fromTable, toTable) pair
     """
+    col_count: dict[str, int] = {t["name"]: len(t.get("columns", [])) for t in tables}
     col_index: dict[str, list[str]] = {}
     for t in tables:
         for c in t.get("columns", []):
             col_index.setdefault(c["name"], []).append(t["name"])
 
-    candidates = []
-    seen: set = set()
+    csv_path_map = csv_path_map or {}
 
+    # Group all shared columns by (many_side, one_side) pair.
+    # Only consider columns shared by exactly 2 tables — columns shared by 3+
+    # are generic attributes (SortOrder, Label…) not semantic join keys.
+    pair_cols: dict[tuple, list[str]] = {}
     for col, tbls in col_index.items():
-        if len(tbls) < 2:
+        if len(tbls) != 2:
             continue
-        if not _re_rel.search(r'(?i)(ID|Key|Ref|Code)$', col):
-            continue
-        dim_tbls  = [t for t in tbls if t.startswith("dim_")]
-        fact_tbls = [t for t in tbls if t.startswith("fact_")]
+        tbl_a, tbl_b = tbls[0], tbls[1]
 
-        # dim→dim: PK owner = dim whose name best matches the FK column.
-        # Triggered when >= 2 dims share the FK, regardless of fact tables.
-        if len(dim_tbls) >= 2:
-            canonical = _canonical_dim(col, dim_tbls)
-            if canonical:
-                for other_dim in dim_tbls:
-                    if other_dim == canonical:
-                        continue
-                    key = (other_dim, canonical, col)
-                    if key not in seen:
-                        seen.add(key)
-                        candidates.append({
-                            "name": f"{other_dim}_{canonical}_{col}",
-                            "fromTable": other_dim,
-                            "fromColumn": col,
-                            "toTable": canonical,
-                            "toColumn": col,
-                        })
-        if not fact_tbls:
+        # Determine one-side: prefer the table whose column is actually unique.
+        # Fall back to fewer columns if CSV unavailable.
+        a_unique = _col_is_unique(csv_path_map[tbl_a], col) if tbl_a in csv_path_map else None
+        b_unique = _col_is_unique(csv_path_map[tbl_b], col) if tbl_b in csv_path_map else None
+
+        if a_unique and not b_unique:
+            one, many = tbl_a, tbl_b
+        elif b_unique and not a_unique:
+            one, many = tbl_b, tbl_a
+        elif a_unique and b_unique:
+            # Both unique — smaller table is one-side
+            one = tbl_a if col_count[tbl_a] <= col_count[tbl_b] else tbl_b
+            many = tbl_b if one == tbl_a else tbl_a
+        else:
+            # Neither unique — skip (can't form a valid many-to-one)
             continue
 
-        if not dim_tbls or not fact_tbls:
-            continue
-        canonical = _canonical_dim(col, dim_tbls)
-        if not canonical:
-            continue
-        for fact in fact_tbls:
-            key = (fact, canonical, col)
-            if key in seen:
-                continue
-            seen.add(key)
-            candidates.append({
-                "name": f"{fact}_{canonical}_{col}",
-                "fromTable": fact,
-                "fromColumn": col,
-                "toTable": canonical,
-                "toColumn": col,
-            })
+        pair_cols.setdefault((many, one), []).append(col)
+
+    candidates = []
+    for (many, one), cols in pair_cols.items():
+        # Pick most key-like column: fewest tables sharing it, then shortest, then alpha
+        best = min(cols, key=lambda c: (len(col_index[c]), len(c), c))
+        candidates.append({
+            "name": f"{many}_{one}_{best}",
+            "fromTable": many,
+            "fromColumn": best,
+            "toTable": one,
+            "toColumn": best,
+        })
 
     # Add all candidates — no BFS dedup (causes wrong drops when dim→dim exist).
     # Deduplication is handled by the post-pass below using directed traversal.
@@ -463,40 +474,64 @@ def _apply_col_overrides(
             )
 
 
-def _relationships_from_schema(rels: list, tables: list) -> list:
-    """Convert LLM relationship dicts to BIM format, dropping any with unknown columns."""
+def _relationships_from_schema(rels: list, tables: list, csv_path_map: dict | None = None) -> list:
+    """Convert relationship dicts to BIM format, dropping any with unknown columns.
+
+    Auto-corrects direction: BIM requires fromTable=many, toTable=one (unique col).
+    Uses CSV uniqueness check when available; falls back to dim_/fact_ prefix heuristic.
+    """
     col_index: dict[str, set[str]] = {
         t["name"]: {c["name"] for c in t.get("columns", [])} for t in tables
     }
+    csv_map = csv_path_map or {}
     result = []
     for r in rels:
         ft, fc, tt, tc = r["fromTable"], r["fromColumn"], r["toTable"], r["toColumn"]
         if ft not in col_index:
-            print(f"  ~ [LLM] ignoré (table inconnue): {ft}")
+            print(f"  ~ [rel] ignoré (table inconnue): {ft}")
             continue
         if tt not in col_index:
-            print(f"  ~ [LLM] ignoré (table inconnue): {tt}")
+            print(f"  ~ [rel] ignoré (table inconnue): {tt}")
             continue
         if fc not in col_index[ft]:
-            print(f"  ~ [LLM] ignoré (colonne inconnue): {ft}[{fc}]")
+            print(f"  ~ [rel] ignoré (colonne inconnue): {ft}[{fc}]")
             continue
         if tc not in col_index[tt]:
-            print(f"  ~ [LLM] ignoré (colonne inconnue): {tt}[{tc}]")
+            print(f"  ~ [rel] ignoré (colonne inconnue): {tt}[{tc}]")
             continue
-        # BIM many-to-one: fromTable=many(fact), toTable=one(dim).
-        # Flip if LLM output is dim→fact so the dim stays on the "one" side.
-        if ft.startswith("dim_") and tt.startswith("fact_"):
+
+        # Determine which side is "one" (unique values) using CSV data when available.
+        ft_csv = csv_map.get(ft)
+        tt_csv = csv_map.get(tt)
+        ft_unique = _col_is_unique(ft_csv, fc) if ft_csv else None
+        tt_unique = _col_is_unique(tt_csv, tc) if tt_csv else None
+
+        if ft_unique is False and tt_unique is not False:
+            # ft has duplicates → ft is many, tt is one (correct direction already)
+            pass
+        elif tt_unique is False and ft_unique is not False:
+            # tt has duplicates → tt is many, ft is one → flip
             ft, fc, tt, tc = tt, tc, ft, fc
+            print(f"  ~ [rel] direction inversée (unicité CSV): {ft}[{fc}] -> {tt}[{tc}]")
+        elif ft.startswith("dim_") and tt.startswith("fact_"):
+            # Fallback heuristic: dim is one side
+            ft, fc, tt, tc = tt, tc, ft, fc
+
         result.append({
             "name": f"{ft}_{tt}_{fc}",
             "fromTable": ft, "fromColumn": fc,
             "toTable": tt,  "toColumn": tc,
         })
-        print(f"  ~ [LLM] {ft}[{fc}] -> {tt}[{tc}]")
+        print(f"  ~ [rel] {ft}[{fc}] -> {tt}[{tc}]")
     return result
 
 
-def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path, report_name: str = REPORT_NAME) -> list[str]:
+def build_semantic_model(
+    csv_dir: pathlib.Path,
+    out_root: pathlib.Path,
+    report_name: str = REPORT_NAME,
+    explicit_relationships: list | None = None,
+) -> list[str]:
     sm_dir  = out_root / f"{report_name}.SemanticModel"
     tables  = []
     csv_path_map: dict[str, pathlib.Path] = {}
@@ -507,18 +542,25 @@ def build_semantic_model(csv_dir: pathlib.Path, out_root: pathlib.Path, report_n
             csv_path_map[t["name"]] = csv_path
             print(f"  + table '{t['name']}' ({len(t['columns'])} cols) <- {csv_path.name}")
 
-    # Load LLM schema if present (schema_builder.py output).
+    # Priority: explicit_relationships (DATA_DICTIONARY) > schema_response.json > inferred
     schema_path = csv_dir.parent / "intermediate" / "schema_response.json"
     schema = json.loads(schema_path.read_text(encoding="utf-8")) if schema_path.exists() else None
 
-    if schema:
+    if explicit_relationships:
+        print("  [dict] DATA_DICTIONARY relationships -> overrides inférence")
+        if schema:
+            _apply_col_overrides(tables, csv_path_map, schema.get("column_types_overrides", []))
+        relationships = _relationships_from_schema(explicit_relationships, tables, csv_path_map)
+        _deactivate_ambiguous_paths(relationships)
+        print(f"  [dict] {len(relationships)} relations")
+    elif schema:
         print("  [schema] schema_response.json trouve -> application des overrides")
         _apply_col_overrides(tables, csv_path_map, schema.get("column_types_overrides", []))
-        relationships = _relationships_from_schema(schema.get("relationships", []), tables)
+        relationships = _relationships_from_schema(schema.get("relationships", []), tables, csv_path_map)
         _deactivate_ambiguous_paths(relationships)
         print(f"  [schema] {len(relationships)} relations LLM")
     else:
-        relationships = _infer_relationships(tables)
+        relationships = _infer_relationships(tables, csv_path_map)
 
     bim = {
         "name": "SemanticModel",
@@ -605,7 +647,9 @@ def _flatten_objects(objects: list) -> list:
 
 
 def _visual_container(obj: dict, tab_order: int) -> dict:
-    viz_type = VIZ_MAP.get(obj.get("type", ""), "card")
+    raw_type = obj.get("type", "")
+    # Use VIZ_MAP for source type translation; if type is already a PBI type, keep it
+    viz_type = VIZ_MAP.get(raw_type, raw_type if raw_type else "card")
     layout   = obj.get("layout", {})
     x, y, w, h = _qlik_to_px(
         layout.get("col", 0), layout.get("row", 0),
@@ -621,13 +665,63 @@ def _visual_container(obj: dict, tab_order: int) -> dict:
     return {"config": config, "filters": "[]", "height": h, "width": w, "x": x, "y": y, "z": tab_order}
 
 
+def _auto_layout(objects: list[dict]) -> list[dict]:
+    """Assign grid positions when all objects share the same (col, row) = (0, 0)."""
+    if not objects:
+        return objects
+    positions = [(o.get("layout", {}).get("col", 0), o.get("layout", {}).get("row", 0)) for o in objects]
+    if len(set(positions)) > 1:
+        return objects  # already positioned — don't touch
+
+    result = []
+    cur_row = 0
+    cur_col = 0
+    COLS = QLIK_COLS  # 30 grid columns
+
+    for obj in objects:
+        obj_type = obj.get("type", "")
+        if obj_type == "slicer":
+            w, h = COLS, 2
+            col, row = 0, cur_row
+            cur_row += h
+            cur_col = 0
+        elif obj_type in ("tableEx", "matrix"):
+            w, h = COLS, 8
+            if cur_col != 0:
+                cur_row += 5
+                cur_col = 0
+            col, row = 0, cur_row
+            cur_row += h
+        else:
+            w, h = 10, 5
+            if cur_col + w > COLS:
+                cur_row += 5
+                cur_col = 0
+            col, row = cur_col, cur_row
+            cur_col += w
+
+        new_obj = dict(obj)
+        new_obj["layout"] = {"col": col, "row": row, "colspan": w, "rowspan": h}
+        result.append(new_obj)
+
+    return result
+
+
 def _section(sheet: dict, ordinal: int) -> dict:
     flat = _flatten_objects(sheet.get("objects", []))
+    flat = _auto_layout(flat)
     containers = [_visual_container(obj, (i + 1) * 1000)
                   for i, obj in enumerate(flat) if "error" not in obj]
+    # Compute actual canvas height needed so no visual is clipped
+    max_bottom = CANVAS_H
+    for obj in flat:
+        layout = obj.get("layout", {})
+        _, y, _, h = _qlik_to_px(layout.get("col", 0), layout.get("row", 0),
+                                  layout.get("colspan", 4), layout.get("rowspan", 3))
+        max_bottom = max(max_bottom, y + h + 20)
     section = {
         "config": "{}", "displayName": sheet.get("title", f"Page {ordinal + 1}"),
-        "displayOption": 1, "filters": "[]", "height": CANVAS_H,
+        "displayOption": 1, "filters": "[]", "height": max_bottom,
         "name": _hex20(), "visualContainers": containers, "width": CANVAS_W,
     }
     if ordinal > 0:
@@ -673,7 +767,7 @@ def build_report(intermediate: pathlib.Path, out_root: pathlib.Path, report_name
                     "title": obj.get("title", ""), "dimensions": obj.get("dimensions", []),
                     "measures": obj.get("measures", []),
                 }
-    _write(report_dir / "qlik_sidecar.json", qlik_meta)
+    _write(report_dir / "visual_sidecar.json", qlik_meta)
     _write(report_dir / "report.json", report)
     _write(report_dir / "definition.pbir", {
         "version": "1.0",

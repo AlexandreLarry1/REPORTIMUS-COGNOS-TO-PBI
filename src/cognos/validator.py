@@ -186,9 +186,20 @@ def _check_relationships(rels: list, col_index: dict) -> list[ValidationError]:
     return errors
 
 
+def _build_measure_index(tables: list) -> dict[str, set[str]]:
+    """Build {table_name: {measure_names}} index."""
+    index: dict[str, set[str]] = {}
+    for table in tables:
+        name = table.get("name")
+        if name:
+            index[name] = {m["name"] for m in table.get("measures", []) if m.get("name")}
+    return index
+
+
 def _check_measures_and_calc_cols(tables: list, col_index: dict) -> list[ValidationError]:
     """Vérifie les mesures DAX et colonnes calculées."""
     errors: list[ValidationError] = []
+    measure_index = _build_measure_index(tables)
 
     for table in tables:
         table_name = table.get("name", "?")
@@ -220,7 +231,7 @@ def _check_measures_and_calc_cols(tables: list, col_index: dict) -> list[Validat
             errors.extend(_check_dax_syntax(expr, f"{table_name}[{m_name}]"))
 
             # Vérifier les références de colonnes
-            errors.extend(_check_column_references(expr, table_name, col_index))
+            errors.extend(_check_column_references(expr, table_name, col_index, measure_index))
 
         # Colonnes calculées
         for col in table.get("columns", []):
@@ -229,7 +240,7 @@ def _check_measures_and_calc_cols(tables: list, col_index: dict) -> list[Validat
                 expr = col.get("expression", "")
                 if expr:
                     errors.extend(_check_dax_syntax(expr, f"{table_name}[{c_name}]"))
-                    errors.extend(_check_column_references(expr, table_name, col_index))
+                    errors.extend(_check_column_references(expr, table_name, col_index, measure_index))
 
     return errors
 
@@ -269,12 +280,17 @@ def _check_dax_syntax(expr: str, location: str) -> list[ValidationError]:
     return errors
 
 
-def _check_column_references(expr: str, context_table: str, col_index: dict) -> list[ValidationError]:
+def _check_column_references(
+    expr: str,
+    context_table: str,
+    col_index: dict,
+    measure_index: dict | None = None,
+) -> list[ValidationError]:
     """Vérifie que les colonnes référencées dans l'expression existent."""
     errors: list[ValidationError] = []
+    measure_index = measure_index or {}
 
     # Pattern pour détecter les références de colonnes: table[col] ou [col]
-    #(table[col])
     refs = re.findall(r'(\w+)\[(\w+)\]', expr)
 
     for table_name, col_name in refs:
@@ -287,7 +303,8 @@ def _check_column_references(expr: str, context_table: str, col_index: dict) -> 
             ))
             continue
 
-        if col_name not in col_index[table_name]:
+        # col could be a measure in that table — not an error
+        if col_name not in col_index[table_name] and col_name not in measure_index.get(table_name, set()):
             errors.append(ValidationError(
                 "warning",
                 "DAX_COLUMN_NOT_FOUND",
@@ -295,10 +312,13 @@ def _check_column_references(expr: str, context_table: str, col_index: dict) -> 
                 f"{table_name}[{col_name}]"
             ))
 
-    # Références implicites [col] (colonne dans la table courante)
-    implicit = re.findall(r'(?<!\w)\[(\w+)\]', expr)
+    # Références implicites [col] (colonne dans la table courante).
+    # Exclude [col] preceded by ' (already covered as qualified ref above).
+    implicit = re.findall(r"(?<![\w'])\[(\w+)\]", expr)
+    all_known = col_index.get(context_table, {})
+    all_known_measures = measure_index.get(context_table, set())
     for col_name in implicit:
-        if context_table in col_index and col_name not in col_index[context_table]:
+        if col_name not in all_known and col_name not in all_known_measures:
             errors.append(ValidationError(
                 "warning",
                 "DAX_IMPLICIT_COLUMN_NOT_FOUND",
