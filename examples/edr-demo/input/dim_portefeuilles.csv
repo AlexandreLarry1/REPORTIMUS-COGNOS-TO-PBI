@@ -1,0 +1,151 @@
+PortefeuilleID,ClientID,TypePortefeuille,DateOuverture,Devise,Statut,ObjectifInvestissement,HorizonInvestissement,BenchmarkRef
+PF00001,CLI0074,Compte Titres,2026-03-06,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00002,CLI0025,PER,2019-11-12,EUR,Actif,Préservation Capital,Long terme (>5 ans),CAC 40
+PF00003,CLI0092,Compte Titres,2020-04-03,EUR,Actif,Croissance,Long terme (>5 ans),CAC 40
+PF00004,CLI0090,PEA-PME,2024-08-13,EUR,Suspendu,Retraite,Court terme (<2 ans),Euro Stoxx 50
+PF00005,CLI0050,Compte Titres,2026-01-05,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00006,CLI0064,Assurance Vie,2024-01-19,EUR,Actif,Croissance,Long terme (>5 ans),Euro Stoxx 50
+PF00007,CLI0052,PEA,2022-01-21,EUR,Actif,Spéculatif,Court terme (<2 ans),Bloomberg Aggr.
+PF00008,CLI0032,Compte Titres,2023-11-19,EUR,Actif,Retraite,Court terme (<2 ans),Bloomberg Aggr.
+PF00009,CLI0019,Compte Titres,2021-10-15,EUR,Suspendu,Retraite,Moyen terme (2-5 ans),MSCI World
+PF00010,CLI0084,Compte Titres,2026-03-02,EUR,Actif,Croissance,Long terme (>5 ans),EONIA+1%
+PF00011,CLI0089,PEA,2023-06-11,EUR,Actif,Revenus,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00012,CLI0001,PEA,2018-10-18,EUR,Clôturé,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00013,CLI0097,Compte Titres,2022-04-05,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00014,CLI0099,PEA-PME,2026-04-17,EUR,Actif,Spéculatif,Long terme (>5 ans),Bloomberg Aggr.
+PF00015,CLI0014,PEA,2019-04-20,EUR,Suspendu,Retraite,Court terme (<2 ans),CAC 40
+PF00016,CLI0100,PEA,2024-12-13,EUR,Actif,Retraite,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00017,CLI0055,PEA,2022-04-12,EUR,Clôturé,Croissance,Moyen terme (2-5 ans),EONIA+1%
+PF00018,CLI0029,PER,2021-12-12,EUR,Clôturé,Revenus,Long terme (>5 ans),Bloomberg Aggr.
+PF00019,CLI0023,Compte Titres,2018-05-27,EUR,Clôturé,Préservation Capital,Long terme (>5 ans),MSCI World
+PF00020,CLI0090,PEA-PME,2019-11-12,EUR,Actif,Spéculatif,Court terme (<2 ans),CAC 40
+PF00021,CLI0067,PEA,2022-03-08,EUR,Actif,Revenus,Court terme (<2 ans),MSCI World
+PF00022,CLI0060,PER,2021-02-06,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00023,CLI0007,Assurance Vie,2022-12-28,EUR,Actif,Retraite,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00024,CLI0072,Assurance Vie,2025-03-16,EUR,Clôturé,Retraite,Long terme (>5 ans),Bloomberg Aggr.
+PF00025,CLI0032,PEA,2021-01-15,EUR,Actif,Croissance,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00026,CLI0016,PEA-PME,2018-11-11,EUR,Actif,Croissance,Long terme (>5 ans),MSCI World
+PF00027,CLI0059,PEA-PME,2022-11-15,EUR,Clôturé,Spéculatif,Moyen terme (2-5 ans),CAC 40
+PF00028,CLI0018,Compte Titres,2024-10-16,EUR,Clôturé,Revenus,Long terme (>5 ans),MSCI World
+PF00029,CLI0060,PEA,2020-03-14,EUR,Actif,Revenus,Moyen terme (2-5 ans),EONIA+1%
+PF00030,CLI0086,Assurance Vie,2025-08-12,EUR,Suspendu,Préservation Capital,Moyen terme (2-5 ans),MSCI World
+PF00031,CLI0068,Compte Titres,2023-02-26,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),CAC 40
+PF00032,CLI0072,PEA-PME,2023-12-22,EUR,Actif,Croissance,Court terme (<2 ans),Bloomberg Aggr.
+PF00033,CLI0077,Compte Titres,2024-05-05,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),MSCI World
+PF00034,CLI0041,Assurance Vie,2022-10-18,EUR,Suspendu,Retraite,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00035,CLI0097,PEA-PME,2020-05-16,EUR,Actif,Croissance,Court terme (<2 ans),CAC 40
+PF00036,CLI0057,PER,2024-02-25,EUR,Actif,Revenus,Court terme (<2 ans),Bloomberg Aggr.
+PF00037,CLI0079,PER,2020-10-01,EUR,Actif,Croissance,Moyen terme (2-5 ans),CAC 40
+PF00038,CLI0093,PEA,2018-11-26,EUR,Actif,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00039,CLI0065,Compte Titres,2018-08-18,EUR,Suspendu,Croissance,Moyen terme (2-5 ans),EONIA+1%
+PF00040,CLI0055,PEA-PME,2021-02-17,EUR,Clôturé,Revenus,Long terme (>5 ans),CAC 40
+PF00041,CLI0071,PEA,2022-06-14,EUR,Suspendu,Retraite,Moyen terme (2-5 ans),CAC 40
+PF00042,CLI0058,Compte Titres,2023-12-10,EUR,Suspendu,Préservation Capital,Long terme (>5 ans),MSCI World
+PF00043,CLI0021,Assurance Vie,2020-05-30,EUR,Suspendu,Spéculatif,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00044,CLI0096,PEA-PME,2021-12-06,EUR,Actif,Préservation Capital,Court terme (<2 ans),Euro Stoxx 50
+PF00045,CLI0061,Compte Titres,2022-02-17,EUR,Suspendu,Retraite,Long terme (>5 ans),EONIA+1%
+PF00046,CLI0058,PEA-PME,2019-05-10,EUR,Clôturé,Retraite,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00047,CLI0034,Compte Titres,2025-08-31,EUR,Clôturé,Retraite,Moyen terme (2-5 ans),CAC 40
+PF00048,CLI0097,Assurance Vie,2018-11-12,EUR,Clôturé,Revenus,Court terme (<2 ans),EONIA+1%
+PF00049,CLI0032,PEA-PME,2024-11-10,EUR,Actif,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00050,CLI0082,PER,2020-08-13,EUR,Suspendu,Spéculatif,Long terme (>5 ans),EONIA+1%
+PF00051,CLI0036,Assurance Vie,2026-05-13,EUR,Clôturé,Revenus,Long terme (>5 ans),Euro Stoxx 50
+PF00052,CLI0099,Compte Titres,2022-08-07,EUR,Actif,Retraite,Court terme (<2 ans),Euro Stoxx 50
+PF00053,CLI0100,PEA-PME,2022-11-28,EUR,Suspendu,Revenus,Long terme (>5 ans),MSCI World
+PF00054,CLI0067,Assurance Vie,2023-07-13,EUR,Suspendu,Spéculatif,Long terme (>5 ans),Euro Stoxx 50
+PF00055,CLI0063,Compte Titres,2021-09-01,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00056,CLI0081,PER,2024-04-29,EUR,Suspendu,Revenus,Moyen terme (2-5 ans),CAC 40
+PF00057,CLI0031,PER,2021-02-23,EUR,Actif,Croissance,Court terme (<2 ans),MSCI World
+PF00058,CLI0036,Compte Titres,2019-10-24,EUR,Actif,Préservation Capital,Long terme (>5 ans),Euro Stoxx 50
+PF00059,CLI0057,PER,2021-12-17,EUR,Actif,Retraite,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00060,CLI0010,Assurance Vie,2025-05-24,EUR,Actif,Préservation Capital,Court terme (<2 ans),EONIA+1%
+PF00061,CLI0092,PER,2020-05-20,EUR,Actif,Spéculatif,Long terme (>5 ans),MSCI World
+PF00062,CLI0037,PEA,2022-04-18,EUR,Actif,Préservation Capital,Court terme (<2 ans),Euro Stoxx 50
+PF00063,CLI0031,PER,2020-03-14,EUR,Actif,Croissance,Long terme (>5 ans),CAC 40
+PF00064,CLI0035,PEA,2019-01-16,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),CAC 40
+PF00065,CLI0043,PEA-PME,2023-09-25,EUR,Suspendu,Préservation Capital,Long terme (>5 ans),Euro Stoxx 50
+PF00066,CLI0041,Assurance Vie,2024-07-02,EUR,Actif,Spéculatif,Long terme (>5 ans),CAC 40
+PF00067,CLI0070,PEA-PME,2024-03-21,EUR,Actif,Spéculatif,Long terme (>5 ans),MSCI World
+PF00068,CLI0011,PEA-PME,2022-10-13,EUR,Actif,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00069,CLI0018,PER,2024-01-31,EUR,Clôturé,Revenus,Court terme (<2 ans),EONIA+1%
+PF00070,CLI0020,PER,2025-08-06,EUR,Clôturé,Retraite,Long terme (>5 ans),MSCI World
+PF00071,CLI0030,PER,2025-03-14,EUR,Suspendu,Spéculatif,Court terme (<2 ans),CAC 40
+PF00072,CLI0050,PEA-PME,2025-03-22,EUR,Clôturé,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00073,CLI0089,Assurance Vie,2023-08-16,EUR,Actif,Préservation Capital,Long terme (>5 ans),MSCI World
+PF00074,CLI0020,Assurance Vie,2020-09-11,EUR,Actif,Préservation Capital,Court terme (<2 ans),CAC 40
+PF00075,CLI0091,PEA,2025-07-26,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00076,CLI0028,Compte Titres,2022-06-04,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00077,CLI0009,Assurance Vie,2024-01-28,EUR,Actif,Retraite,Court terme (<2 ans),EONIA+1%
+PF00078,CLI0054,PER,2025-11-26,EUR,Clôturé,Retraite,Long terme (>5 ans),CAC 40
+PF00079,CLI0053,PEA,2022-05-20,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),CAC 40
+PF00080,CLI0043,PER,2023-11-21,EUR,Actif,Revenus,Long terme (>5 ans),Bloomberg Aggr.
+PF00081,CLI0070,PEA-PME,2026-01-15,EUR,Actif,Revenus,Court terme (<2 ans),Bloomberg Aggr.
+PF00082,CLI0060,PEA-PME,2020-10-26,EUR,Suspendu,Spéculatif,Court terme (<2 ans),MSCI World
+PF00083,CLI0054,PER,2026-04-25,EUR,Actif,Retraite,Moyen terme (2-5 ans),EONIA+1%
+PF00084,CLI0008,Assurance Vie,2022-08-08,EUR,Clôturé,Revenus,Moyen terme (2-5 ans),EONIA+1%
+PF00085,CLI0027,Compte Titres,2021-10-31,EUR,Actif,Retraite,Long terme (>5 ans),CAC 40
+PF00086,CLI0054,PER,2024-09-13,EUR,Suspendu,Croissance,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00087,CLI0050,Assurance Vie,2020-12-23,EUR,Actif,Préservation Capital,Court terme (<2 ans),EONIA+1%
+PF00088,CLI0099,PEA,2024-12-28,EUR,Actif,Retraite,Court terme (<2 ans),Euro Stoxx 50
+PF00089,CLI0075,PER,2018-12-01,EUR,Actif,Retraite,Court terme (<2 ans),EONIA+1%
+PF00090,CLI0090,PEA,2020-04-28,EUR,Actif,Retraite,Long terme (>5 ans),CAC 40
+PF00091,CLI0003,Assurance Vie,2025-10-30,EUR,Actif,Revenus,Moyen terme (2-5 ans),EONIA+1%
+PF00092,CLI0098,Assurance Vie,2025-01-09,EUR,Actif,Retraite,Long terme (>5 ans),MSCI World
+PF00093,CLI0074,Assurance Vie,2025-11-19,EUR,Actif,Croissance,Long terme (>5 ans),Bloomberg Aggr.
+PF00094,CLI0049,Assurance Vie,2021-08-14,EUR,Actif,Revenus,Moyen terme (2-5 ans),CAC 40
+PF00095,CLI0062,PEA-PME,2024-10-23,EUR,Suspendu,Spéculatif,Court terme (<2 ans),CAC 40
+PF00096,CLI0001,Assurance Vie,2020-03-19,EUR,Suspendu,Spéculatif,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00097,CLI0046,PEA-PME,2024-11-20,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00098,CLI0039,Compte Titres,2023-11-30,EUR,Clôturé,Croissance,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00099,CLI0097,PEA-PME,2021-01-18,EUR,Actif,Retraite,Long terme (>5 ans),CAC 40
+PF00100,CLI0050,PEA,2022-02-06,EUR,Clôturé,Croissance,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00101,CLI0054,Compte Titres,2019-10-05,EUR,Actif,Spéculatif,Court terme (<2 ans),Bloomberg Aggr.
+PF00102,CLI0069,PEA,2019-01-11,EUR,Clôturé,Retraite,Moyen terme (2-5 ans),CAC 40
+PF00103,CLI0096,PER,2021-06-09,EUR,Actif,Croissance,Court terme (<2 ans),CAC 40
+PF00104,CLI0095,PER,2025-08-20,EUR,Suspendu,Revenus,Court terme (<2 ans),MSCI World
+PF00105,CLI0070,PEA-PME,2021-08-03,EUR,Suspendu,Retraite,Court terme (<2 ans),EONIA+1%
+PF00106,CLI0078,PEA,2021-04-01,EUR,Clôturé,Revenus,Long terme (>5 ans),Euro Stoxx 50
+PF00107,CLI0029,PER,2020-04-29,EUR,Clôturé,Croissance,Long terme (>5 ans),CAC 40
+PF00108,CLI0063,PER,2025-02-24,EUR,Actif,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00109,CLI0029,PER,2020-12-09,EUR,Suspendu,Préservation Capital,Moyen terme (2-5 ans),MSCI World
+PF00110,CLI0035,Compte Titres,2019-02-12,EUR,Actif,Préservation Capital,Long terme (>5 ans),EONIA+1%
+PF00111,CLI0056,Compte Titres,2023-04-20,EUR,Clôturé,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00112,CLI0063,Assurance Vie,2022-05-24,EUR,Actif,Retraite,Court terme (<2 ans),EONIA+1%
+PF00113,CLI0004,PEA,2018-10-02,EUR,Suspendu,Croissance,Moyen terme (2-5 ans),MSCI World
+PF00114,CLI0050,PER,2018-10-06,EUR,Actif,Préservation Capital,Court terme (<2 ans),Bloomberg Aggr.
+PF00115,CLI0044,PEA,2023-08-03,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00116,CLI0086,Assurance Vie,2024-08-25,EUR,Actif,Retraite,Long terme (>5 ans),EONIA+1%
+PF00117,CLI0087,PEA-PME,2023-08-22,EUR,Actif,Préservation Capital,Court terme (<2 ans),MSCI World
+PF00118,CLI0052,Assurance Vie,2022-06-13,EUR,Suspendu,Retraite,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00119,CLI0093,PER,2020-05-05,EUR,Suspendu,Spéculatif,Moyen terme (2-5 ans),EONIA+1%
+PF00120,CLI0022,PEA-PME,2025-01-07,EUR,Actif,Croissance,Long terme (>5 ans),EONIA+1%
+PF00121,CLI0060,PEA-PME,2023-12-01,EUR,Actif,Spéculatif,Long terme (>5 ans),Bloomberg Aggr.
+PF00122,CLI0017,Assurance Vie,2021-08-26,EUR,Suspendu,Croissance,Long terme (>5 ans),CAC 40
+PF00123,CLI0080,PER,2021-02-09,EUR,Actif,Revenus,Moyen terme (2-5 ans),CAC 40
+PF00124,CLI0069,PEA-PME,2023-11-21,EUR,Actif,Préservation Capital,Long terme (>5 ans),EONIA+1%
+PF00125,CLI0004,Assurance Vie,2024-07-03,EUR,Clôturé,Revenus,Moyen terme (2-5 ans),Euro Stoxx 50
+PF00126,CLI0051,Assurance Vie,2020-10-03,EUR,Suspendu,Croissance,Long terme (>5 ans),Bloomberg Aggr.
+PF00127,CLI0076,PER,2020-09-12,EUR,Clôturé,Retraite,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00128,CLI0073,Assurance Vie,2025-05-29,EUR,Actif,Croissance,Court terme (<2 ans),Euro Stoxx 50
+PF00129,CLI0085,Assurance Vie,2023-08-27,EUR,Actif,Croissance,Long terme (>5 ans),Bloomberg Aggr.
+PF00130,CLI0004,Assurance Vie,2022-03-27,EUR,Suspendu,Retraite,Court terme (<2 ans),MSCI World
+PF00131,CLI0011,PEA,2022-02-07,EUR,Clôturé,Revenus,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00132,CLI0083,Compte Titres,2026-01-26,EUR,Clôturé,Préservation Capital,Court terme (<2 ans),Bloomberg Aggr.
+PF00133,CLI0055,PEA,2023-03-20,EUR,Actif,Croissance,Long terme (>5 ans),Bloomberg Aggr.
+PF00134,CLI0018,Assurance Vie,2022-02-11,EUR,Clôturé,Croissance,Long terme (>5 ans),CAC 40
+PF00135,CLI0060,Compte Titres,2025-12-08,EUR,Actif,Préservation Capital,Moyen terme (2-5 ans),MSCI World
+PF00136,CLI0024,PEA-PME,2021-08-02,EUR,Clôturé,Croissance,Long terme (>5 ans),Bloomberg Aggr.
+PF00137,CLI0007,PEA,2020-09-04,EUR,Actif,Préservation Capital,Court terme (<2 ans),MSCI World
+PF00138,CLI0034,PEA,2024-01-17,EUR,Actif,Préservation Capital,Long terme (>5 ans),MSCI World
+PF00139,CLI0049,PEA,2018-11-11,EUR,Actif,Préservation Capital,Court terme (<2 ans),MSCI World
+PF00140,CLI0042,PER,2020-03-30,EUR,Actif,Retraite,Long terme (>5 ans),Euro Stoxx 50
+PF00141,CLI0028,Assurance Vie,2019-09-18,EUR,Actif,Revenus,Moyen terme (2-5 ans),Bloomberg Aggr.
+PF00142,CLI0059,PEA-PME,2023-07-09,EUR,Clôturé,Revenus,Long terme (>5 ans),CAC 40
+PF00143,CLI0042,PEA-PME,2018-07-14,EUR,Clôturé,Spéculatif,Moyen terme (2-5 ans),CAC 40
+PF00144,CLI0044,PEA-PME,2021-01-11,EUR,Actif,Retraite,Long terme (>5 ans),CAC 40
+PF00145,CLI0098,Assurance Vie,2024-08-29,EUR,Clôturé,Spéculatif,Moyen terme (2-5 ans),CAC 40
+PF00146,CLI0049,Compte Titres,2022-07-31,EUR,Suspendu,Revenus,Court terme (<2 ans),Bloomberg Aggr.
+PF00147,CLI0036,PEA,2024-11-21,EUR,Actif,Revenus,Court terme (<2 ans),CAC 40
+PF00148,CLI0097,Assurance Vie,2023-04-15,EUR,Clôturé,Revenus,Court terme (<2 ans),MSCI World
+PF00149,CLI0054,PEA,2023-08-25,EUR,Actif,Croissance,Court terme (<2 ans),Euro Stoxx 50
+PF00150,CLI0033,Assurance Vie,2020-01-07,EUR,Actif,Spéculatif,Moyen terme (2-5 ans),EONIA+1%

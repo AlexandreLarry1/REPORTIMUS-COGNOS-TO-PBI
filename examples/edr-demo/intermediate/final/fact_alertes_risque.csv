@@ -1,0 +1,501 @@
+AlerteID,PortefeuilleID,ClientID,DateAlerte,TypeAlerte,Severite,Statut,Description,ValeurMesure,SeuilAlerte,DateResolution
+ALT00001,PF00115,CLI0095,2025-11-23,Concentration Secteur,Haute,En traitement,Front remettre revoir donc cheveu parce que transformer assurer raison beaux côte.,-23.81,7.34,2026-02-14
+ALT00002,PF00075,CLI0066,2025-09-28,Limite Exposition Dépassée,Faible,Ouverte,Arrivée arme grandir y parvenir ombre arrêter frapper madame.,24.91,3.76,2025-12-09
+ALT00003,PF00092,CLI0071,2025-02-28,KYC Expiré,Critique,Ouverte,Croire vous saint main appel aide recevoir public.,5.04,-8.78,2026-05-18
+ALT00004,PF00003,CLI0094,2025-10-01,Drawdown Excessif,Critique,En traitement,Minute vie service brûler complet elle fumée abri usage vraiment espace verre.,-17.16,-9.5,2025-12-11
+ALT00005,PF00013,CLI0040,2024-10-29,Limite Exposition Dépassée,Modérée,En traitement,Odeur mort inutile lui long écarter conversation.,9.05,2.24,2025-12-17
+ALT00006,PF00033,CLI0086,2025-09-17,KYC Expiré,Modérée,Ouverte,Interrompre parole angoisse vision imposer hôtel garçon elle servir couleur.,-21.53,6.86,2025-10-14
+ALT00007,PF00018,CLI0042,2026-04-22,Drawdown Excessif,Modérée,Ouverte,Portier joie mien joie chacun problème.,16.45,8.8,2026-02-15
+ALT00008,PF00148,CLI0007,2024-11-24,Drawdown Excessif,Haute,Ignorée,Famille suffire naturellement ramener cou moi cesse soudain ceci souhaiter vers cou marier.,-12.82,8.95,2025-06-23
+ALT00009,PF00053,CLI0098,2025-07-09,Instrument Suspendu,Modérée,Ignorée,Consulter lequel conduire assurer matière doux condition yeux roman.,15.56,-14.44,2025-11-22
+ALT00010,PF00119,CLI0026,2025-04-30,KYC Expiré,Critique,En traitement,Construire droite joie ce membre révéler convenir compagnie sonner scène face.,18.51,3.04,2026-02-08
+ALT00011,PF00026,CLI0008,2026-02-12,Limite Exposition Dépassée,Faible,Ignorée,Pouvoir long apporter croiser peuple corps montagne accompagner remplir après.,-18.93,9.9,2026-02-20
+ALT00012,PF00099,CLI0069,2024-06-27,Dépassement VaR,Faible,Ouverte,Surprendre risquer auprès pointe qui rire hasard effacer chaîne semaine.,29.97,-4.75,2026-03-04
+ALT00013,PF00089,CLI0090,2025-12-27,Drawdown Excessif,Modérée,Résolue,Résister si présenter saint long nuit preuve arme chasse avis argent.,-23.99,-2.49,2026-04-29
+ALT00014,PF00019,CLI0036,2025-09-02,KYC Expiré,Haute,Ignorée,Principe croix sonner courir surtout magnifique à ah preuve élément beau masse.,20.43,-14.82,2025-08-07
+ALT00015,PF00148,CLI0080,2025-11-03,Concentration Secteur,Critique,En traitement,Avenir représenter silence demi pluie dessiner chambre droite précis demeurer.,2.88,-10.55,2026-04-23
+ALT00016,PF00057,CLI0070,2025-10-27,Concentration Secteur,Faible,Ouverte,Contenir ailleurs jardin simple juste premier oeuvre réunir figure parcourir printemps.,19.12,0.06,2026-03-21
+ALT00017,PF00117,CLI0035,2025-03-08,Concentration Secteur,Faible,Ouverte,Idée essayer problème inutile jamais position naturel social étage oh.,-12.95,7.83,2025-11-16
+ALT00018,PF00020,CLI0060,2024-05-21,Dépassement VaR,Modérée,Résolue,Parti ce naturel amener voyage couper après cheval.,28.38,7.15,2025-11-30
+ALT00019,PF00013,CLI0078,2025-07-19,KYC Expiré,Faible,Ouverte,Source travailler fine lier considérer prévenir militaire.,-12.01,-3.81,2026-03-12
+ALT00020,PF00103,CLI0094,2026-05-01,KYC Expiré,Critique,Ignorée,Serrer arbre feu examiner dangereux etc endroit il élément trace voile esprit douleur.,20.4,2.29,2025-09-20
+ALT00021,PF00138,CLI0020,2024-06-16,Limite Exposition Dépassée,Faible,En traitement,Ouvrir marché franc obliger durant corde.,-20.57,2.49,2025-12-09
+ALT00022,PF00109,CLI0004,2025-01-01,Concentration Secteur,Critique,Ignorée,Soulever presser sorte drôle tuer cela morceau simple image.,-22.37,-3.86,2025-05-18
+ALT00023,PF00096,CLI0097,2026-04-19,Drawdown Excessif,Faible,Ouverte,Écraser recommencer présence nécessaire travailler musique absolument fonction foi papier avec ruine.,9.91,-4.93,2026-02-07
+ALT00024,PF00104,CLI0094,2024-12-07,Dépassement VaR,Modérée,Résolue,Examiner suite gagner danger lorsque autre compagnon briller.,9.1,-7.68,2025-05-21
+ALT00025,PF00114,CLI0004,2024-07-29,Instrument Suspendu,Haute,Ouverte,Pauvre reconnaître couleur bois arrière vague étoile parvenir deux.,-10.96,13.41,2025-09-06
+ALT00026,PF00030,CLI0047,2024-10-04,Drawdown Excessif,Modérée,Ouverte,Ci descendre propre naissance tel expérience est.,1.3,2.55,2025-07-06
+ALT00027,PF00001,CLI0067,2024-10-07,KYC Expiré,Faible,Ouverte,Côte dormir quart fort jeu yeux épaule ça trait même autour note dimanche.,-23.73,0.65,2026-03-04
+ALT00028,PF00118,CLI0059,2025-03-23,Instrument Suspendu,Critique,Ignorée,Étroit exemple lieu ciel chair rester propos.,0.84,3.72,2025-11-30
+ALT00029,PF00043,CLI0090,2024-09-10,Instrument Suspendu,Modérée,Ouverte,Repousser élément retirer entraîner mode foule jeunesse réclamer chiffre tenter frère public.,15.97,5.57,2026-02-17
+ALT00030,PF00054,CLI0045,2024-08-24,Limite Exposition Dépassée,Critique,En traitement,Aide françois faim garçon devoir matin roi sérieux suivant dix besoin voyage.,6.05,4.07,2025-12-07
+ALT00031,PF00141,CLI0093,2025-04-11,Limite Exposition Dépassée,Haute,Résolue,Chasse fixe père vue intérêt fauteuil poser ici long précis commencement ferme.,-27.52,5.43,2026-02-08
+ALT00032,PF00022,CLI0015,2025-02-22,Dépassement VaR,Critique,Résolue,Immobile dehors établir main cela savoir âge paysage soleil lendemain sec.,-17.11,4.64,2025-09-01
+ALT00033,PF00007,CLI0094,2026-04-16,Concentration Secteur,Critique,En traitement,Position assister présenter connaissance poche ami subir parcourir.,25.58,4.33,2025-07-25
+ALT00034,PF00135,CLI0083,2024-07-24,Drawdown Excessif,Haute,En traitement,Essuyer cou situation emmener construire éloigner avouer or huit gros.,27.34,14.49,2025-12-14
+ALT00035,PF00004,CLI0024,2026-04-25,Instrument Suspendu,Modérée,Ignorée,Enfoncer mensonge certainement besoin complet fortune ceci été divers épais.,-29.28,-10.53,2025-11-14
+ALT00036,PF00073,CLI0039,2024-11-11,Dépassement VaR,Haute,Ouverte,Drôle liberté hauteur histoire cours présent jeunesse vert rouge mourir qualité inutile.,-10.24,8.71,2025-08-21
+ALT00037,PF00033,CLI0084,2024-05-25,Concentration Secteur,Critique,Ouverte,Ministre porter écarter extraordinaire réel rapide lorsque ennemi docteur ligne.,28.51,-7.85,2026-05-15
+ALT00038,PF00103,CLI0017,2025-03-30,Dépassement VaR,Haute,Résolue,Poste image maintenant atteindre devoir conversation miser donner bande ci fer.,6.17,-13.9,2026-01-10
+ALT00039,PF00057,CLI0006,2025-12-23,Dépassement VaR,Faible,En traitement,Réclamer lentement mieux chercher tandis que lien absolu te françois divers hasard leur.,11.92,-0.68,2026-01-11
+ALT00040,PF00042,CLI0042,2025-06-05,KYC Expiré,Modérée,Ignorée,Sept conscience voyage sentiment humide auprès lorsque cercle.,-4.43,5.12,2025-09-13
+ALT00041,PF00035,CLI0045,2025-12-14,Concentration Secteur,Faible,En traitement,Camarade gens prêter rapidement général près dresser occuper livrer depuis pouvoir.,-23.02,-14.6,2026-01-08
+ALT00042,PF00021,CLI0017,2025-03-06,Dépassement VaR,Faible,Résolue,Confier social arrêter bout risquer aussitôt figure gauche rapide employer perdu déchirer apercevoir.,21.34,7.22,2026-03-04
+ALT00043,PF00057,CLI0056,2025-03-08,Concentration Secteur,Faible,En traitement,Retrouver certain flot écraser vieil connaître tête court source défaut même.,-28.14,-4.15,2025-06-09
+ALT00044,PF00096,CLI0050,2024-09-10,Drawdown Excessif,Faible,Ouverte,Palais théâtre pays abri espoir fuir garde.,20.9,-6.18,2025-10-17
+ALT00045,PF00103,CLI0035,2025-06-18,Concentration Secteur,Faible,Ignorée,Après en dangereux couper présence seconde fin couleur titre énorme.,11.38,-14.92,2025-10-03
+ALT00046,PF00106,CLI0054,2024-12-20,Instrument Suspendu,Faible,En traitement,Art effacer conduire blond animer nuit entretenir visite.,5.4,10.46,2025-10-22
+ALT00047,PF00100,CLI0031,2025-10-22,KYC Expiré,Modérée,En traitement,Siège espérer animal rire siège jaune train rideau attention craindre transformer.,-18.83,-2.39,2026-05-07
+ALT00048,PF00096,CLI0012,2025-03-25,Limite Exposition Dépassée,Faible,Résolue,Ouvert fier rôle etc naturellement même ami chercher trois pas larme.,-23.38,-5.96,2026-03-06
+ALT00049,PF00067,CLI0002,2025-08-23,Instrument Suspendu,Haute,Ouverte,Si prison courant que petit tranquille unique commander ça vie front plus officier.,20.17,2.93,2026-04-23
+ALT00050,PF00028,CLI0068,2024-09-14,KYC Expiré,Faible,Ouverte,Vraiment ville public maintenir vision public comment jeune par.,15.61,-8.81,2026-04-15
+ALT00051,PF00132,CLI0078,2026-03-04,Limite Exposition Dépassée,Modérée,Ignorée,Clef confiance voler large bande retomber.,-24.83,3.84,2026-02-16
+ALT00052,PF00089,CLI0028,2024-06-03,KYC Expiré,Faible,En traitement,Riche avec celui attitude offrir signer surveiller auquel condition.,21.06,11.38,2025-09-29
+ALT00053,PF00007,CLI0030,2025-01-19,Instrument Suspendu,Haute,Ignorée,Choix consentir promettre lui sauter répandre éviter mode glisser entendre heure presser saint.,18.38,0.15,2025-12-17
+ALT00054,PF00054,CLI0053,2025-09-30,Dépassement VaR,Critique,Résolue,Fatiguer bataille barbe volonté arme juger tellement sujet.,26.63,-12.18,2026-03-18
+ALT00055,PF00020,CLI0039,2026-04-20,Instrument Suspendu,Faible,Ouverte,Guère vaste quand grain refuser nouveau propre devoir par jusque séparer.,-16.74,-0.93,2026-02-21
+ALT00056,PF00016,CLI0004,2024-10-12,Instrument Suspendu,Modérée,Résolue,Dos chaleur loup premier gris sombre muet train genou chair.,-24.56,0.38,2025-06-23
+ALT00057,PF00132,CLI0025,2025-10-27,Dépassement VaR,Faible,Ouverte,Tout plan dépasser six étude homme tapis vieillard leur.,3.18,13.24,2025-08-08
+ALT00058,PF00011,CLI0045,2024-08-03,Dépassement VaR,Haute,En traitement,Jeune droite flamme absolu science auteur madame digne tracer règle beau.,-15.96,-7.32,2025-12-16
+ALT00059,PF00093,CLI0038,2024-08-01,Concentration Secteur,Modérée,En traitement,Ami contraire croire aucun également mince écarter ensemble travers.,3.8,-5.66,2026-04-30
+ALT00060,PF00096,CLI0025,2026-01-02,KYC Expiré,Modérée,Résolue,Mal résistance un pencher science manquer satisfaire horizon.,16.31,12.1,2025-10-10
+ALT00061,PF00146,CLI0046,2026-05-14,Drawdown Excessif,Critique,Ignorée,Assister instant importance vrai docteur feuille travers branche devoir.,-15.21,13.44,2025-07-13
+ALT00062,PF00077,CLI0012,2026-03-17,Limite Exposition Dépassée,Haute,En traitement,Autre pointe et vide foi goût honte ville causer rôle.,-8.61,-1.9,2025-06-03
+ALT00063,PF00080,CLI0100,2025-10-14,Instrument Suspendu,Critique,En traitement,Passer paysage beaux morceau désigner il écraser où désirer ici.,-15.0,-0.37,2025-11-10
+ALT00064,PF00117,CLI0100,2024-11-12,Instrument Suspendu,Faible,En traitement,Fine indiquer retour brûler apercevoir malheur quoi aussitôt suite.,-15.54,10.64,2025-09-17
+ALT00065,PF00089,CLI0069,2025-09-28,KYC Expiré,Faible,Résolue,Intérêt veiller soir aucun revoir bas qualité point arrière éclat rencontre.,-22.51,7.07,2026-04-11
+ALT00066,PF00109,CLI0072,2025-11-22,Instrument Suspendu,Faible,En traitement,Personne tête terrible repas surveiller ami remonter appeler charger gens mauvais.,-8.95,-14.99,2025-06-29
+ALT00067,PF00055,CLI0091,2024-07-26,Concentration Secteur,Modérée,Ouverte,Appel dehors aventure au précieux chaud mari côte.,-27.87,-11.27,2025-08-08
+ALT00068,PF00054,CLI0052,2026-01-20,Dépassement VaR,Haute,Ignorée,Confondre quoi gris peau déchirer médecin portier droit être.,13.82,9.59,2025-07-28
+ALT00069,PF00020,CLI0035,2025-08-19,Concentration Secteur,Modérée,Ouverte,Place au voyage en impossible droite quatre.,-14.73,-9.64,2026-03-03
+ALT00070,PF00111,CLI0073,2026-01-09,Concentration Secteur,Faible,Ouverte,Pousser haut plan malheur mériter aucun trop facile.,26.67,-2.53,2025-10-03
+ALT00071,PF00001,CLI0020,2024-11-01,Instrument Suspendu,Faible,En traitement,Jambe faim époque fin amour humain mourir présent salle avoir.,-12.17,13.24,2026-05-09
+ALT00072,PF00005,CLI0072,2025-03-02,Drawdown Excessif,Faible,En traitement,Changer pourtant jouer cependant juge million un seuil ordre obliger lentement volonté.,-29.66,-5.93,2026-04-15
+ALT00073,PF00137,CLI0054,2024-06-29,Dépassement VaR,Critique,En traitement,Encore fou entraîner fauteuil fils étude.,6.02,3.47,2026-05-03
+ALT00074,PF00091,CLI0093,2024-12-09,Concentration Secteur,Critique,Résolue,Lire sorte échapper chaque croiser partager tout pauvre parti falloir.,-8.9,-0.63,2026-04-30
+ALT00075,PF00045,CLI0049,2025-04-05,Limite Exposition Dépassée,Haute,Ouverte,Courant espace double projet vieil aujourd'hui mode sans double livre partir agir reconnaître.,24.62,12.27,2026-01-05
+ALT00076,PF00110,CLI0035,2024-08-21,Drawdown Excessif,Critique,En traitement,Sommeil professeur mériter assez votre tôt solitude.,14.78,12.82,2025-10-23
+ALT00077,PF00050,CLI0093,2025-04-12,Dépassement VaR,Modérée,Ignorée,Souvent déchirer je prochain vin hors auprès étranger état connaissance près habitant.,12.55,-5.19,2025-12-30
+ALT00078,PF00129,CLI0083,2025-06-10,Concentration Secteur,Modérée,Ouverte,Maître roche lequel porter défendre installer colline énergie monter.,-21.11,14.09,2025-12-28
+ALT00079,PF00009,CLI0082,2024-11-13,Drawdown Excessif,Faible,Ouverte,Chemin embrasser tête retour donc davantage amuser militaire guère fou.,13.26,7.83,2025-06-23
+ALT00080,PF00142,CLI0008,2025-05-19,KYC Expiré,Critique,Ignorée,Souffrir secret bord supérieur relation mine étaler avouer voix mari.,22.21,-11.44,2025-06-13
+ALT00081,PF00076,CLI0069,2026-03-09,Limite Exposition Dépassée,Faible,Ignorée,Animer métier étage prier poursuivre livrer souffrir présent ignorer même ainsi loi.,10.27,1.64,2025-07-29
+ALT00082,PF00003,CLI0011,2025-10-20,Concentration Secteur,Haute,Résolue,Matière réduire tenir rire atteindre accomplir étudier songer pénétrer troubler.,-15.09,11.42,2025-10-19
+ALT00083,PF00007,CLI0052,2026-04-16,Concentration Secteur,Faible,Résolue,Armée avance père accomplir commander groupe ça reprendre pénétrer large sous eh situation.,2.2,13.91,2025-12-26
+ALT00084,PF00005,CLI0086,2024-11-22,Drawdown Excessif,Critique,En traitement,Savoir bon peur détail selon puis allumer chance bord seconde.,20.56,14.88,2025-10-12
+ALT00085,PF00001,CLI0069,2025-10-06,Concentration Secteur,Faible,Ouverte,Répéter grand devant garçon objet carte prétendre inventer politique ceci ni.,-18.99,3.46,2026-04-27
+ALT00086,PF00109,CLI0097,2024-07-23,Instrument Suspendu,Faible,Résolue,Confier gauche déclarer homme couleur coûter maintenant content nuit voisin tendre.,-2.49,7.1,2026-04-02
+ALT00087,PF00102,CLI0071,2025-05-15,Concentration Secteur,Modérée,En traitement,Planche obtenir assez six question fusil nul prier fin pourtant avoir gloire.,-3.26,9.67,2025-12-21
+ALT00088,PF00116,CLI0083,2025-04-22,Instrument Suspendu,Haute,Ouverte,Horizon classe problème hasard ligne durer porte.,-3.1,-1.21,2025-08-27
+ALT00089,PF00130,CLI0045,2024-10-22,Limite Exposition Dépassée,Faible,Ignorée,Agent écrire arrêter expérience haute dehors.,24.54,-1.9,2025-07-22
+ALT00090,PF00134,CLI0062,2024-11-24,Drawdown Excessif,Critique,Ouverte,Principe fait sept chercher odeur subir fermer passé tendre aimer dernier professeur corps voile.,24.54,-14.99,2026-04-28
+ALT00091,PF00061,CLI0084,2024-08-09,Concentration Secteur,Modérée,En traitement,Rayon meilleur doucement recommencer après rapide père cuisine moi reprendre.,28.06,4.75,2025-07-14
+ALT00092,PF00041,CLI0003,2024-06-11,KYC Expiré,Haute,Ignorée,Yeux soldat tempête aujourd'hui rapide tapis plein.,-8.48,11.4,2025-09-04
+ALT00093,PF00035,CLI0009,2025-12-15,KYC Expiré,Critique,Résolue,Personne essuyer sans signer rassurer cas plaisir.,27.73,-1.94,2025-12-07
+ALT00094,PF00001,CLI0019,2024-05-20,Limite Exposition Dépassée,Critique,Ouverte,Envie lumière monde dormir partir rêver diriger fleur derrière bruit fin rencontre.,-10.89,-13.93,2025-05-21
+ALT00095,PF00030,CLI0099,2024-10-06,KYC Expiré,Faible,Ignorée,Soit chercher seigneur volonté fête avec interroger arrêter.,13.52,1.59,2025-05-24
+ALT00096,PF00116,CLI0037,2025-07-11,Limite Exposition Dépassée,Haute,Ouverte,Briller souffler précipiter plaine titre poésie fermer an frapper grâce joli dame.,22.39,-11.96,2025-09-10
+ALT00097,PF00132,CLI0080,2025-08-19,Limite Exposition Dépassée,Critique,Ouverte,Éternel faire mériter fort atteindre pensée.,-14.05,6.91,2026-02-21
+ALT00098,PF00099,CLI0091,2025-10-14,Instrument Suspendu,Haute,Résolue,Écarter éclater faible général si soleil goutte supérieur bureau centre cinquante.,-10.24,-4.44,2025-08-12
+ALT00099,PF00082,CLI0063,2026-02-10,Dépassement VaR,Faible,En traitement,Entrée de un sauvage placer accompagner se répéter ci accuser noire terminer.,-22.83,3.56,2025-06-26
+ALT00100,PF00040,CLI0039,2025-07-20,Concentration Secteur,Haute,Résolue,Adresser printemps pendant autorité appeler lequel poitrine.,-23.92,-4.69,2026-01-06
+ALT00101,PF00054,CLI0062,2024-06-25,Concentration Secteur,Modérée,Ignorée,Oreille composer but mince complètement gouvernement tirer.,3.17,1.34,2025-08-09
+ALT00102,PF00016,CLI0017,2025-06-01,KYC Expiré,Haute,Ouverte,Front moyen premier commencement tâche chose arrière quartier.,-4.74,3.14,2025-08-29
+ALT00103,PF00054,CLI0095,2025-11-19,KYC Expiré,Haute,Résolue,Dehors ressembler chien rang justice tâche.,6.05,11.55,2025-11-23
+ALT00104,PF00122,CLI0099,2026-01-29,Dépassement VaR,Haute,Résolue,Conduire robe croire éclater repas foule.,29.08,5.58,2025-07-25
+ALT00105,PF00035,CLI0088,2026-03-15,Concentration Secteur,Critique,Résolue,Rayon coin franc montagne absence leur contraire politique souffrance.,19.92,7.29,2025-06-08
+ALT00106,PF00019,CLI0060,2025-11-06,Instrument Suspendu,Haute,Ouverte,Aucun finir empire imaginer seulement poste nu égal mon.,21.5,13.51,2026-04-11
+ALT00107,PF00033,CLI0074,2025-05-18,Limite Exposition Dépassée,Modérée,Ignorée,Chemin vif gagner garder comme fin visage maison nouveau joindre tenir.,-15.34,-13.4,2025-12-31
+ALT00108,PF00057,CLI0073,2024-07-10,Limite Exposition Dépassée,Faible,Ouverte,Aide près époque court mériter déposer.,4.05,-5.89,2025-09-03
+ALT00109,PF00050,CLI0095,2024-12-08,Limite Exposition Dépassée,Modérée,Ouverte,Quand terre naturel soleil histoire rang suivre appartement jeu colère remercier musique.,-7.37,-12.7,2026-04-18
+ALT00110,PF00047,CLI0081,2025-12-03,Dépassement VaR,Modérée,Résolue,Aussitôt comment un couper esprit essuyer suivre scène rôle étoile avoir couler éteindre.,27.25,7.83,2026-03-06
+ALT00111,PF00043,CLI0020,2024-07-11,Limite Exposition Dépassée,Critique,Ignorée,Douze lisser respect avec mener as posséder conduire épais grave intention vérité exemple.,21.42,-2.69,2026-04-06
+ALT00112,PF00050,CLI0053,2024-12-02,Concentration Secteur,Modérée,En traitement,Femme loi point recommencer exposer travailler.,-20.76,5.88,2026-05-06
+ALT00113,PF00099,CLI0051,2024-11-13,KYC Expiré,Haute,En traitement,Recommencer autre rapidement dormir ombre réduire soutenir monsieur demi falloir.,-23.61,3.07,2025-08-26
+ALT00114,PF00034,CLI0029,2026-05-03,Instrument Suspendu,Critique,Ouverte,Semaine père auteur chef moyen rêve travailler odeur auprès.,-4.54,2.63,2025-07-12
+ALT00115,PF00082,CLI0060,2026-03-19,Concentration Secteur,Haute,Ignorée,Présence glace fumée double hier puis payer.,6.74,1.55,2025-12-09
+ALT00116,PF00030,CLI0028,2024-11-24,Drawdown Excessif,Modérée,Résolue,Traverser savoir type vaste ci plante bouche cause chair veille.,-14.01,9.68,2026-04-01
+ALT00117,PF00031,CLI0030,2026-03-25,Instrument Suspendu,Critique,En traitement,Fonction étendue nouveau plaindre étoile pareil quand branche rose éteindre.,11.47,11.57,2025-10-04
+ALT00118,PF00062,CLI0064,2025-08-10,Concentration Secteur,Modérée,Résolue,Plante en fatigue nul presser nuage.,27.62,-0.54,2025-10-02
+ALT00119,PF00127,CLI0026,2025-11-27,Limite Exposition Dépassée,Critique,Ouverte,Recevoir tour prouver un autrefois terminer toucher mon sourd.,-19.84,12.77,2025-07-19
+ALT00120,PF00044,CLI0072,2024-08-07,Dépassement VaR,Faible,Ignorée,Chez nul puis beau leur liberté remarquer.,12.92,13.41,2026-02-17
+ALT00121,PF00092,CLI0098,2025-07-30,Dépassement VaR,Critique,Résolue,Bord bande quinze cesse indiquer champ quand.,-9.74,-8.78,2026-04-19
+ALT00122,PF00073,CLI0089,2025-08-20,Concentration Secteur,Critique,Ignorée,Divers tenir nord magnifique roche joie espace groupe.,26.34,-2.65,2025-09-12
+ALT00123,PF00023,CLI0031,2024-07-14,Drawdown Excessif,Modérée,Résolue,Renoncer moyen visible noir étude étouffer matière passé face.,-3.73,-2.66,2025-11-29
+ALT00124,PF00053,CLI0009,2025-12-13,Drawdown Excessif,Haute,Résolue,Flamme contenir colère village autorité vol foi chasse regarder nous cas.,25.12,-8.17,2026-04-14
+ALT00125,PF00100,CLI0043,2025-11-12,Drawdown Excessif,Modérée,Résolue,Grand autre éclater puis pourquoi creuser étendue profondément village premier ceci principe.,-1.62,13.08,2026-02-25
+ALT00126,PF00105,CLI0032,2024-09-21,Concentration Secteur,Haute,Ignorée,Espoir ressembler cabinet attention par abandonner interrompre chambre aventure étroit spectacle.,-11.25,0.6,2025-08-30
+ALT00127,PF00111,CLI0091,2024-10-08,Concentration Secteur,Critique,Résolue,Facile moyen île avant étage bien.,10.45,10.33,2025-06-08
+ALT00128,PF00063,CLI0033,2024-07-08,Limite Exposition Dépassée,Faible,Résolue,Aucun marier sujet défendre étage rapporter couleur élément faire employer nul.,1.0,-11.55,2025-05-24
+ALT00129,PF00025,CLI0099,2025-12-29,Concentration Secteur,Faible,En traitement,Beaucoup été lever avec rare reste rue nommer entre roche résoudre course.,27.56,-7.39,2026-01-19
+ALT00130,PF00061,CLI0016,2024-11-28,Dépassement VaR,Critique,Ignorée,Règle paysage acheter montrer inconnu homme marquer premier faux puisque que je.,27.06,-5.6,2025-08-21
+ALT00131,PF00039,CLI0011,2024-06-22,Concentration Secteur,Critique,En traitement,Avancer grâce posséder aussi hôtel tour.,11.14,4.75,2025-05-30
+ALT00132,PF00003,CLI0088,2025-02-27,KYC Expiré,Faible,Ignorée,Désert professeur cruel payer usage banc arrivée.,13.92,-3.16,2026-03-12
+ALT00133,PF00108,CLI0068,2026-04-24,Limite Exposition Dépassée,Faible,Ouverte,Précipiter forme silence école remercier manger.,3.7,-9.36,2025-11-11
+ALT00134,PF00076,CLI0060,2025-11-23,Instrument Suspendu,Haute,Ouverte,Portier agent terreur digne crier sentiment répandre dormir conduire.,-16.29,2.53,2025-12-20
+ALT00135,PF00117,CLI0064,2025-11-08,Limite Exposition Dépassée,Critique,Résolue,Triste barbe chercher intelligence article haute action important.,18.21,10.54,2025-05-20
+ALT00136,PF00003,CLI0092,2025-12-11,Limite Exposition Dépassée,Faible,En traitement,Encore fin salle écraser air jardin.,5.81,-5.42,2026-01-06
+ALT00137,PF00061,CLI0027,2025-04-06,Concentration Secteur,Critique,Ignorée,Partager joue pendre titre sentiment passé voisin manger paysage premier.,-2.16,-0.12,2026-01-21
+ALT00138,PF00149,CLI0002,2024-12-05,Concentration Secteur,Haute,En traitement,Commencer selon se devant au envelopper bras lueur disposer consulter.,-7.23,-1.87,2025-09-03
+ALT00139,PF00020,CLI0005,2025-04-09,Dépassement VaR,Modérée,Ouverte,Haute détacher avis loi agiter faveur titre peine prouver terre descendre former rouler.,-7.5,-13.79,2025-12-19
+ALT00140,PF00008,CLI0047,2026-04-23,Limite Exposition Dépassée,Modérée,En traitement,Vieillard médecin pendre considérer tapis voilà.,11.9,10.73,2025-10-07
+ALT00141,PF00034,CLI0014,2024-06-20,Concentration Secteur,Modérée,Ouverte,Vif accent politique maître cour ressembler circonstance machine gauche vendre.,23.32,-3.7,2025-05-27
+ALT00142,PF00141,CLI0039,2024-10-21,Drawdown Excessif,Critique,En traitement,Pensée médecin soumettre machine causer succès.,6.38,6.1,2025-05-24
+ALT00143,PF00063,CLI0008,2025-10-18,Concentration Secteur,Haute,Ouverte,Absence année tant considérer système reste mémoire convenir un masse recueillir remplacer exécuter.,-8.53,2.72,2026-03-21
+ALT00144,PF00117,CLI0069,2025-05-14,Concentration Secteur,Haute,En traitement,Recommencer toit depuis petit adresser appartenir elle paix désert étudier fin même papa.,-20.11,-13.86,2026-03-13
+ALT00145,PF00098,CLI0046,2026-03-21,Instrument Suspendu,Modérée,Résolue,Rue étranger vert partie rose dangereux garder bon content chien militaire robe éclater.,-0.91,5.31,2025-12-17
+ALT00146,PF00077,CLI0008,2024-12-21,Drawdown Excessif,Haute,Ignorée,Vin miser rose voyager satisfaire profondément combien oser importer tant gauche valoir.,-20.26,-0.48,2025-12-15
+ALT00147,PF00143,CLI0006,2025-11-06,Concentration Secteur,Critique,Ouverte,Cause au valoir main servir intérieur ce rompre métier.,-17.35,0.72,2025-07-07
+ALT00148,PF00001,CLI0041,2025-01-20,Limite Exposition Dépassée,Faible,En traitement,Pas demi yeux cinquante énorme défaut cela.,25.14,13.8,2025-12-06
+ALT00149,PF00108,CLI0032,2025-12-12,Dépassement VaR,Faible,En traitement,Avancer souvenir poursuivre juste barbe répondre durer maintenant certes enfermer.,15.42,-2.96,2025-11-27
+ALT00150,PF00028,CLI0084,2025-11-17,KYC Expiré,Faible,Résolue,Grave public simplement groupe personnage espèce vers mesure or homme coin.,22.86,-13.03,2026-04-23
+ALT00151,PF00057,CLI0043,2025-08-03,KYC Expiré,Modérée,Résolue,Descendre conduire trembler envelopper retirer diriger réfléchir mal désir marcher.,-22.71,9.47,2025-09-18
+ALT00152,PF00129,CLI0079,2025-04-11,Limite Exposition Dépassée,Critique,En traitement,Peau prière quitter force protéger condition inviter.,3.73,-6.23,2026-03-17
+ALT00153,PF00146,CLI0017,2024-09-04,Drawdown Excessif,Critique,Ignorée,Projet attacher bien argent arracher vaste milieu sans quitter enfoncer exprimer.,2.19,11.51,2026-04-02
+ALT00154,PF00060,CLI0001,2026-02-15,KYC Expiré,Modérée,En traitement,Certainement cause marier long bientôt tout fermer.,8.73,7.07,2026-05-05
+ALT00155,PF00015,CLI0068,2026-03-12,Concentration Secteur,Modérée,Ignorée,Également assez bureau imaginer exposer entourer gens exposer éternel remarquer quel supporter.,-7.4,-6.22,2025-10-16
+ALT00156,PF00096,CLI0016,2026-05-08,KYC Expiré,Faible,Ignorée,Réduire foi beaux expliquer lune sable aujourd'hui fumée suivant.,3.07,-7.39,2025-12-25
+ALT00157,PF00017,CLI0024,2026-03-06,Limite Exposition Dépassée,Critique,Résolue,Choisir éternel comment lutte écarter centre.,12.49,-0.8,2025-08-30
+ALT00158,PF00138,CLI0098,2024-10-29,Limite Exposition Dépassée,Faible,Résolue,Planche jeter port veille sujet souffrir fête frapper faim bon.,-0.75,-4.36,2026-02-19
+ALT00159,PF00088,CLI0046,2024-11-30,Drawdown Excessif,Faible,Ouverte,Noir mériter d'autres aide famille chanter.,-28.44,0.24,2025-07-17
+ALT00160,PF00061,CLI0025,2025-12-04,Concentration Secteur,Critique,Résolue,Simplement préférer hésiter prier doute victime cruel garder.,21.55,-10.08,2025-08-06
+ALT00161,PF00018,CLI0041,2025-10-20,Concentration Secteur,Critique,Ignorée,Aventure escalier famille chez se vaincre lire nation arrivée expression avant ce marche.,-7.06,-2.07,2025-11-05
+ALT00162,PF00016,CLI0034,2024-11-14,Drawdown Excessif,Faible,En traitement,Apercevoir approcher liberté cerveau retomber portier bruit horizon.,12.88,9.8,2025-12-23
+ALT00163,PF00045,CLI0076,2025-04-15,Limite Exposition Dépassée,Haute,Résolue,Habiter avant commencement jamais juge arriver réunir pied essuyer.,-6.44,5.78,2025-11-07
+ALT00164,PF00112,CLI0045,2024-11-09,KYC Expiré,Haute,Résolue,Apprendre sable importer loi couvrir rond entre.,-22.9,11.72,2026-02-05
+ALT00165,PF00087,CLI0096,2026-02-28,Dépassement VaR,Critique,Ignorée,Tel jambe lorsque difficile lettre vent mille bon inquiétude delà chance haut où.,21.35,-10.39,2025-11-25
+ALT00166,PF00112,CLI0051,2025-02-17,KYC Expiré,Modérée,Ouverte,Mort croix air lequel accorder lire signifier flot comprendre aujourd'hui tour figurer.,15.03,-1.81,2026-02-17
+ALT00167,PF00129,CLI0034,2025-11-12,KYC Expiré,Faible,Ouverte,Emmener résoudre haute paix est nombre figurer véritable retenir étrange rond convenir gouvernement.,-2.22,-11.76,2026-02-25
+ALT00168,PF00111,CLI0067,2025-08-28,Drawdown Excessif,Critique,Ignorée,En plaisir briller ou risquer rouge changer jambe coûter caractère.,-9.39,-14.75,2025-07-05
+ALT00169,PF00139,CLI0099,2026-04-26,Instrument Suspendu,Modérée,Ouverte,Lutte qualité éviter personne perdre fort attitude tourner etc grain service.,19.24,-2.07,2026-01-20
+ALT00170,PF00025,CLI0066,2024-08-26,KYC Expiré,Haute,En traitement,Attendre train officier queue aide parfaitement dépasser classe quelqu'un ailleurs midi.,-21.89,-13.13,2025-05-22
+ALT00171,PF00095,CLI0027,2026-05-13,Instrument Suspendu,Critique,En traitement,Gris trouver professeur brûler consentir tu embrasser lequel prince pointe épaule.,-28.7,-8.46,2026-02-02
+ALT00172,PF00075,CLI0022,2026-02-08,Dépassement VaR,Modérée,En traitement,Effort entourer comment satisfaire condamner fruit quatre nerveux bien lequel.,8.87,3.13,2025-06-13
+ALT00173,PF00111,CLI0028,2025-11-06,Instrument Suspendu,Critique,Ouverte,Front représenter y espèce jamais vaste dormir tracer penser.,-27.97,-0.78,2025-12-07
+ALT00174,PF00084,CLI0055,2025-02-01,Dépassement VaR,Faible,Ouverte,Politique joie abattre obliger doute peau coucher tête te intéresser oui quitter.,-23.83,10.91,2025-12-26
+ALT00175,PF00108,CLI0045,2024-07-11,Instrument Suspendu,Critique,Résolue,Pas bleu dix maintenir adresser mémoire vouloir mer matin.,-1.93,-4.24,2025-05-20
+ALT00176,PF00009,CLI0012,2025-10-14,Dépassement VaR,Faible,En traitement,Moyen atteindre vêtement drôle appartenir aucun chair appel pièce quel énorme peu.,11.08,-11.03,2026-01-23
+ALT00177,PF00023,CLI0100,2024-09-30,Concentration Secteur,Critique,Ouverte,Côte que bureau dans pourquoi important victime choisir rond yeux portier respirer pas.,2.87,-12.77,2025-08-06
+ALT00178,PF00040,CLI0065,2025-11-28,Dépassement VaR,Modérée,En traitement,Douze âme fonction lendemain divers mien lèvre établir public.,17.25,2.88,2025-10-12
+ALT00179,PF00004,CLI0069,2025-11-23,Limite Exposition Dépassée,Modérée,Ignorée,Raconter système de remonter art devoir tu connaissance imposer dernier.,-13.99,-10.32,2025-06-07
+ALT00180,PF00101,CLI0013,2024-09-24,Instrument Suspendu,Faible,Ouverte,Cesser fait problème inutile offrir coucher droit commencer achever dieu dès officier dehors.,-15.48,7.63,2025-11-10
+ALT00181,PF00080,CLI0059,2025-09-09,KYC Expiré,Modérée,Ignorée,Écrire peine sauver vie course sourire quart noir falloir.,-25.8,1.92,2026-04-07
+ALT00182,PF00068,CLI0027,2025-03-09,Instrument Suspendu,Critique,En traitement,Paysan étranger conduire jaune servir inquiétude traverser drôle imaginer.,-22.03,7.5,2026-03-22
+ALT00183,PF00059,CLI0048,2025-01-15,Limite Exposition Dépassée,Faible,Résolue,Figurer content élément clair coin cinquante réussir amener plaine.,22.0,-8.28,2026-03-12
+ALT00184,PF00112,CLI0078,2025-06-12,Drawdown Excessif,Critique,Ouverte,Aventure épaule gris devoir moi voisin.,0.61,-12.1,2025-09-16
+ALT00185,PF00134,CLI0069,2024-10-24,Limite Exposition Dépassée,Critique,Résolue,An discuter espace direction quartier vouloir prochain.,25.93,-11.72,2025-12-29
+ALT00186,PF00038,CLI0084,2024-10-20,Concentration Secteur,Haute,Ouverte,Énorme perte agir solitude secret accrocher garder.,-13.87,-8.07,2026-03-19
+ALT00187,PF00136,CLI0058,2025-07-27,Dépassement VaR,Critique,Résolue,Certain ça assister travailler présence fenêtre essayer vision rocher.,12.57,-0.09,2025-09-29
+ALT00188,PF00011,CLI0003,2024-09-27,Dépassement VaR,Faible,Ouverte,Soir comment tout rapport quelqu'un non expérience important joue interroger profiter.,-6.07,10.38,2026-04-10
+ALT00189,PF00020,CLI0070,2024-09-15,Dépassement VaR,Faible,Ouverte,Erreur devant qualité exemple arbre vert forêt banc.,18.53,3.95,2026-02-06
+ALT00190,PF00091,CLI0007,2024-08-24,Dépassement VaR,Critique,Ignorée,Ramasser possible revenir vif âge sauter feuille politique oiseau naissance entrer placer.,-2.26,-4.36,2026-05-09
+ALT00191,PF00136,CLI0092,2026-05-16,Limite Exposition Dépassée,Modérée,Résolue,Mille vie vieillard beau ferme chaque.,-26.15,-10.33,2026-03-23
+ALT00192,PF00014,CLI0060,2024-06-10,Instrument Suspendu,Critique,Ignorée,Acheter réveiller et nul effet bord soudain rose musique où briller tendre.,27.16,8.53,2025-12-02
+ALT00193,PF00122,CLI0098,2026-01-27,KYC Expiré,Critique,Ouverte,Politique claire nerveux tapis côté cent.,-28.17,-14.12,2025-08-08
+ALT00194,PF00145,CLI0078,2024-12-31,Limite Exposition Dépassée,Modérée,Ignorée,Magnifique vue au lumière moitié général prévoir autorité éviter salle.,29.24,6.48,2026-04-22
+ALT00195,PF00033,CLI0069,2025-09-29,Drawdown Excessif,Haute,Ouverte,Ressembler ennemi intérieur sein quarante ici.,-28.28,-4.23,2025-11-24
+ALT00196,PF00107,CLI0077,2024-10-17,Dépassement VaR,Faible,Résolue,Mettre magnifique état en partir puissance morceau.,8.55,-13.95,2025-08-24
+ALT00197,PF00046,CLI0023,2025-04-12,KYC Expiré,Faible,Ouverte,Roman brusquement réveiller raconter ancien partager chemin question eau.,-12.03,-11.66,2025-12-15
+ALT00198,PF00144,CLI0048,2025-06-12,Limite Exposition Dépassée,Haute,Résolue,Personne comment bon deviner membre impression métier race me décider cesse dame relation abandonner.,-12.57,9.87,2025-09-15
+ALT00199,PF00040,CLI0098,2025-08-27,KYC Expiré,Faible,Résolue,Couper moins offrir vous allumer soirée professeur cinquante libre toit jeu lors secrétaire inspirer.,-26.3,1.03,2025-08-21
+ALT00200,PF00097,CLI0066,2024-08-27,Limite Exposition Dépassée,Haute,Résolue,Endormir petit muet pendant désirer personne oncle dernier.,-19.85,-3.0,2026-02-05
+ALT00201,PF00026,CLI0031,2025-11-11,Drawdown Excessif,Haute,Résolue,Très genou cheveu non rien confondre désert alors poésie précieux cheveu marier solitude.,7.35,10.26,2025-06-17
+ALT00202,PF00058,CLI0052,2025-12-18,KYC Expiré,Faible,Ouverte,Feuille protéger abri après plusieurs attaquer vers ça recommencer rare.,-20.29,-9.23,2025-06-03
+ALT00203,PF00147,CLI0049,2024-05-31,Instrument Suspendu,Faible,Ouverte,Réponse premier fille ministre partager inspirer tuer plaindre salle émotion grâce.,15.8,-2.77,2025-07-26
+ALT00204,PF00027,CLI0096,2025-12-27,Instrument Suspendu,Critique,En traitement,Emporter ramasser reculer remplir expliquer où fer intérêt élément.,26.9,12.74,2025-09-30
+ALT00205,PF00049,CLI0079,2026-04-23,KYC Expiré,Faible,Ouverte,Action réel éclat autre aspect calme magnifique terre crainte.,-17.66,4.17,2025-11-08
+ALT00206,PF00145,CLI0035,2025-02-03,Dépassement VaR,Critique,En traitement,Rapidement fait changer faute plante cerveau accrocher passer.,21.92,-5.89,2025-08-12
+ALT00207,PF00006,CLI0073,2025-04-05,Limite Exposition Dépassée,Modérée,En traitement,Que mieux lendemain lettre peur intention endormir voyager passé.,-13.95,11.95,2026-01-03
+ALT00208,PF00092,CLI0080,2026-02-21,KYC Expiré,Modérée,Ouverte,Temps attitude dessiner apprendre habiller cause situation.,-15.91,10.78,2026-05-18
+ALT00209,PF00014,CLI0001,2025-01-03,Drawdown Excessif,Haute,Ouverte,Dame respecter ni troisième parent tranquille vieillard animal chance court rêver.,-17.75,7.3,2025-07-23
+ALT00210,PF00125,CLI0024,2025-10-24,Dépassement VaR,Modérée,Résolue,Pointe donc argent histoire manger service facile.,-1.25,-11.04,2026-01-16
+ALT00211,PF00136,CLI0086,2024-11-30,KYC Expiré,Haute,Ignorée,François assez animal vieux creuser madame immense.,-9.36,0.9,2025-05-28
+ALT00212,PF00063,CLI0066,2025-07-14,Limite Exposition Dépassée,Haute,Résolue,Coup genou répéter conversation exposer couper.,-8.54,12.23,2025-10-08
+ALT00213,PF00058,CLI0026,2025-04-20,Dépassement VaR,Faible,En traitement,Tapis remplir pain prévoir plusieurs briser plusieurs quartier rideau.,-9.26,14.81,2026-02-24
+ALT00214,PF00028,CLI0050,2024-10-01,Dépassement VaR,Haute,Résolue,Rouge repas tenter rire intention asseoir rassurer dessus.,11.36,8.44,2026-04-04
+ALT00215,PF00067,CLI0052,2025-12-04,Limite Exposition Dépassée,Faible,Ouverte,Assez détacher lèvre succès subir source profond mener.,-23.98,2.2,2025-12-12
+ALT00216,PF00128,CLI0053,2024-10-06,KYC Expiré,Modérée,Ignorée,Manquer mieux quel réussir connaissance vendre paraître conclure page de.,-5.24,7.6,2026-01-18
+ALT00217,PF00037,CLI0018,2025-04-30,Limite Exposition Dépassée,Modérée,En traitement,Tranquille tôt français pas travail type emmener hier journée police bout.,-1.34,6.69,2026-01-01
+ALT00218,PF00127,CLI0026,2024-08-22,KYC Expiré,Critique,En traitement,Service qui miser tache conseil chaîne violence mener.,-23.7,-9.12,2025-12-29
+ALT00219,PF00052,CLI0013,2025-06-26,Drawdown Excessif,Haute,Ignorée,Présence beau souvenir droit affirmer beau action absolu rapport paix.,-19.11,6.45,2026-05-06
+ALT00220,PF00143,CLI0032,2026-04-20,Limite Exposition Dépassée,Faible,Ouverte,Regard rapport envelopper verser pauvre comment absolument.,5.53,11.42,2025-11-20
+ALT00221,PF00043,CLI0072,2025-08-01,Limite Exposition Dépassée,Critique,En traitement,Public larme y réduire lumière un premier centre intérêt hier plusieurs ventre animal.,-18.72,0.57,2025-12-02
+ALT00222,PF00002,CLI0074,2024-06-10,Dépassement VaR,Haute,Ignorée,Signe raconter comme note midi affaire face vol révolution début mourir chacun.,8.37,-10.81,2025-06-04
+ALT00223,PF00095,CLI0085,2025-01-10,Concentration Secteur,Modérée,Résolue,Soleil verser fin vieil aujourd'hui expliquer noire en terrible.,-19.84,4.14,2026-02-06
+ALT00224,PF00024,CLI0019,2026-02-09,Dépassement VaR,Faible,Résolue,Conseil essayer près espace guère bataille.,-6.02,6.82,2025-08-18
+ALT00225,PF00008,CLI0033,2025-09-04,Concentration Secteur,Haute,En traitement,Poussière doux vivre sable réunir convenir chemin.,-11.63,0.04,2026-02-24
+ALT00226,PF00078,CLI0093,2025-10-07,Dépassement VaR,Critique,En traitement,Subir jouer exiger mois chaque apercevoir prix raison long.,-6.5,14.48,2025-08-23
+ALT00227,PF00003,CLI0052,2026-01-24,Drawdown Excessif,Modérée,Ouverte,Chair souffler retrouver terme ouvert remplacer poser répondre public amour ligne pareil y ensuite.,-12.09,-6.54,2025-05-29
+ALT00228,PF00079,CLI0032,2025-11-21,Instrument Suspendu,Haute,Ignorée,Étaler jamais pouvoir seul envoyer parti pourtant politique rassurer unique.,-6.53,-13.51,2025-08-14
+ALT00229,PF00096,CLI0026,2025-05-31,Instrument Suspendu,Haute,Ignorée,Assez cou madame cuisine air réunir d'autres papa rouler place séparer.,-0.83,5.98,2025-06-11
+ALT00230,PF00120,CLI0008,2025-06-23,Limite Exposition Dépassée,Haute,En traitement,Million large forêt éprouver peur tombe parce que honte.,-24.5,11.61,2025-10-12
+ALT00231,PF00055,CLI0087,2025-02-27,Dépassement VaR,Critique,Ouverte,Marchand recommencer sec inviter facile aussitôt intéresser.,-6.54,6.09,2025-12-25
+ALT00232,PF00037,CLI0069,2025-04-02,Concentration Secteur,Critique,Résolue,Phrase dernier ton remplir étranger fort rapporter.,-28.9,-8.88,2025-07-08
+ALT00233,PF00004,CLI0041,2025-01-08,Drawdown Excessif,Modérée,Résolue,Monsieur qui creuser lèvre regard présence rejoindre lourd rond abri pain.,-9.98,-7.43,2025-07-03
+ALT00234,PF00053,CLI0072,2025-03-28,Concentration Secteur,Modérée,Ouverte,Puis de chaud couler contraire aujourd'hui puis garder retour situation sortir lien signe.,5.08,-8.1,2025-09-30
+ALT00235,PF00015,CLI0099,2026-02-16,Instrument Suspendu,Critique,Résolue,Jeune préférer roman pensée moment ou décider.,-23.51,-12.44,2025-07-13
+ALT00236,PF00056,CLI0035,2025-09-24,KYC Expiré,Faible,En traitement,Songer lever certain condamner poste miser vision seconde accorder façon médecin.,-25.85,14.34,2026-02-22
+ALT00237,PF00101,CLI0077,2024-06-02,KYC Expiré,Modérée,En traitement,Prendre arriver plusieurs faveur appuyer tard éclater vieux tandis que autrement cause.,-1.83,10.6,2025-07-29
+ALT00238,PF00121,CLI0013,2026-03-20,Limite Exposition Dépassée,Haute,Ignorée,Demander oreille d'autres auprès grandir gens brusquement jeter éviter qualité seuil que désigner.,4.59,12.64,2025-11-18
+ALT00239,PF00131,CLI0051,2025-02-25,Limite Exposition Dépassée,Haute,En traitement,Silencieux à supporter terme arrivée jeune crainte haïr.,25.68,6.15,2025-11-01
+ALT00240,PF00124,CLI0030,2025-07-01,Instrument Suspendu,Modérée,Ouverte,Plaindre assister valoir colère circonstance passage jaune direction imaginer toile horizon.,-17.22,6.38,2025-12-15
+ALT00241,PF00046,CLI0013,2026-05-17,Drawdown Excessif,Modérée,En traitement,Obtenir siège lutte cinq trente brûler celui siècle faim chacun franc.,12.0,9.18,2025-05-22
+ALT00242,PF00091,CLI0077,2025-04-11,Concentration Secteur,Haute,Résolue,Soumettre brusquement souhaiter genou puis revoir bout.,14.09,10.44,2026-05-07
+ALT00243,PF00104,CLI0077,2024-06-27,Drawdown Excessif,Haute,En traitement,Idée sept cent branche noir le.,0.52,-0.35,2025-12-20
+ALT00244,PF00103,CLI0042,2025-02-09,Limite Exposition Dépassée,Faible,Résolue,Habitude comme vêtir mort autour étendre supérieur barbe oeil voici.,18.72,-3.56,2026-02-07
+ALT00245,PF00024,CLI0034,2024-08-20,Drawdown Excessif,Faible,En traitement,Homme enfant profond souvenir ensemble pénétrer.,-4.11,-12.0,2026-02-01
+ALT00246,PF00080,CLI0048,2024-05-29,KYC Expiré,Faible,Ouverte,Passé instant permettre charge ouvrir marchand exécuter chute consentir savoir brusquement.,-11.35,-6.29,2025-10-08
+ALT00247,PF00038,CLI0040,2026-02-12,Drawdown Excessif,Faible,En traitement,Caresser action être contenir haut vaste science magnifique.,23.66,-4.19,2026-04-25
+ALT00248,PF00089,CLI0052,2026-05-16,KYC Expiré,Critique,Ouverte,Libre lieu déchirer ci froid honneur.,16.97,-0.0,2025-08-20
+ALT00249,PF00041,CLI0006,2026-02-28,KYC Expiré,Haute,En traitement,Pendre escalier sang maintenant brûler chair empire ni.,-14.05,-4.86,2026-01-13
+ALT00250,PF00072,CLI0009,2024-08-30,Concentration Secteur,Modérée,En traitement,Rôle plaire étudier lien crise année mouvement recevoir.,16.85,-2.3,2025-12-21
+ALT00251,PF00074,CLI0036,2025-09-07,Concentration Secteur,Haute,Résolue,Cacher vieillard choix journal précéder usage siège déjà.,10.05,-8.11,2026-04-28
+ALT00252,PF00082,CLI0043,2024-08-26,KYC Expiré,Faible,Ignorée,Souffler pousser éprouver chacun curieux annoncer distinguer.,-22.14,5.06,2025-08-03
+ALT00253,PF00107,CLI0039,2024-12-26,Dépassement VaR,Haute,Résolue,Maître couper un confondre honneur nom fuir contenir tenter porte robe espèce.,20.44,9.22,2025-12-16
+ALT00254,PF00016,CLI0036,2026-03-16,Concentration Secteur,Faible,Résolue,Flamme monsieur argent souffrir étroit pendre type plonger désigner répandre violence.,25.71,-8.11,2025-12-30
+ALT00255,PF00121,CLI0002,2026-05-17,Concentration Secteur,Faible,Résolue,Courant ouvert unique vêtement cela envoyer facile chaise loi séparer faire.,-2.8,4.04,2026-02-01
+ALT00256,PF00043,CLI0077,2025-12-15,KYC Expiré,Haute,Ouverte,Dehors personne ce sommeil séparer claire français intéresser remonter prière vide gauche.,26.23,-1.99,2025-11-08
+ALT00257,PF00062,CLI0085,2024-09-08,Limite Exposition Dépassée,Haute,En traitement,Conversation signe pont briser éclat envoyer fin soirée sorte.,26.16,10.86,2026-05-07
+ALT00258,PF00077,CLI0014,2024-06-23,Limite Exposition Dépassée,Faible,En traitement,Passé savoir importance poids quelque famille où.,15.46,-11.45,2025-09-24
+ALT00259,PF00080,CLI0045,2025-11-21,Instrument Suspendu,Critique,Résolue,Endormir cause horizon son vent aider spectacle quinze.,9.29,-8.68,2025-11-10
+ALT00260,PF00029,CLI0004,2025-04-26,Drawdown Excessif,Faible,Résolue,Vivant perdre taire donc éclater perte front arbre acte montagne discuter approcher bon.,-11.66,-11.58,2025-08-06
+ALT00261,PF00055,CLI0023,2024-09-06,Concentration Secteur,Faible,En traitement,Pluie vieil relation expression morceau rien attaquer colline commander bataille.,28.78,10.19,2025-11-20
+ALT00262,PF00044,CLI0049,2024-10-25,Concentration Secteur,Faible,En traitement,Fait gris chance sol après préférer avec réfléchir colline.,26.09,3.55,2025-12-05
+ALT00263,PF00068,CLI0048,2024-09-20,KYC Expiré,Critique,Ignorée,Chaîne franc solitude vert devant mode impression.,18.42,11.54,2025-10-14
+ALT00264,PF00093,CLI0047,2024-12-04,Dépassement VaR,Faible,Ignorée,Dehors avec suite jambe chercher falloir choisir lieu depuis connaître.,-12.91,-6.87,2026-01-03
+ALT00265,PF00129,CLI0100,2024-12-10,Limite Exposition Dépassée,Critique,Ignorée,Pourquoi entier naissance travers tomber danser garçon bête.,0.38,3.04,2025-11-23
+ALT00266,PF00071,CLI0035,2025-04-05,Concentration Secteur,Critique,En traitement,Certes mieux avance étonner court loup.,-28.94,3.74,2025-12-14
+ALT00267,PF00102,CLI0049,2025-02-03,Concentration Secteur,Modérée,En traitement,Conclure gagner presser genou classe lui repousser même cercle point brusquement attacher.,0.2,-2.28,2026-04-19
+ALT00268,PF00081,CLI0003,2024-07-01,KYC Expiré,Faible,En traitement,Cela sommet tôt doucement bord sentiment route ventre.,5.48,-8.74,2025-08-13
+ALT00269,PF00007,CLI0066,2024-09-10,Dépassement VaR,Faible,En traitement,Gens souvenir page réalité plan masse chant franc.,17.74,5.04,2025-11-27
+ALT00270,PF00102,CLI0098,2025-06-02,KYC Expiré,Modérée,Résolue,Fatiguer mieux vision vivre immense trace saison que.,0.08,-13.92,2025-06-30
+ALT00271,PF00036,CLI0083,2026-01-17,Concentration Secteur,Faible,Résolue,Long réalité possible part cesser étaler pouvoir horizon enfin ombre trois impossible vers.,-21.71,-7.82,2025-07-13
+ALT00272,PF00051,CLI0042,2025-04-05,Limite Exposition Dépassée,Haute,En traitement,Beauté saluer curiosité françois nouveau fête pénétrer rassurer lune politique regard même.,-18.31,5.41,2025-10-16
+ALT00273,PF00094,CLI0058,2025-12-22,KYC Expiré,Modérée,Ouverte,Depuis position chiffre relation alors éternel paraître paquet couler exemple.,2.16,-14.25,2025-11-29
+ALT00274,PF00007,CLI0061,2026-02-02,Instrument Suspendu,Haute,En traitement,Celui vêtement centre falloir bataille étudier ici remplir ignorer.,28.3,5.65,2025-08-01
+ALT00275,PF00060,CLI0092,2025-12-25,Concentration Secteur,Critique,Ouverte,Anglais époque blond remarquer chef règle voyager chasse sable marché ami retrouver personne.,-7.78,13.91,2025-08-15
+ALT00276,PF00044,CLI0085,2024-07-17,Drawdown Excessif,Haute,Ouverte,Défaut libre calme caresser toile rien colon paupière amuser porte âgé verser attitude froid.,21.71,-13.26,2025-12-29
+ALT00277,PF00004,CLI0041,2026-02-01,Instrument Suspendu,Modérée,En traitement,Rideau retomber apparence arrière joli parvenir.,-27.96,0.91,2026-04-25
+ALT00278,PF00084,CLI0061,2024-09-02,Instrument Suspendu,Modérée,Ouverte,Sein environ placer secours profondément distinguer voyage promettre voie beauté nul déjà.,-0.23,-6.87,2025-07-30
+ALT00279,PF00098,CLI0002,2025-12-26,Instrument Suspendu,Haute,Ignorée,Tendre trace marchand drôle haut d'abord mort voile aimer quart rêve.,7.02,-3.17,2025-10-29
+ALT00280,PF00081,CLI0091,2025-02-14,Drawdown Excessif,Modérée,Résolue,Cacher bas ministre faute créer pleurer roman jeunesse mais où douze.,-29.85,3.52,2025-10-04
+ALT00281,PF00071,CLI0079,2025-12-20,Instrument Suspendu,Haute,Ouverte,Émotion an certain surveiller marcher usage réveiller bon combien soleil.,19.54,13.78,2025-10-14
+ALT00282,PF00025,CLI0099,2025-12-13,Dépassement VaR,Critique,En traitement,Rester disparaître voiture moment temps bruit été ton.,21.04,11.98,2025-05-25
+ALT00283,PF00120,CLI0008,2025-05-30,Dépassement VaR,Haute,Résolue,Côté seul hiver cour fond reprendre demande sûr juge acte fils grave soudain.,20.29,5.04,2025-11-23
+ALT00284,PF00036,CLI0054,2025-12-01,Instrument Suspendu,Critique,Résolue,Médecin fixe même dame vie être chanter croix droite.,20.3,3.63,2025-09-10
+ALT00285,PF00078,CLI0019,2024-11-05,Instrument Suspendu,Critique,Ouverte,Blond plaine consulter suite affaire rapport témoin mesure odeur.,16.24,-2.88,2026-01-01
+ALT00286,PF00075,CLI0054,2026-03-17,Dépassement VaR,Modérée,Ignorée,Tendre étoile voix matin mieux âme combat.,-3.34,2.56,2025-07-28
+ALT00287,PF00065,CLI0014,2025-08-31,Drawdown Excessif,Modérée,Ouverte,Obtenir enfant comprendre visite ligne établir dessiner affirmer politique douter lien hôtel satisfaire.,22.02,6.02,2025-06-01
+ALT00288,PF00120,CLI0051,2024-12-25,KYC Expiré,Modérée,Ignorée,Ton exposer fatigue étaler offrir avec.,4.62,-1.69,2026-04-18
+ALT00289,PF00052,CLI0013,2025-10-06,Dépassement VaR,Haute,En traitement,Passion quinze découvrir même encore court planche certain composer.,1.11,10.85,2026-05-16
+ALT00290,PF00005,CLI0042,2024-09-16,Concentration Secteur,Modérée,Ignorée,Derrière camarade peine but vin centre dur importer.,21.4,2.05,2026-02-07
+ALT00291,PF00098,CLI0066,2026-03-31,Drawdown Excessif,Modérée,Résolue,Reconnaître quoi rond port reprendre impression suivre maître table colline rond côté.,3.12,-8.63,2025-12-17
+ALT00292,PF00012,CLI0005,2025-11-08,Dépassement VaR,Critique,En traitement,Machine source agir accepter reste dormir asseoir épais.,-8.22,-10.29,2025-05-25
+ALT00293,PF00093,CLI0066,2025-04-28,Limite Exposition Dépassée,Haute,Ouverte,Discours usage courir mentir presser habitude grain.,-4.47,-9.9,2025-06-26
+ALT00294,PF00043,CLI0048,2025-09-16,Concentration Secteur,Haute,En traitement,Bête semaine debout début ouvert avoir le lisser gros voisin.,-0.59,4.2,2025-08-15
+ALT00295,PF00081,CLI0080,2025-05-17,Dépassement VaR,Haute,Ouverte,Reposer président preuve foule rester noir inutile conclure disposer maître quarante.,10.88,-11.8,2026-05-01
+ALT00296,PF00137,CLI0031,2025-03-01,Instrument Suspendu,Critique,En traitement,Chance vif montrer détail offrir seigneur camarade.,-1.83,10.59,2025-08-23
+ALT00297,PF00107,CLI0058,2025-12-17,Concentration Secteur,Critique,Résolue,Attacher sol condition peuple transformer debout.,-8.3,-3.11,2025-06-29
+ALT00298,PF00067,CLI0036,2024-10-08,Dépassement VaR,Haute,Ignorée,Vin cruel voilà mine bas trace.,1.24,9.49,2026-02-11
+ALT00299,PF00113,CLI0082,2025-11-27,Limite Exposition Dépassée,Haute,Résolue,Pièce recommencer fou voix part pur ah position pur.,22.2,6.5,2025-07-05
+ALT00300,PF00001,CLI0011,2025-05-10,Drawdown Excessif,Critique,En traitement,Cercle vêtement joue mettre réveiller rester disposer vague court sommeil.,-3.63,7.57,2025-07-06
+ALT00301,PF00063,CLI0002,2026-03-10,Limite Exposition Dépassée,Haute,En traitement,Fou te mériter amour éloigner printemps montrer machine ami pointe.,24.32,-4.8,2026-01-28
+ALT00302,PF00006,CLI0057,2025-10-16,Limite Exposition Dépassée,Faible,En traitement,Prévoir entrée table mer seigneur épais événement renoncer déchirer poste cri obéir roman.,9.55,-12.62,2026-01-05
+ALT00303,PF00042,CLI0029,2024-05-22,Limite Exposition Dépassée,Haute,En traitement,Semaine public oeil simple inquiétude blanc maladie apercevoir quelque mine lui avancer.,23.95,-4.66,2026-01-21
+ALT00304,PF00105,CLI0004,2026-04-18,Concentration Secteur,Faible,Ignorée,Militaire seuil rose mine mot ouvrage.,29.01,9.68,2026-01-28
+ALT00305,PF00135,CLI0092,2024-11-26,Dépassement VaR,Haute,Résolue,Banc sous main donc mien secret.,14.33,7.03,2025-07-05
+ALT00306,PF00026,CLI0086,2025-11-22,KYC Expiré,Faible,Ignorée,Commander vin reconnaître avant naturel chez pied mort en chambre absolu.,11.76,-14.05,2025-05-22
+ALT00307,PF00043,CLI0007,2024-07-08,KYC Expiré,Critique,Ignorée,Serrer voyage élever geste mariage branche billet homme terreur marier précis moitié somme.,-6.59,-14.46,2026-01-25
+ALT00308,PF00005,CLI0079,2026-04-08,Instrument Suspendu,Critique,Résolue,Seul combien ciel facile arracher épaule nation maladie danser comment.,6.88,8.42,2025-07-24
+ALT00309,PF00073,CLI0001,2024-06-22,Dépassement VaR,Haute,Ignorée,Titre terme croire plaine mer enfermer ventre donner nom lendemain nouveau nez.,5.56,-4.41,2025-12-13
+ALT00310,PF00050,CLI0093,2026-01-27,Concentration Secteur,Faible,En traitement,Beau madame mort horizon chez franc course général.,3.87,5.11,2025-08-16
+ALT00311,PF00043,CLI0064,2025-06-30,Limite Exposition Dépassée,Haute,En traitement,Passer femme projet poursuivre fille appel beau.,-19.32,-1.98,2026-03-29
+ALT00312,PF00127,CLI0026,2026-03-19,Instrument Suspendu,Haute,En traitement,Vêtement clef pièce déjà énorme sourire.,21.68,-11.77,2025-08-19
+ALT00313,PF00100,CLI0077,2025-09-14,Limite Exposition Dépassée,Critique,Ouverte,Vite million jaune inventer pur respirer prier.,26.46,6.4,2026-02-27
+ALT00314,PF00138,CLI0079,2026-02-20,Instrument Suspendu,Faible,En traitement,Enfant dégager cou encore bas bonheur aller passer.,-1.1,2.02,2025-07-05
+ALT00315,PF00025,CLI0027,2024-06-27,Limite Exposition Dépassée,Modérée,Ignorée,Confondre sang passage passage avenir entourer sac respect.,6.38,-11.88,2025-05-22
+ALT00316,PF00040,CLI0003,2025-10-05,Drawdown Excessif,Haute,Ouverte,Image mine impossible conscience placer paysan nourrir parent recueillir disposer.,-18.53,8.52,2026-03-29
+ALT00317,PF00006,CLI0100,2025-09-10,Limite Exposition Dépassée,Haute,Résolue,Voix droite chemin seigneur lien forcer prévenir etc figure presque frais souvent haine.,-3.01,-13.58,2026-03-30
+ALT00318,PF00097,CLI0031,2024-12-30,Concentration Secteur,Critique,Résolue,Inconnu vivre poser expliquer midi de repas dresser fauteuil être.,5.46,4.08,2025-12-13
+ALT00319,PF00084,CLI0017,2024-06-04,Drawdown Excessif,Modérée,En traitement,Entre manger étouffer bête pénétrer beauté tempête morceau prouver côte santé blanc garder.,-18.44,6.69,2025-06-18
+ALT00320,PF00136,CLI0050,2024-11-06,Drawdown Excessif,Faible,Résolue,Figure acte rassurer santé cabinet peau.,19.59,-5.79,2026-02-03
+ALT00321,PF00002,CLI0085,2026-04-12,KYC Expiré,Haute,Ignorée,Paraître annoncer métier larme rang chance discussion journal bas.,-12.2,-7.04,2025-06-04
+ALT00322,PF00020,CLI0063,2026-04-04,Dépassement VaR,Haute,Résolue,Geste début chaque avant abri pourquoi ensemble entier hauteur casser force.,-12.33,-2.25,2026-04-01
+ALT00323,PF00046,CLI0028,2025-07-18,Dépassement VaR,Haute,Ignorée,Peu bras pauvre etc précieux prendre discussion toucher finir mensonge autant couleur jeter.,-1.91,10.33,2025-10-07
+ALT00324,PF00076,CLI0055,2025-02-13,Instrument Suspendu,Modérée,Ignorée,Frère changer service bruit accord sien pays aspect colon sommeil déjà.,25.81,10.72,2026-01-15
+ALT00325,PF00132,CLI0083,2026-03-11,Concentration Secteur,Critique,Ignorée,Situation côté nez ton signe coucher franc forme dépasser respirer témoin chef.,27.05,-3.25,2025-08-31
+ALT00326,PF00084,CLI0097,2025-06-19,Drawdown Excessif,Faible,Résolue,Inquiéter an écraser là recueillir tirer habiller centre nourrir installer paix pauvre.,14.87,11.17,2026-01-06
+ALT00327,PF00106,CLI0087,2025-03-21,Drawdown Excessif,Modérée,En traitement,Importance beauté premier tant eau chemise intelligence trop vieil.,3.32,5.13,2025-06-08
+ALT00328,PF00075,CLI0095,2026-05-10,KYC Expiré,Haute,Ignorée,Pièce sable ordre nord ramasser appartement voisin porter étude angoisse.,6.44,2.57,2025-09-03
+ALT00329,PF00067,CLI0093,2025-04-11,Instrument Suspendu,Haute,Ignorée,Peur puissance fier triste livrer jeune malade poids que.,14.36,-2.29,2026-02-06
+ALT00330,PF00097,CLI0004,2025-08-01,Dépassement VaR,Faible,Ouverte,Sauter oncle résultat croiser fortune dur tantôt qui réserver pouvoir manquer nom.,-17.09,2.15,2025-08-17
+ALT00331,PF00039,CLI0090,2025-09-12,Instrument Suspendu,Faible,En traitement,Près cours rejoindre quart écraser campagne brûler part taille mener.,-28.75,-5.12,2026-02-13
+ALT00332,PF00028,CLI0093,2025-09-19,Instrument Suspendu,Haute,Résolue,Ramasser centre rare côté ouvert livrer.,-17.88,-0.71,2026-04-14
+ALT00333,PF00132,CLI0072,2024-08-08,Instrument Suspendu,Modérée,Ouverte,Devoir de aide prison envoyer dominer esprit jour fin demande nombreux.,11.43,3.28,2025-08-01
+ALT00334,PF00038,CLI0044,2025-09-16,Limite Exposition Dépassée,Modérée,En traitement,Fer troubler vivant magnifique passé leur.,-8.43,-14.92,2025-05-31
+ALT00335,PF00084,CLI0063,2024-06-28,Concentration Secteur,Faible,Résolue,Quitter construire livre sein mieux temps.,-19.5,11.6,2025-07-04
+ALT00336,PF00091,CLI0010,2024-09-24,Instrument Suspendu,Critique,En traitement,Certainement livre rouler entrer matière appartenir tromper rouge.,-27.91,-1.05,2025-11-14
+ALT00337,PF00104,CLI0023,2025-11-17,Limite Exposition Dépassée,Modérée,Ouverte,Défaut notre époque tendre armer poitrine imaginer selon.,5.5,-7.68,2025-06-28
+ALT00338,PF00022,CLI0082,2025-01-16,Dépassement VaR,Modérée,Résolue,Apparence placer demander aide accrocher gauche.,-15.04,-10.75,2025-07-27
+ALT00339,PF00001,CLI0079,2025-07-15,KYC Expiré,Faible,En traitement,Neuf tapis jeune étude obliger aimer bas soirée poésie décider chaleur depuis geste.,26.16,3.47,2025-06-22
+ALT00340,PF00058,CLI0040,2026-05-18,KYC Expiré,Haute,Ignorée,Profondément défaut vêtir journal plaindre matière juge quelqu'un prison français chair.,-9.93,-13.96,2026-03-08
+ALT00341,PF00113,CLI0068,2026-04-26,Instrument Suspendu,Haute,Ignorée,Rassurer jeter marche droit même d'abord exposer pendre tâche circonstance corde.,8.7,12.32,2026-03-18
+ALT00342,PF00146,CLI0037,2026-02-21,Dépassement VaR,Critique,En traitement,Déjà prêt ramener gagner malheur aimer parole pierre détail même verser hier.,-11.45,12.51,2026-01-18
+ALT00343,PF00065,CLI0060,2024-11-12,Instrument Suspendu,Haute,Résolue,Haut ministre confondre conclure fond hésiter ouvrage trente attaquer.,14.51,2.53,2025-07-03
+ALT00344,PF00049,CLI0058,2025-01-15,Limite Exposition Dépassée,Haute,En traitement,Tout qualité un profondément jamais poète fauteuil.,-4.99,-2.55,2025-12-20
+ALT00345,PF00005,CLI0079,2026-01-23,Drawdown Excessif,Faible,Ignorée,Mensonge entraîner davantage consentir français d'autres musique absolument autre vieux ami.,-17.36,-10.23,2026-02-09
+ALT00346,PF00086,CLI0005,2025-10-12,Drawdown Excessif,Modérée,En traitement,Autorité malgré vide poids énergie ruine apparaître fil nombreux armer lueur chute beauté.,11.27,2.53,2026-02-19
+ALT00347,PF00060,CLI0024,2025-01-25,Drawdown Excessif,Haute,Ouverte,Proposer vaste étroit pauvre prison intention remonter dessiner.,-13.9,-8.21,2025-08-09
+ALT00348,PF00086,CLI0094,2024-05-22,Instrument Suspendu,Critique,Ouverte,Charger patron enfin tu silencieux vraiment lier pareil.,17.94,-14.18,2026-04-27
+ALT00349,PF00134,CLI0025,2026-02-28,Concentration Secteur,Faible,Ouverte,Devenir vieux pendre protéger retenir prononcer petit combat cou tantôt politique fer exécuter.,19.35,-4.44,2026-02-13
+ALT00350,PF00098,CLI0063,2025-02-19,Concentration Secteur,Modérée,Ignorée,Distance signifier charger victime approcher examiner oiseau suivant vrai.,0.79,1.35,2025-07-31
+ALT00351,PF00051,CLI0016,2025-06-17,Limite Exposition Dépassée,Critique,En traitement,Servir descendre espace céder chien poitrine nourrir surveiller inconnu parfaitement instinct.,27.6,-10.88,2026-03-17
+ALT00352,PF00075,CLI0097,2024-10-11,Drawdown Excessif,Modérée,En traitement,Corps rapport d'abord autant fonder retourner quart parcourir suite point plonger.,7.69,-12.97,2026-01-04
+ALT00353,PF00071,CLI0016,2024-08-19,Concentration Secteur,Critique,Ouverte,Cheveu oeuvre guerre tendre changer apparence accrocher erreur.,29.49,3.81,2026-01-30
+ALT00354,PF00097,CLI0034,2024-11-17,Drawdown Excessif,Faible,Ouverte,Ligne mot et siècle détruire volonté air loin pur intérieur.,-22.82,-7.15,2025-08-15
+ALT00355,PF00148,CLI0013,2024-05-26,Dépassement VaR,Modérée,Résolue,Nombre être monde ce projet blanc corps gens animer prier carte coin seulement.,-26.17,9.19,2026-04-23
+ALT00356,PF00035,CLI0069,2026-04-03,KYC Expiré,Critique,Ignorée,L'Une paquet quitter prendre clef réponse entier précipiter en léger hauteur passé derrière.,9.18,-8.19,2025-09-01
+ALT00357,PF00092,CLI0073,2024-06-19,KYC Expiré,Haute,Ouverte,Attitude réponse absolument conscience ailleurs nouveau traîner voile grand jour haine indiquer.,15.64,-6.41,2025-06-04
+ALT00358,PF00133,CLI0064,2026-04-08,Concentration Secteur,Critique,En traitement,Gagner public égal plan accord siège divers.,22.62,4.91,2025-11-11
+ALT00359,PF00094,CLI0078,2025-03-27,Dépassement VaR,Critique,En traitement,Ni table chacun demi aucun moyen acheter.,20.11,-8.59,2025-07-30
+ALT00360,PF00058,CLI0076,2025-01-03,KYC Expiré,Haute,En traitement,Si habitant continuer servir discours révéler sang.,13.66,-0.58,2025-11-23
+ALT00361,PF00092,CLI0078,2024-07-06,Drawdown Excessif,Modérée,Ignorée,Bleu pas rendre amour partir installer aucun davantage couper saint masse bouche l'un.,28.38,-1.7,2026-01-12
+ALT00362,PF00010,CLI0060,2025-12-18,Concentration Secteur,Faible,Résolue,Toi pouvoir rapide possible ruine voile monsieur course brûler préférer.,-1.42,-4.15,2026-01-10
+ALT00363,PF00037,CLI0050,2025-08-22,Limite Exposition Dépassée,Haute,Ignorée,Suivant agiter attaquer prêt discussion souvenir travailler.,-10.46,13.08,2026-04-11
+ALT00364,PF00051,CLI0095,2024-05-27,Instrument Suspendu,Haute,En traitement,Arriver convenir étendue trop intérêt bon ce mon être adresser tracer droite sein.,-7.97,4.22,2025-11-09
+ALT00365,PF00001,CLI0037,2024-05-24,Drawdown Excessif,Modérée,Ignorée,Colon dresser inquiétude exécuter réel pont jamais asseoir arrière sentir.,-15.41,7.34,2025-12-27
+ALT00366,PF00057,CLI0062,2024-07-17,Dépassement VaR,Faible,Résolue,Leur erreur effacer toujours coucher couche endroit malgré signifier agir soutenir toile exiger.,-1.55,4.86,2026-04-01
+ALT00367,PF00087,CLI0064,2026-01-21,Instrument Suspendu,Faible,En traitement,Mieux honte déclarer hésiter regard époque escalier curiosité étude parfois.,7.39,-0.39,2026-01-01
+ALT00368,PF00146,CLI0082,2025-09-22,Instrument Suspendu,Modérée,Résolue,Mouvement appeler cacher travail fruit obtenir ton renverser.,-5.46,0.82,2026-04-05
+ALT00369,PF00030,CLI0078,2024-12-24,Instrument Suspendu,Modérée,Ouverte,Rose air affaire impression poursuivre prêter brûler sauvage défendre.,-6.71,-0.49,2025-07-28
+ALT00370,PF00036,CLI0078,2024-09-25,Drawdown Excessif,Modérée,Ignorée,Intention confiance rapport pain plutôt rencontre sourire verre bruit côté.,-25.87,-3.65,2025-07-21
+ALT00371,PF00118,CLI0079,2024-11-02,Drawdown Excessif,Modérée,Résolue,An parmi davantage témoin usage considérer faveur partout signer bouche seconde.,6.82,-13.37,2026-01-10
+ALT00372,PF00085,CLI0021,2025-06-12,Limite Exposition Dépassée,Faible,Ouverte,Sentir dernier saison atteindre faute madame faible durer fleur compagnie cinquante qualité.,20.64,14.76,2025-11-12
+ALT00373,PF00011,CLI0017,2024-11-06,Limite Exposition Dépassée,Critique,En traitement,Entourer pas frère métier essuyer mourir cuisine mal membre manquer colline.,-17.12,-0.95,2026-04-10
+ALT00374,PF00016,CLI0064,2026-03-13,Limite Exposition Dépassée,Modérée,Ouverte,Confondre vite place type fin également.,-3.26,10.96,2026-03-26
+ALT00375,PF00100,CLI0080,2025-08-20,Instrument Suspendu,Haute,En traitement,Combat ici soulever ami guère dire acte ici recommencer.,28.79,12.56,2025-12-20
+ALT00376,PF00021,CLI0082,2026-03-18,KYC Expiré,Haute,Résolue,Chercher machine finir ventre air désir.,17.73,-5.94,2026-05-15
+ALT00377,PF00061,CLI0094,2024-05-22,Dépassement VaR,Modérée,En traitement,Erreur prochain parent traverser reconnaître vêtement société complet bras monde.,4.34,-4.24,2025-06-16
+ALT00378,PF00106,CLI0035,2025-11-17,KYC Expiré,Critique,En traitement,Lumière dur pour soin dernier beaux.,-25.89,7.19,2025-11-17
+ALT00379,PF00041,CLI0060,2025-12-19,Concentration Secteur,Critique,Ouverte,Mariage nature imaginer pauvre ci attacher.,20.09,-3.49,2026-04-12
+ALT00380,PF00142,CLI0015,2025-06-13,Drawdown Excessif,Modérée,Ouverte,Fusil vif blanc leur recherche ajouter terminer couche mourir préférer envoyer mourir longtemps.,-18.18,-13.99,2025-09-10
+ALT00381,PF00125,CLI0060,2025-06-10,Limite Exposition Dépassée,Haute,Ignorée,Souffler précipiter fond troisième esprit salut saint confondre succès embrasser tôt.,10.86,5.23,2025-07-03
+ALT00382,PF00146,CLI0098,2024-12-21,Dépassement VaR,Modérée,Résolue,Avec habitude respect double sauter tant serrer droite écrire six fatigue découvrir discours.,-1.09,-5.13,2026-02-24
+ALT00383,PF00148,CLI0066,2025-05-18,Dépassement VaR,Modérée,En traitement,Travail surprendre abandonner faire puis ni comment creuser quand.,3.59,-0.69,2025-06-03
+ALT00384,PF00098,CLI0046,2025-05-21,Drawdown Excessif,Haute,Résolue,Gens paquet savoir déjà cher plaisir car sourire pur départ verre.,-25.12,13.93,2026-01-08
+ALT00385,PF00045,CLI0082,2025-06-28,Instrument Suspendu,Faible,En traitement,Établir blanc scène quinze possible étroit recommencer résultat fier ce.,12.02,11.41,2025-07-05
+ALT00386,PF00076,CLI0055,2025-01-29,Instrument Suspendu,Faible,En traitement,Croire du face dormir détail drame nom.,15.55,-0.46,2026-04-14
+ALT00387,PF00020,CLI0003,2026-04-23,Concentration Secteur,Modérée,Ignorée,Sûr sou quelqu'un premier interrompre pont aspect représenter.,-5.03,-0.04,2026-05-10
+ALT00388,PF00107,CLI0096,2025-02-19,Concentration Secteur,Modérée,Résolue,Vêtement quand chose douceur conduire intérêt assister gouvernement.,1.62,9.33,2026-02-10
+ALT00389,PF00109,CLI0039,2025-06-19,Concentration Secteur,Critique,Ignorée,Retomber capable détruire face dont hors entrer sang même nécessaire fonder seigneur pendant.,29.99,-11.01,2025-12-06
+ALT00390,PF00076,CLI0035,2025-10-30,Limite Exposition Dépassée,Faible,En traitement,Autrement tard projet si loup presser maison changement presser.,-5.11,-10.29,2025-09-09
+ALT00391,PF00019,CLI0059,2024-05-18,Instrument Suspendu,Faible,Ignorée,Doucement troisième travailler entretenir fusil frais neuf.,-2.34,14.62,2025-06-10
+ALT00392,PF00134,CLI0079,2024-06-09,Concentration Secteur,Haute,Ignorée,Premier joindre joie vers parcourir certain partir but mal prononcer lier.,-19.07,2.36,2026-02-11
+ALT00393,PF00040,CLI0017,2024-06-05,KYC Expiré,Critique,Ouverte,Éloigner surprendre éternel quartier volonté autour savoir moment drame dans social devoir.,-0.36,-14.05,2025-06-03
+ALT00394,PF00052,CLI0025,2025-08-14,Instrument Suspendu,Faible,Résolue,Autre instinct drôle époque remettre chanter rappeler maintenant doucement.,-14.84,13.98,2025-12-31
+ALT00395,PF00044,CLI0081,2024-09-02,Drawdown Excessif,Faible,Résolue,Boire figure militaire jeu tout derrière résister hôtel fête nul.,-10.05,-11.41,2025-11-05
+ALT00396,PF00111,CLI0057,2025-12-31,Limite Exposition Dépassée,Modérée,Ignorée,Demain présent détruire rendre tenir défendre.,-7.6,-13.7,2026-02-25
+ALT00397,PF00142,CLI0052,2025-11-21,Limite Exposition Dépassée,Critique,Ouverte,Chiffre avouer pénétrer voix être transformer visite compte pierre machine haut ne nombre.,14.14,-1.78,2025-06-02
+ALT00398,PF00004,CLI0082,2026-02-23,Dépassement VaR,Haute,Ouverte,Violent année animal dame apprendre pain accomplir.,-19.58,-4.65,2025-08-27
+ALT00399,PF00092,CLI0080,2026-01-03,Limite Exposition Dépassée,Faible,Résolue,Promettre écrire fatigue danger saluer maintenant.,3.12,-4.1,2026-02-13
+ALT00400,PF00008,CLI0011,2024-12-02,Dépassement VaR,Critique,Ignorée,Nu comme parfois capable tout mince forcer.,26.71,-5.42,2025-09-19
+ALT00401,PF00051,CLI0008,2025-09-10,Dépassement VaR,Critique,Résolue,Afin De vingt arrière tendre rayon ramasser étendre ressembler magnifique.,-5.54,7.67,2026-01-25
+ALT00402,PF00008,CLI0066,2025-03-24,Limite Exposition Dépassée,Modérée,En traitement,Être mener soumettre poitrine science pitié un veille bonheur train prouver.,16.66,-6.79,2026-04-11
+ALT00403,PF00023,CLI0082,2025-12-29,Limite Exposition Dépassée,Modérée,Ignorée,Tête fatigue immense départ bas faim propre représenter prévenir.,-11.96,-0.32,2026-05-03
+ALT00404,PF00095,CLI0025,2025-04-19,Concentration Secteur,Haute,Résolue,Aussi deviner confondre puis répondre leur vingt d'autres commander.,-24.24,3.57,2025-11-20
+ALT00405,PF00001,CLI0049,2024-12-28,Dépassement VaR,Critique,En traitement,Près ici éteindre île officier promener courant.,29.66,14.27,2026-02-16
+ALT00406,PF00149,CLI0022,2025-03-13,Dépassement VaR,Faible,Ouverte,Personne chasser cas même voiture traverser français bas admettre geste bien rocher haute.,9.84,6.07,2025-09-05
+ALT00407,PF00121,CLI0048,2025-05-06,Limite Exposition Dépassée,Faible,Ignorée,Planche parent vague envelopper non content guère égal instant principe.,-1.66,-2.51,2025-09-24
+ALT00408,PF00025,CLI0046,2025-09-04,Drawdown Excessif,Haute,Résolue,Horizon battre homme résoudre chaîne partir branche affaire existence aujourd'hui.,-20.01,-2.86,2026-05-17
+ALT00409,PF00078,CLI0039,2024-09-02,Limite Exposition Dépassée,Modérée,Ouverte,Huit prier donner queue noir quant à.,27.1,11.07,2026-02-11
+ALT00410,PF00145,CLI0075,2026-03-03,Drawdown Excessif,Modérée,Ouverte,Détail objet quelqu'un endormir oncle tendre près former oh marquer espèce.,-9.03,-0.55,2025-12-06
+ALT00411,PF00133,CLI0029,2024-12-26,Dépassement VaR,Modérée,En traitement,Achever reste très chasse banc social annoncer classe mourir savoir noire glisser.,3.6,-2.2,2025-09-25
+ALT00412,PF00090,CLI0040,2025-04-20,Drawdown Excessif,Modérée,Ouverte,Soumettre charge supérieur plante ici drame résistance satisfaire premier fixer regard bande pays.,-0.7,-9.03,2026-05-01
+ALT00413,PF00029,CLI0006,2026-01-15,Instrument Suspendu,Haute,Ouverte,Avouer magnifique faveur prison étouffer quarante voyage claire.,-26.47,13.72,2025-10-16
+ALT00414,PF00140,CLI0038,2025-05-11,Drawdown Excessif,Haute,En traitement,Ministre pierre promener vingt l'un vide dire tard grand second le.,-21.26,2.52,2025-12-12
+ALT00415,PF00145,CLI0025,2024-10-06,Drawdown Excessif,Haute,Ouverte,Mon cheveu refuser acheter fusil non barbe semblable.,24.66,-6.84,2025-12-17
+ALT00416,PF00046,CLI0081,2025-03-17,Drawdown Excessif,Haute,Ouverte,Distinguer conduire installer signifier port aujourd'hui jour paquet anglais détail.,-28.4,9.13,2026-04-16
+ALT00417,PF00075,CLI0050,2024-11-06,Dépassement VaR,Modérée,Ignorée,Vin banc fort question obtenir vous mêler vol neuf.,21.28,0.7,2025-08-14
+ALT00418,PF00137,CLI0096,2024-12-31,Dépassement VaR,Modérée,Résolue,Visible épaule longtemps six supporter payer arrivée exister épais ordre.,-19.23,-4.76,2025-09-08
+ALT00419,PF00073,CLI0021,2026-04-10,KYC Expiré,Faible,Ouverte,Rayon fou parler système souvent plante échapper tard abandonner vite arracher courage.,-8.0,-7.5,2026-04-12
+ALT00420,PF00098,CLI0047,2025-12-24,Drawdown Excessif,Faible,Résolue,Chance retirer système éclat inventer relation chat atteindre.,11.0,-10.99,2026-03-14
+ALT00421,PF00023,CLI0028,2025-11-20,Drawdown Excessif,Critique,En traitement,Fatigue répondre revenir émotion fatiguer ajouter côte île.,-22.26,12.84,2026-05-08
+ALT00422,PF00025,CLI0019,2025-03-17,Dépassement VaR,Haute,Ignorée,Verser titre haut propre approcher habiter tout rapporter chat parvenir me puissant sueur.,-29.2,11.68,2025-12-18
+ALT00423,PF00101,CLI0045,2025-02-06,Concentration Secteur,Haute,Ouverte,Plein sentier tapis fonder poche voie clair au précipiter dangereux digne humide inspirer.,-17.15,-10.92,2025-11-26
+ALT00424,PF00017,CLI0026,2025-09-24,Limite Exposition Dépassée,Faible,Ouverte,Rayon autre étendue plus montrer rouge gloire.,26.12,-13.59,2025-11-04
+ALT00425,PF00039,CLI0013,2024-11-25,Drawdown Excessif,Faible,Ouverte,Sable souffler victime charger professeur céder éclater détail chaud satisfaire dix discussion.,-16.87,9.23,2026-05-13
+ALT00426,PF00143,CLI0067,2025-11-09,Dépassement VaR,Modérée,En traitement,Veiller quatre voile million valeur marche détruire façon événement religion odeur.,7.88,13.97,2026-03-18
+ALT00427,PF00028,CLI0053,2026-02-28,Concentration Secteur,Faible,En traitement,Droite instinct construire situation intelligence toute soirée gauche couleur fou avenir profondément.,28.74,12.37,2025-06-26
+ALT00428,PF00029,CLI0060,2025-05-22,Drawdown Excessif,Faible,Ouverte,Recevoir personne pourtant casser repousser dès effet baisser terre porte avenir creuser.,-18.55,8.43,2026-03-09
+ALT00429,PF00096,CLI0089,2025-12-11,Dépassement VaR,Faible,Ouverte,Interrompre rien source petit y fumer croiser vraiment terrible sortir personne dernier.,-12.34,-14.15,2025-08-12
+ALT00430,PF00011,CLI0041,2024-12-30,Concentration Secteur,Critique,Ouverte,Droit ventre permettre assurer abandonner rassurer autrefois résoudre sueur attirer image.,5.43,-11.98,2025-08-05
+ALT00431,PF00016,CLI0064,2025-05-25,Drawdown Excessif,Faible,Ouverte,Supporter pas fleur songer terre obtenir haine arrivée chambre jeune risquer dos.,9.95,-0.13,2025-07-22
+ALT00432,PF00122,CLI0068,2024-09-22,Drawdown Excessif,Faible,Ouverte,Vêtir résoudre lier entrer nuage simple fermer beau réfléchir.,-29.97,5.89,2025-11-04
+ALT00433,PF00007,CLI0066,2025-01-31,Instrument Suspendu,Faible,Ouverte,Au partager mériter complet montagne fier violence hôtel mouvement terrible maintenant larme cher.,17.26,-8.0,2025-10-31
+ALT00434,PF00012,CLI0084,2024-10-01,Limite Exposition Dépassée,Faible,Ouverte,Quatre remercier réunir espoir apprendre apporter parole quelque seuil.,11.46,-5.61,2025-12-02
+ALT00435,PF00132,CLI0058,2024-10-16,Drawdown Excessif,Critique,En traitement,Foule simplement fier beau fin pencher.,-26.3,-1.64,2025-09-13
+ALT00436,PF00030,CLI0034,2025-12-25,Dépassement VaR,Critique,Résolue,Flot rayon selon sentier guère étranger tant remarquer village sein causer alors jouer.,-20.5,8.4,2025-12-13
+ALT00437,PF00068,CLI0035,2025-09-07,Drawdown Excessif,Faible,Ouverte,Trembler tout difficile existence quelque lire deviner apprendre cerveau monter.,14.09,-13.88,2026-02-12
+ALT00438,PF00036,CLI0086,2024-10-10,Instrument Suspendu,Critique,Résolue,Glisser brusquement marquer gris réunir chaise an partager autrefois jour recherche contenir.,18.29,-11.14,2025-07-12
+ALT00439,PF00001,CLI0011,2025-10-05,KYC Expiré,Critique,En traitement,Fond respirer gens vieillard côté garder briller sang joindre confondre croix.,-25.32,-8.53,2026-03-21
+ALT00440,PF00132,CLI0090,2025-10-29,KYC Expiré,Haute,Résolue,Position escalier foule recherche absolument spectacle.,16.11,4.67,2025-09-12
+ALT00441,PF00127,CLI0062,2024-09-04,Instrument Suspendu,Critique,En traitement,Séparer beau épaule camarade plante deux.,2.14,12.63,2025-08-24
+ALT00442,PF00048,CLI0083,2025-10-02,Dépassement VaR,Haute,Ignorée,Grâce rentrer voler phrase minute seconde mener travail surprendre.,-5.39,11.58,2026-04-16
+ALT00443,PF00134,CLI0006,2026-04-03,KYC Expiré,Critique,Ignorée,Usage chanter roman réussir tapis mort oiseau durant libre promener voyager.,5.46,-12.39,2026-04-04
+ALT00444,PF00116,CLI0063,2024-05-22,Concentration Secteur,Faible,Ouverte,Voyage un votre trouver époque port moyen saisir devoir oeuvre.,-7.85,6.63,2025-08-07
+ALT00445,PF00051,CLI0044,2024-11-09,KYC Expiré,Faible,En traitement,Également disposer importance arme dégager troisième nourrir.,-14.88,-5.75,2026-04-14
+ALT00446,PF00108,CLI0089,2024-06-08,KYC Expiré,Faible,Résolue,Taille vaste chant réussir dire selon digne fonder conseil voyager un fusil décrire.,24.19,4.53,2026-05-08
+ALT00447,PF00142,CLI0038,2026-05-15,Concentration Secteur,Critique,Résolue,Ici serrer travailler avancer presser revoir haut exposer autorité te précipiter valeur.,28.81,-3.65,2025-09-23
+ALT00448,PF00114,CLI0080,2024-12-28,KYC Expiré,Haute,Ignorée,Étendue grain accomplir corde expérience arme chaque billet fou cinquante réflexion maître.,-16.62,9.35,2025-05-18
+ALT00449,PF00119,CLI0023,2024-09-01,Instrument Suspendu,Modérée,Ignorée,Valoir roi content courant souffler midi ni sombre.,20.19,13.61,2025-08-14
+ALT00450,PF00048,CLI0006,2025-11-10,Drawdown Excessif,Critique,Ouverte,Parole assez cour fixe tu appeler tellement juge.,-23.06,8.17,2025-12-31
+ALT00451,PF00097,CLI0006,2024-07-23,Drawdown Excessif,Haute,En traitement,Pain triste certainement notre prison partager ignorer.,-10.42,-12.83,2025-05-22
+ALT00452,PF00081,CLI0060,2025-01-19,KYC Expiré,Faible,En traitement,Son image auprès être double scène connaître colon roi fin pauvre avoir frapper.,-15.81,-6.73,2026-04-04
+ALT00453,PF00124,CLI0084,2025-08-14,Instrument Suspendu,Modérée,En traitement,Voisin afin de sonner manquer connaissance pénétrer large deviner dos hésiter gagner.,1.55,-5.17,2026-02-20
+ALT00454,PF00022,CLI0020,2026-01-01,KYC Expiré,Haute,Ouverte,Tromper fuir nouveau bruit soirée un lors moment porter.,14.98,-2.9,2025-12-09
+ALT00455,PF00056,CLI0055,2025-10-17,Limite Exposition Dépassée,Modérée,Ouverte,Indiquer près même boire décider importance revenir reconnaître fleur feu.,-10.94,5.87,2025-07-17
+ALT00456,PF00105,CLI0016,2024-12-13,KYC Expiré,Critique,Ignorée,Promener sombre éprouver en village couleur point lier tâche confondre gens passé temps.,-19.36,14.3,2025-07-11
+ALT00457,PF00103,CLI0032,2026-05-10,Instrument Suspendu,Critique,En traitement,Armée silence autrement maintenant planche mêler allumer de train grandir étage conscience.,11.78,-1.49,2026-05-02
+ALT00458,PF00026,CLI0088,2025-10-02,KYC Expiré,Haute,Résolue,Odeur parfois peine nombre couche demeurer lier caractère distinguer blanc.,-10.53,3.16,2025-12-05
+ALT00459,PF00060,CLI0045,2024-12-28,Limite Exposition Dépassée,Modérée,En traitement,Naissance amour rapide consulter appartenir riche bas.,-2.94,-12.66,2025-08-26
+ALT00460,PF00051,CLI0019,2025-02-18,Instrument Suspendu,Modérée,Ignorée,Montagne vin inventer nu vite étaler intelligence marché.,-14.25,1.57,2026-03-28
+ALT00461,PF00025,CLI0100,2025-05-05,Limite Exposition Dépassée,Haute,Ignorée,Pousser car supposer content autre exprimer ouvrage papa savoir sec côte ventre tombe.,25.42,-10.54,2025-07-17
+ALT00462,PF00137,CLI0069,2025-05-12,Drawdown Excessif,Modérée,Ignorée,Parole question trois éprouver commander d'autres.,21.24,-7.94,2025-12-19
+ALT00463,PF00006,CLI0018,2025-06-09,KYC Expiré,Haute,Ignorée,Bientôt route éclater rire île retour marche hors ami.,22.19,-2.44,2026-01-01
+ALT00464,PF00074,CLI0015,2025-03-18,KYC Expiré,Faible,Résolue,Éternel à quant à neuf partager offrir chacun mariage lueur éternel.,12.98,0.11,2025-07-28
+ALT00465,PF00087,CLI0077,2025-08-23,Drawdown Excessif,Modérée,Résolue,Marcher pont chien montrer regard de en pleurer.,1.79,2.61,2025-07-23
+ALT00466,PF00109,CLI0066,2024-09-25,Instrument Suspendu,Modérée,Résolue,Science ombre part paysage cela oh poésie accord.,-9.44,12.87,2025-07-22
+ALT00467,PF00137,CLI0011,2026-01-30,Dépassement VaR,Haute,En traitement,Presser police combat valeur monsieur falloir oublier hôtel importer céder.,-28.0,-2.44,2025-12-18
+ALT00468,PF00037,CLI0007,2025-06-26,Concentration Secteur,Modérée,En traitement,Accuser fatigue inquiéter pays renverser douze.,-6.69,-13.03,2025-09-17
+ALT00469,PF00097,CLI0046,2025-09-03,Limite Exposition Dépassée,Critique,Ignorée,Reste consulter françois bande déposer conduire vite.,-14.07,-6.54,2026-05-13
+ALT00470,PF00047,CLI0069,2025-03-06,Drawdown Excessif,Faible,Ignorée,Promener finir pointe commencer tendre ami préférer prêter servir certes vieil attention couvrir.,-14.03,-12.17,2025-09-02
+ALT00471,PF00071,CLI0037,2026-02-07,Concentration Secteur,Faible,En traitement,Signer santé côte extraordinaire enfoncer détacher général être.,-18.38,-1.22,2025-12-01
+ALT00472,PF00066,CLI0010,2024-08-29,Concentration Secteur,Modérée,En traitement,Attaquer juger inquiétude justice mauvais respirer étranger principe amuser ailleurs.,-5.76,5.68,2025-11-23
+ALT00473,PF00096,CLI0023,2024-11-26,Drawdown Excessif,Modérée,Ouverte,Tout elle hauteur visite avis ouvrage.,-17.53,14.72,2025-12-01
+ALT00474,PF00082,CLI0028,2025-08-28,Drawdown Excessif,Faible,Résolue,Victime cuisine sonner éteindre répandre hiver année compagnon nord type tempête.,-13.09,-0.14,2025-11-13
+ALT00475,PF00071,CLI0028,2025-05-10,Concentration Secteur,Modérée,Résolue,Entrer autrefois désert homme veille rencontre du pointe.,-18.16,13.54,2026-04-23
+ALT00476,PF00092,CLI0035,2025-02-19,KYC Expiré,Haute,Résolue,Oh importance refuser partout poche expliquer rejeter.,8.08,-13.04,2025-09-10
+ALT00477,PF00133,CLI0052,2024-10-01,Concentration Secteur,Modérée,Résolue,Troubler contenter fort coup du mari sauver titre avoir.,4.44,4.99,2026-02-25
+ALT00478,PF00096,CLI0088,2025-07-13,Dépassement VaR,Haute,Ignorée,Aimer aller preuve âgé peau champ argent alors eaux nord grâce toujours rester système.,-14.51,-7.33,2025-09-18
+ALT00479,PF00042,CLI0056,2025-10-19,Concentration Secteur,Modérée,Résolue,Parent former page tout croix conseil rose appartement content croiser.,28.88,9.36,2026-02-01
+ALT00480,PF00049,CLI0072,2026-02-12,Instrument Suspendu,Faible,Ignorée,Coup sol te ensemble milieu autour sommeil soit étoile conversation rayon.,-13.03,-6.05,2026-02-18
+ALT00481,PF00140,CLI0037,2025-09-29,KYC Expiré,Critique,En traitement,Paquet plein cher réussir retrouver bruit sept.,-20.77,5.89,2025-06-11
+ALT00482,PF00039,CLI0100,2025-02-07,KYC Expiré,Faible,Résolue,Scène succès calmer te plante prier souffrance nature soudain.,-26.37,11.87,2025-08-14
+ALT00483,PF00067,CLI0007,2024-08-10,Dépassement VaR,Critique,Ignorée,Approcher effet bataille chemise mieux cercle intéresser droit double reconnaître malgré.,-6.57,13.52,2025-11-10
+ALT00484,PF00118,CLI0099,2025-03-29,Instrument Suspendu,Critique,Ouverte,Mon également étudier reste compte pensée selon.,-23.26,0.54,2025-12-07
+ALT00485,PF00107,CLI0008,2025-11-19,Concentration Secteur,Haute,Résolue,Voyager impression cruel danser bas vous troubler désespoir seconde chasser entre grâce éteindre.,29.38,13.69,2025-12-19
+ALT00486,PF00064,CLI0074,2024-10-06,Limite Exposition Dépassée,Modérée,Ignorée,Demander tout président pareil noir veille plaine quartier problème appartenir sueur vérité pleurer.,13.0,-0.62,2026-03-31
+ALT00487,PF00135,CLI0006,2025-11-17,Limite Exposition Dépassée,Critique,Résolue,Parce Que faveur amener lune tu sérieux toujours soleil quinze maison surprendre battre métier.,-21.05,5.87,2026-05-06
+ALT00488,PF00128,CLI0048,2024-09-04,Drawdown Excessif,Critique,Ignorée,Beaucoup neuf partir feuille étoile pour leur.,-9.84,-0.06,2025-08-17
+ALT00489,PF00128,CLI0074,2025-08-23,Drawdown Excessif,Faible,Ouverte,Absolument second auquel quelque lèvre mur question cour combien pousser.,-20.11,-2.22,2026-03-30
+ALT00490,PF00094,CLI0034,2026-04-23,Concentration Secteur,Modérée,En traitement,Jeune nerveux le pourquoi brusquement envie mari.,24.47,-3.64,2025-07-23
+ALT00491,PF00072,CLI0034,2024-09-27,KYC Expiré,Haute,Ouverte,Convenir pourquoi regarder phrase saison joindre as.,-26.32,-0.1,2025-05-29
+ALT00492,PF00048,CLI0059,2025-10-01,Drawdown Excessif,Critique,Résolue,Intention saisir escalier rose vague terre.,-12.39,5.44,2025-12-12
+ALT00493,PF00067,CLI0073,2024-07-10,Limite Exposition Dépassée,Critique,Ouverte,Taille intelligence milieu action condamner genre baisser simple deux.,-12.7,-5.13,2026-04-25
+ALT00494,PF00024,CLI0074,2026-05-07,Concentration Secteur,Modérée,Ouverte,Conseil mille beau chambre occasion au chaleur imaginer rien rejoindre rejoindre part.,-8.45,-13.24,2025-12-24
+ALT00495,PF00038,CLI0011,2025-03-04,KYC Expiré,Critique,Ouverte,Frère avec mien même sable chat plusieurs.,26.2,-4.85,2026-04-07
+ALT00496,PF00146,CLI0091,2025-06-05,Concentration Secteur,Modérée,Ignorée,Regard tracer trouver douceur puis sien si.,4.51,-7.46,2025-08-15
+ALT00497,PF00037,CLI0065,2024-12-05,KYC Expiré,Faible,En traitement,Ou corps tempête printemps cesse éclater avant voici queue.,-23.17,10.71,2026-05-03
+ALT00498,PF00092,CLI0035,2025-09-14,Instrument Suspendu,Haute,En traitement,Ennemi lit tendre règle sérieux appel bas comme dès d'autres.,23.01,9.03,2025-10-09
+ALT00499,PF00045,CLI0083,2025-09-24,Limite Exposition Dépassée,Haute,Ouverte,Tendre manger foule tendre large rayon jour secret.,-15.96,-14.48,2025-06-24
+ALT00500,PF00002,CLI0061,2025-04-29,KYC Expiré,Faible,En traitement,Intention te quelque connaissance tourner réalité coûter face instant eau propos juger quartier.,-21.52,1.09,2025-12-13

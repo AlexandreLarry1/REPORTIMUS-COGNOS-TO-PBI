@@ -1,0 +1,21 @@
+.env
+*.qvf
+*.qvd
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Données source et outputs par exemple (volumineuses, confidentielles)
+examples/*/input/*
+!examples/*/input/.gitkeep
+examples/*/intermediate/
+examples/*/pbip/
+
+# Anciens chemins (legacy)
+inputs/
+data/
+output/
+outputs/
+extraction/
+sql/generated.sql

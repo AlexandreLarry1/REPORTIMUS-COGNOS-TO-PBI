@@ -1,0 +1,7 @@
+duckdb
+lxml
+openai
+pandas
+python-dotenv
+websocket-client
+langfuse

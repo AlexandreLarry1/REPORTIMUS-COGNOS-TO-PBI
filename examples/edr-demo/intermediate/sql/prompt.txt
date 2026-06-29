@@ -1,0 +1,1159 @@
+SYSTEM:
+Tu es un expert en migration Qlik -> SQL DuckDB.
+
+Tables sources disponibles dans DuckDB (suffixe _src, READ-ONLY) :
+- dim_calendrier_src : Date, Annee, Trimestre, Mois, NomMois, Semaine, JourSemaine, NomJour, EstWeekend, EstJourFerie, Semestre, AnneeMois, AnneeTrimestreTxt
+- dim_clients_src : ClientID, Nom, Prenom, Email, Telephone, DateNaissance, Segment, Pays, Ville, DateEntreeRelation, Conseiller, ProfilRisque, StatutKYC
+- dim_conseillers_src : ConseillerID, Nom, Prenom, Email, Bureau, Equipe, AnneeExperience, Certification, NbClients, AuM_EUR
+- dim_instruments_src : InstrumentID, NomInstrument, TypeInstrument, Classe Actif, Devise, Pays, ISIN, Emetteur, NiveauRisque, FraisGestion_pct
+- dim_portefeuilles_src : PortefeuilleID, ClientID, TypePortefeuille, DateOuverture, Devise, Statut, ObjectifInvestissement, HorizonInvestissement, BenchmarkRef
+- fact_alertes_risque_src : AlerteID, PortefeuilleID, ClientID, DateAlerte, TypeAlerte, Severite, Statut, Description, ValeurMesure, SeuilAlerte, DateResolution
+- fact_cours_historiques_src : Date, InstrumentID, PrixOuverture, PrixHaut, PrixBas, PrixCloture, Volume, Devise
+- fact_performances_src : PeriodeDate, PortefeuilleID, Rendement_pct, Benchmark_pct, Alpha_pct, Volatilite_pct, RatioSharpe, MaxDrawdown_pct, ValeurPortefeuille_EUR, FluxNets_EUR, RendementCumule_pct
+- fact_positions_src : SnapshotDate, PortefeuilleID, InstrumentID, Quantite, PrixRevientUnitaire, PrixMarcheUnitaire, ValeurAchat_EUR, ValeurMarche_EUR, PnL_EUR, PnL_pct, PoidsPortefeuille_pct, Devise
+- fact_transactions_src : TransactionID, PortefeuilleID, InstrumentID, DateTransaction, TypeTransaction, Quantite, PrixUnitaire, MontantBrut, Frais, MontantNet, Devise, TauxChange_EUR, MontantNet_EUR, Statut, Courtier, Operateur
+
+REGLE CRITIQUE : utilise EXACTEMENT les noms de colonnes et de vues listes ci-dessus. Ne renomme pas, ne rajoute pas d'espaces, ne raccourcis pas les noms de vues. Ex : si la vue s'appelle fact_cours_historiques_src, utilise fact_cours_historiques_src (pas Fact_Cours_src). Si la colonne s'appelle NomMois, utilise NomMois (pas "Nom Mois").
+
+IMPORTANT : les tables sources (_src) contiennent deja les valeurs finales telles qu'affichees dans Qlik (post-transformation : dates formatees, calculs appliques, etc.). NE PAS re-appliquer les transformations du script (AddYears, Floor, Date(), etc.) sur les colonnes sources. Pour chaque table du script qui charge depuis un QVD, faire simplement CREATE OR REPLACE TABLE <Nom> AS SELECT <colonnes> FROM <Nom>_src. Appliquer les transformations UNIQUEMENT pour les tables derivees qui combinent plusieurs sources (RESIDENT, Mapping, jointures).
+
+Regles de traduction strictes :
+- MAPPING LOAD              -> CREATE OR REPLACE TEMP TABLE
+- RESIDENT <table>          -> FROM <table>
+- ApplyMap('Map', key, def) -> COALESCE((SELECT val FROM Map WHERE k=key), def)
+- NOT Exists(Key, field)    -> NOT EXISTS (SELECT 1 FROM table WHERE col=field)
+- Concatenation &           -> ||
+- left(str, n)              -> SUBSTR(str, 1, n)
+- right(str, n)             -> RIGHT(str, n)
+- mid(str, pos)             -> SUBSTR(str, pos)
+- MAXSTRING()               -> MAX()
+- wildmatch(f,'a','b')>0   -> f IN ('a','b')
+- if(cond, a, b)            -> CASE WHEN cond THEN a ELSE b END
+- Rowno()                   -> ROW_NUMBER() OVER ()
+
+Contraintes DuckDB :
+- Pas de UPDATE sur TEMP TABLE -> recreer avec SELECT
+- CREATE OR REPLACE TABLE pour les tables finales
+- CREATE OR REPLACE TEMP TABLE pour les intermediaires
+- Index non supportes sur TEMP TABLE -> les omettre
+- SUBSTR(str, -n) retourne vide en DuckDB -> utiliser RIGHT(str, n)
+- Pour les periodes SAP : LPAD(CAST(CAST(PERIO AS INTEGER) AS VARCHAR), 2, '0')
+- Toutes les colonnes sources sont VARCHAR. Toujours caster explicitement avant toute operation arithmetique ou numerique : CAST(col AS DOUBLE), etc.
+- Les dates sources sont au format M/D/YYYY (ex: '4/4/2024'). Les valeurs manquantes sont '-'. Toujours utiliser TRY_STRPTIME (jamais strptime ni CAST AS DATE) : TRY_STRPTIME(col, '%m/%d/%Y').
+- AddYears(col, n) -> TRY_STRPTIME(col, '%m/%d/%Y') + INTERVAL (n) YEAR
+- AddMonths(col, n) -> TRY_STRPTIME(col, '%m/%d/%Y') + INTERVAL (n) MONTH
+- Floor(col) -> FLOOR(CAST(col AS DOUBLE))
+
+Retourne UNIQUEMENT du SQL valide DuckDB, sans explication, sans markdown.
+Chaque bloc separe par un commentaire -- [NOM_TABLE].
+Genere toutes les tables definies dans le script (intermediaires et finales).
+Les tables finales utilisent CREATE OR REPLACE TABLE, les intermediaires CREATE OR REPLACE TEMP TABLE.
+
+USER:
+Voici le script Qlik et les variables resolues.
+Genere les requetes SQL DuckDB pour reproduire exactement toutes les tables du script.
+
+--- VARIABLES ---
+- vDataPath = lib://InvestmentData/
+- vCurrentYear = 2026
+- vCurrentMonth = mai
+- vReportDate = 2026-05-19
+- vMinDate = 44592
+- vMaxDate = 46161
+
+--- SCRIPT QLIK ---
+///$tab Main
+SET ThousandSep=' ';
+SET DecimalSep=',';
+SET MoneyThousandSep=' ';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='# ##0.00 CHF;-# ##0.00 CHF';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='DD.MM.YYYY';
+SET TimestampFormat='DD.MM.YYYY hh:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=0;
+SET ReferenceDay=4;
+SET FirstMonthOfYear=1;
+SET CollationLocale='fr-CH';
+SET CreateSearchIndexOnReload=1;
+SET MonthNames='janv.;févr.;mars;avr.;mai;juin;juil.;août;sept.;oct.;nov.;déc.';
+SET LongMonthNames='janvier;février;mars;avril;mai;juin;juillet;août;septembre;octobre;novembre;décembre';
+SET DayNames='lun.;mar.;mer.;jeu.;ven.;sam.;dim.';
+SET LongDayNames='lundi;mardi;mercredi;jeudi;vendredi;samedi;dimanche';
+SET NumericalAbbreviation='3:k;6:M;9:G;12:T;15:P;18:E;21:Z;24:Y;-3:m;-6:μ;-9:n;-12:p;-15:f;-18:a;-21:z;-24:y';
+
+///$tab Section 3
+// ============================================================
+// QLIK SENSE - INVESTMENT TRACKING - LOAD SCRIPT
+// Built from: datas_demo_edr dataset (actual column names)
+// ============================================================
+
+// ── GLOBAL VARIABLES ─────────────────────────────────────────
+SET ThousandSep=' ';
+SET DecimalSep=',';
+SET MoneyThousandSep=' ';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 EUR;-# ##0,00 EUR';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='YYYY-MM-DD';
+SET TimestampFormat='YYYY-MM-DD hh:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=4;
+SET FirstMonthOfYear=1;
+SET CollationLocale='fr-FR';
+SET CreateSearchIndexOnReload=1;
+
+LET vDataPath = 'lib://InvestmentData/';
+
+// ============================================================
+// SECTION 1 : DIMENSION TABLES
+// ============================================================
+
+// ── DIM_CALENDRIER ───────────────────────────────────────────
+// CSV columns: Date,Annee,Trimestre,Mois,NomMois,Semaine,
+//              JourSemaine,NomJour,EstWeekend,EstJourFerie,
+//              Semestre,AnneeMois,AnneeTrimestreTxt
+[Dim_Calendrier]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')      AS [Date],
+    Num#(Annee)                    AS [Annee],
+    Num#(Trimestre)                AS [Trimestre],
+    Num#(Mois)                     AS [Mois],
+    NomMois                        AS [Nom Mois],
+    Num#(Semaine)                  AS [Semaine],
+    Num#(JourSemaine)              AS [Jour Semaine],
+    NomJour                        AS [Nom Jour],
+    Num#(EstWeekend)               AS [Est Weekend],
+    Num#(EstJourFerie)             AS [Est Jour Ferie],
+    Num#(Semestre)                 AS [Semestre],
+    AnneeMois                      AS [Annee-Mois],
+    AnneeTrimestreTxt              AS [Annee-Trimestre],
+    If(Num#(EstWeekend)=0, 'Jour Ouvre', 'Weekend') AS [Type Jour]
+FROM [$(vDataPath)dim_calendrier.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── DIM_CLIENTS ──────────────────────────────────────────────
+// CSV columns: ClientID,Nom,Prenom,Email,Telephone,DateNaissance,
+//              Segment,Pays,Ville,DateEntreeRelation,Conseiller,
+//              ProfilRisque,StatutKYC
+// Note: join key to Dim_Conseillers is [Conseiller] = ConseillerID
+[Dim_Clients]:
+LOAD
+    ClientID,
+    Nom                                      AS [Nom Client],
+    Prenom                                   AS [Prenom Client],
+    Nom & ' ' & Prenom                       AS [Nom Complet Client],
+    Email                                    AS [Email Client],
+    Telephone,
+    Date#(DateNaissance, 'YYYY-MM-DD')       AS [Date Naissance],
+    Year(Today()) - Year(Date#(DateNaissance, 'YYYY-MM-DD')) AS [Age Client],
+    Segment                                  AS [Segment Client],
+    Pays                                     AS [Pays Client],
+    Ville                                    AS [Ville Client],
+    Date#(DateEntreeRelation, 'YYYY-MM-DD')  AS [Date Entree Relation],
+    Year(Today()) - Year(Date#(DateEntreeRelation, 'YYYY-MM-DD')) AS [Anciennete (ans)],
+    Conseiller                               AS ConseillerID,
+    ProfilRisque                             AS [Profil Risque],
+    StatutKYC                                AS [Statut KYC]
+FROM [$(vDataPath)dim_clients.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── DIM_CONSEILLERS ──────────────────────────────────────────
+// CSV columns: ConseillerID,Nom,Prenom,Email,Bureau,Equipe,
+//              AnneeExperience,Certification,NbClients,AuM_EUR
+[Dim_Conseillers]:
+LOAD
+    ConseillerID,
+    Nom                            AS [Nom Conseiller],
+    Prenom                         AS [Prenom Conseiller],
+    Nom & ' ' & Prenom             AS [Nom Complet Conseiller],
+    Email                          AS [Email Conseiller],
+    Bureau,
+    Equipe,
+    Num#(AnneeExperience)          AS [Annees Experience],
+    Certification,
+    Num#(NbClients)                AS [Nb Clients Conseiller],
+    Num#(AuM_EUR)                  AS [AuM Conseiller (EUR)]
+FROM [$(vDataPath)dim_conseillers.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── DIM_INSTRUMENTS ──────────────────────────────────────────
+// CSV columns: InstrumentID,NomInstrument,TypeInstrument,Classe Actif,
+//              Devise,Pays,ISIN,Emetteur,NiveauRisque,FraisGestion_pct
+// Note: column is literally "Classe Actif" (with space, no apostrophe)
+[Dim_Instruments]:
+LOAD
+    InstrumentID,
+    NomInstrument                  AS [Nom Instrument],
+    TypeInstrument                 AS [Type Instrument],
+    [Classe Actif]                 AS [Classe Actif],
+    Devise                         AS [Devise Instrument],
+    Pays                           AS [Pays Instrument],
+    ISIN,
+    Emetteur,
+    NiveauRisque                   AS [Niveau Risque],
+    Num#(FraisGestion_pct)         AS [Frais Gestion (%)]
+FROM [$(vDataPath)dim_instruments.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── DIM_PORTEFEUILLES ────────────────────────────────────────
+// CSV columns: PortefeuilleID,ClientID,TypePortefeuille,DateOuverture,
+//              Devise,Statut,ObjectifInvestissement,HorizonInvestissement,
+//              BenchmarkRef
+[Dim_Portefeuilles]:
+LOAD
+    PortefeuilleID,
+    ClientID,
+    TypePortefeuille               AS [Type Portefeuille],
+    Date#(DateOuverture, 'YYYY-MM-DD') AS [Date Ouverture],
+    Devise                         AS [Devise Portefeuille],
+    Statut                         AS [Statut Portefeuille],
+    ObjectifInvestissement         AS [Objectif Investissement],
+    HorizonInvestissement          AS [Horizon Investissement],
+    BenchmarkRef                   AS [Benchmark Reference]
+FROM [$(vDataPath)dim_portefeuilles.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 2 : FACT TABLES
+// ============================================================
+
+// ── FACT_TRANSACTIONS ────────────────────────────────────────
+// CSV columns: TransactionID,PortefeuilleID,InstrumentID,DateTransaction,
+//              TypeTransaction,Quantite,PrixUnitaire,MontantBrut,Frais,
+//              MontantNet,Devise,TauxChange_EUR,MontantNet_EUR,Statut,
+//              Courtier,Operateur
+// Statut values in data: 'Exécuté', 'En attente', 'Annulé'
+// TypeTransaction values: Achat, Vente, Dividende, Coupon, Frais,
+//                         Arbitrage Entrant, Arbitrage Sortant
+[Fact_Transactions]:
+LOAD
+    TransactionID,
+    PortefeuilleID,
+    InstrumentID,
+    Date#(DateTransaction, 'YYYY-MM-DD')  AS [Date Transaction],
+    Date#(DateTransaction, 'YYYY-MM-DD')  AS [Date],
+    TypeTransaction                        AS [Type Transaction],
+    Num#(Quantite)                         AS [Quantite],
+    Num#(PrixUnitaire)                     AS [Prix Unitaire (EUR)],
+    Num#(MontantBrut)                      AS [Montant Brut (EUR)],
+    Num#(Frais)                            AS [Frais (EUR)],
+    Num#(MontantNet)                       AS [Montant Net],
+    Devise                                 AS [Devise Transaction],
+    Num#(TauxChange_EUR)                   AS [Taux Change EUR],
+    Num#(MontantNet_EUR)                   AS [Montant Net EUR],
+    Statut                                 AS [Statut Transaction],
+    Courtier,
+    Operateur,
+    // Pre-split amounts by transaction type
+    If(TypeTransaction='Achat',             Num#(MontantNet_EUR), 0) AS [Montant Achat EUR],
+    If(TypeTransaction='Vente',             Num#(MontantNet_EUR), 0) AS [Montant Vente EUR],
+    If(TypeTransaction='Dividende' Or TypeTransaction='Coupon',
+                                            Num#(MontantNet_EUR), 0) AS [Revenus EUR],
+    If(TypeTransaction='Frais',             Num#(MontantNet_EUR), 0) AS [Total Frais EUR],
+    If(TypeTransaction='Arbitrage Entrant', Num#(MontantNet_EUR), 0) AS [Arbitrage Entrant EUR],
+    If(TypeTransaction='Arbitrage Sortant', Num#(MontantNet_EUR), 0) AS [Arbitrage Sortant EUR]
+FROM [$(vDataPath)fact_transactions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq)
+WHERE Statut = 'Exécuté';
+
+
+// ── FACT_POSITIONS ───────────────────────────────────────────
+// CSV columns: SnapshotDate,PortefeuilleID,InstrumentID,Quantite,
+//              PrixRevientUnitaire,PrixMarcheUnitaire,ValeurAchat_EUR,
+//              ValeurMarche_EUR,PnL_EUR,PnL_pct,PoidsPortefeuille_pct,Devise
+[Fact_Positions]:
+LOAD
+    Date#(SnapshotDate, 'YYYY-MM-DD')    AS [Date Snapshot],
+    Date#(SnapshotDate, 'YYYY-MM-DD')    AS [Date],
+    PortefeuilleID,
+    InstrumentID,
+    Num#(Quantite)                       AS [Quantite Position],
+    Num#(PrixRevientUnitaire)            AS [Prix Revient Unitaire],
+    Num#(PrixMarcheUnitaire)             AS [Prix Marche Unitaire],
+    Num#(ValeurAchat_EUR)                AS [Valeur Achat (EUR)],
+    Num#(ValeurMarche_EUR)               AS [Valeur Marche (EUR)],
+    Num#(PnL_EUR)                        AS [PnL (EUR)],
+    Num#(PnL_pct)                        AS [PnL (%)],
+    Num#(PoidsPortefeuille_pct)          AS [Poids Portefeuille (%)],
+    Devise                               AS [Devise Position],
+    If(Num#(PnL_EUR) >= 0, 'Positif', 'Negatif') AS [Signe PnL]
+FROM [$(vDataPath)fact_positions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── FACT_PERFORMANCES ────────────────────────────────────────
+// CSV columns: PeriodeDate,PortefeuilleID,Rendement_pct,Benchmark_pct,
+//              Alpha_pct,Volatilite_pct,RatioSharpe,MaxDrawdown_pct,
+//              ValeurPortefeuille_EUR,FluxNets_EUR,RendementCumule_pct
+// NOTE: NO InstrumentID in this table
+[Fact_Performances]:
+LOAD
+    Date#(PeriodeDate, 'YYYY-MM-DD')     AS [Date Performance],
+    Date#(PeriodeDate, 'YYYY-MM-DD')     AS [Date],
+    PortefeuilleID,
+    Num#(Rendement_pct)                  AS [Rendement (%)],
+    Num#(Benchmark_pct)                  AS [Benchmark (%)],
+    Num#(Alpha_pct)                      AS [Alpha (%)],
+    Num#(Volatilite_pct)                 AS [Volatilite (%)],
+    Num#(RatioSharpe)                    AS [Ratio Sharpe],
+    Num#(MaxDrawdown_pct)                AS [Max Drawdown (%)],
+    Num#(ValeurPortefeuille_EUR)         AS [Valeur Portefeuille (EUR)],
+    Num#(FluxNets_EUR)                   AS [Flux Nets (EUR)],
+    Num#(RendementCumule_pct)            AS [Rendement Cumule (%)],
+    If(Num#(Alpha_pct) >= 0, 'Alpha Positif', 'Alpha Negatif') AS [Signe Alpha],
+    If(Num#(Rendement_pct) >= Num#(Benchmark_pct),
+       'Surperforme', 'Sous-performe')   AS [Vs Benchmark]
+FROM [$(vDataPath)fact_performances.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── FACT_COURS_HISTORIQUES ───────────────────────────────────
+// CSV columns: Date,InstrumentID,PrixOuverture,PrixHaut,PrixBas,
+//              PrixCloture,Volume,Devise
+// NOTE: NO PortefeuilleID in this table
+[Fact_Cours]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')           AS [Date Cours],
+    Date#(Date, 'YYYY-MM-DD')           AS [Date],
+    InstrumentID,
+    Num#(PrixOuverture)                 AS [Prix Ouverture],
+    Num#(PrixHaut)                      AS [Prix Haut],
+    Num#(PrixBas)                       AS [Prix Bas],
+    Num#(PrixCloture)                   AS [Prix Cloture],
+    Num#(Volume)                        AS [Volume],
+    Devise                              AS [Devise Cours],
+    Num#(PrixHaut) - Num#(PrixBas)      AS [Amplitude Journaliere]
+FROM [$(vDataPath)fact_cours_historiques.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── FACT_ALERTES_RISQUE ──────────────────────────────────────
+// CSV columns: AlerteID,PortefeuilleID,ClientID,DateAlerte,TypeAlerte,
+//              Severite,Statut,Description,ValeurMesure,SeuilAlerte,
+//              DateResolution
+// Severite values: Haute, Faible, Critique, Modérée
+// Statut values:   En traitement, Ouverte, Ignorée, Résolue
+[Fact_Alertes]:
+LOAD
+    AlerteID,
+    PortefeuilleID,
+    ClientID,
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date Alerte],
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date],
+    TypeAlerte                          AS [Type Alerte],
+    Severite,
+    Statut                              AS [Statut Alerte],
+    Description                         AS [Description Alerte],
+    Num#(ValeurMesure)                  AS [Valeur Mesuree],
+    Num#(SeuilAlerte)                   AS [Seuil Alerte],
+    Date#(DateResolution, 'YYYY-MM-DD') AS [Date Resolution],
+    If(Statut = 'Résolue',
+       Date#(DateResolution, 'YYYY-MM-DD') - Date#(DateAlerte, 'YYYY-MM-DD'),
+       Null())                          AS [Delai Resolution (jours)]
+FROM [$(vDataPath)fact_alertes_risque.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 3 : MAPPINGS & ENRICHMENTS
+// ============================================================
+
+// ── Macro-Classe mapping ─────────────────────────────────────
+// Based on actual [Classe Actif] values in dim_instruments.csv:
+// Actions, Taux, Immobilier, Monétaire, Matières Premières,
+// Obligations HY, Obligations Convertibles, Private Equity, Épargne
+Map_MacroClasse:
+MAPPING LOAD * INLINE [
+Classe Actif, Macro Classe Actif
+Actions, Risque
+Obligations HY, Risque
+Private Equity, Risque
+Taux, Defensif
+Monétaire, Defensif
+Épargne, Defensif
+Immobilier, Diversifie
+Matières Premières, Diversifie
+Obligations Convertibles, Diversifie
+];
+
+// Enrich Dim_Instruments with Macro-Classe
+[Dim_Instruments_Tmp]:
+LOAD *,
+    ApplyMap('Map_MacroClasse', [Classe Actif], 'Non classifie') AS [Macro Classe Actif]
+Resident [Dim_Instruments];
+
+Drop Table [Dim_Instruments];
+RENAME Table [Dim_Instruments_Tmp] TO [Dim_Instruments];
+
+
+// ============================================================
+// SECTION 4 : MASTER CALENDAR
+// ============================================================
+// Builds a single [Date] field linking all fact tables.
+// Uses Dim_Calendrier as the source (already contains full date range).
+// All fact tables expose a [Date] field that links here.
+
+[MasterCalendar]:
+LOAD
+    [Date],
+    [Annee],
+    [Mois],
+    [Nom Mois],
+    [Trimestre],
+    [Semaine],
+    [Annee-Mois],
+    [Annee-Trimestre],
+    [Semestre],
+    [Type Jour],
+    [Est Weekend],
+    [Est Jour Ferie]
+Resident [Dim_Calendrier];
+
+Drop Table [Dim_Calendrier];
+
+// ============================================================
+// END OF SCRIPT
+// ============================================================
+exit script;
+///$tab Section 2
+// ============================================================
+// QLIK SENSE - INVESTMENT TRACKING - SCRIPT DE CHARGEMENT
+// Version : 1.0 | Date : 2025
+// Architecture : Modele en etoile (Star Schema)
+// ============================================================
+
+// ── VARIABLES GLOBALES ────────────────────────────────────────
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 EUR;-# ##0,00 EUR';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='YYYY-MM-DD';
+SET TimestampFormat='YYYY-MM-DD hh:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=4;
+SET FirstMonthOfYear=1;
+SET CollationLocale='fr-FR';
+SET CreateSearchIndexOnReload=1;
+
+LET vDataPath = 'lib://InvestmentData/';
+LET vCurrentYear = Year(Today());
+LET vCurrentMonth = Month(Today());
+LET vReportDate = Date(Today(), 'YYYY-MM-DD');
+
+// ============================================================
+// SECTION 1 : DIMENSIONS (Tables de reference)
+// ============================================================
+
+// ── TABLE : DIM_CALENDRIER ────────────────────────────────────
+[Dim_Calendrier]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')       AS [Date],
+    Annee                            AS [Annee],
+    Num#(Trimestre)                  AS [Trimestre],
+    Num#(Mois)                       AS [Mois],
+    NomMois                          AS [Nom Mois],
+    Semaine                          AS [Semaine],
+    JourSemaine                      AS [Jour Semaine],
+    NomJour                          AS [Nom Jour],
+    Num#(EstWeekend)                 AS [Est Weekend],
+    AnneeMois                        AS [Annee-Mois],
+    AnneeTrimestreTxt                AS [Annee-Trimestre],
+    Semestre                         AS [Semestre],
+    If(Num#(EstWeekend)=0, 'Jour Ouvre', 'Weekend') AS [Type Jour]
+FROM [$(vDataPath)dim_calendrier.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : DIM_CLIENTS ───────────────────────────────────────
+[Dim_Clients]:
+LOAD
+    ClientID,
+    Nom                              AS [Nom Client],
+    Prenom                           AS [Prenom Client],
+    Nom & ' ' & Prenom               AS [Nom Complet Client],
+    Email                            AS [Email Client],
+    Telephone                        AS [Telephone],
+    Date#(DateNaissance, 'YYYY-MM-DD') AS [Date Naissance],
+    Year(Today()) - Year(Date#(DateNaissance,'YYYY-MM-DD')) AS [Age Client],
+    Segment                          AS [Segment Client],
+    Pays                             AS [Pays Client],
+    Ville                            AS [Ville Client],
+    Date#(DateEntreeRelation, 'YYYY-MM-DD') AS [Date Entree Relation],
+    Year(Today()) - Year(Date#(DateEntreeRelation,'YYYY-MM-DD')) AS [Anciennete (ans)],
+    Conseiller                       AS ConseillerID,
+    ProfilRisque                     AS [Profil Risque],
+    StatutKYC                        AS [Statut KYC]
+FROM [$(vDataPath)dim_clients.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : DIM_INSTRUMENTS ───────────────────────────────────
+[Dim_Instruments]:
+LOAD
+    InstrumentID,
+    NomInstrument                    AS [Nom Instrument],
+    TypeInstrument                   AS [Type Instrument],
+    [Classe Actif]                   AS [Classe d'Actif],
+    Devise                           AS [Devise Instrument],
+    Pays                             AS [Pays Instrument],
+    ISIN,
+    Emetteur,
+    NiveauRisque                     AS [Niveau Risque],
+    Num#(FraisGestion_pct)           AS [Frais Gestion (%)]
+FROM [$(vDataPath)dim_instruments.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : DIM_CONSEILLERS ───────────────────────────────────
+[Dim_Conseillers]:
+LOAD
+    ConseillerID,
+    Nom                              AS [Nom Conseiller],
+    Prenom                           AS [Prenom Conseiller],
+    Nom & ' ' & Prenom               AS [Nom Complet Conseiller],
+    Email                            AS [Email Conseiller],
+    Bureau                           AS [Bureau],
+    Equipe                           AS [Equipe],
+    Num#(AnneeExperience)            AS [Annees Experience],
+    Certification,
+    Num#(NbClients)                  AS [Nb Clients],
+    Num#(AuM_EUR)                    AS [AuM (EUR)]
+FROM [$(vDataPath)dim_conseillers.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : DIM_PORTEFEUILLES ─────────────────────────────────
+[Dim_Portefeuilles]:
+LOAD
+    PortefeuilleID,
+    ClientID,
+    TypePortefeuille                 AS [Type Portefeuille],
+    Date#(DateOuverture, 'YYYY-MM-DD') AS [Date Ouverture],
+    Devise                           AS [Devise Portefeuille],
+    Statut                           AS [Statut Portefeuille],
+    ObjectifInvestissement           AS [Objectif Investissement],
+    HorizonInvestissement            AS [Horizon Investissement],
+    BenchmarkRef                     AS [Benchmark Reference]
+FROM [$(vDataPath)dim_portefeuilles.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 2 : FAITS (Tables de faits)
+// ============================================================
+
+// ── TABLE : FACT_TRANSACTIONS ─────────────────────────────────
+[Fact_Transactions]:
+LOAD
+    TransactionID,
+    PortefeuilleID,
+    InstrumentID,
+    Date#(DateTransaction, 'YYYY-MM-DD') AS [Date Transaction],
+    Date#(DateTransaction, 'YYYY-MM-DD') AS [Date],
+    TypeTransaction                   AS [Type Transaction],
+    Num#(Quantite)                    AS [Quantite],
+    Num#(PrixUnitaire)                AS [Prix Unitaire (EUR)],
+    Num#(MontantBrut)                 AS [Montant Brut (EUR)],
+    Num#(Frais)                       AS [Frais (EUR)],
+    Num#(MontantNet)                  AS [Montant Net],
+    Devise                            AS [Devise Transaction],
+    Num#(TauxChange_EUR)              AS [Taux Change EUR],
+    Num#(MontantNet_EUR)              AS [Montant Net EUR],
+    Statut                            AS [Statut Transaction],
+    Courtier,
+    Operateur,
+    If(TypeTransaction='Achat',    Num#(MontantNet_EUR), 0) AS [Montant Achat EUR],
+    If(TypeTransaction='Vente',    Num#(MontantNet_EUR), 0) AS [Montant Vente EUR],
+    If(TypeTransaction='Dividende',Num#(MontantNet_EUR), 0) AS [Dividendes EUR],
+    If(TypeTransaction='Frais',    Num#(MontantNet_EUR), 0) AS [Total Frais EUR]
+FROM [$(vDataPath)fact_transactions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq)
+WHERE Statut = 'Execute';
+
+// ── TABLE : FACT_POSITIONS ────────────────────────────────────
+[Fact_Positions]:
+LOAD
+    Date#(SnapshotDate, 'YYYY-MM-DD') AS [Date Snapshot],
+    Date#(SnapshotDate, 'YYYY-MM-DD') AS [Date],
+    PortefeuilleID,
+    InstrumentID,
+    Num#(Quantite)                    AS [Quantite Position],
+    Num#(PrixRevientUnitaire)         AS [Prix Revient Unitaire],
+    Num#(PrixMarcheUnitaire)          AS [Prix Marche Unitaire],
+    Num#(ValeurAchat_EUR)             AS [Valeur Achat (EUR)],
+    Num#(ValeurMarche_EUR)            AS [Valeur Marche (EUR)],
+    Num#(PnL_EUR)                     AS [PnL (EUR)],
+    Num#(PnL_pct)                     AS [PnL (%)],
+    Num#(PoidsPortefeuille_pct)       AS [Poids Portefeuille (%)],
+    If(Num#(PnL_EUR) >= 0, 'Positif', 'Negatif') AS [Signe PnL]
+FROM [$(vDataPath)fact_positions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : FACT_PERFORMANCES ─────────────────────────────────
+[Fact_Performances]:
+LOAD
+    Date#(PeriodeDate, 'YYYY-MM-DD')  AS [Date Performance],
+    Date#(PeriodeDate, 'YYYY-MM-DD')  AS [Date],
+    PortefeuilleID,
+    Num#(Rendement_pct)               AS [Rendement (%)],
+    Num#(Benchmark_pct)               AS [Benchmark (%)],
+    Num#(Alpha_pct)                   AS [Alpha (%)],
+    Num#(Volatilite_pct)              AS [Volatilite (%)],
+    Num#(RatioSharpe)                 AS [Ratio Sharpe],
+    Num#(MaxDrawdown_pct)             AS [Max Drawdown (%)],
+    Num#(ValeurPortefeuille_EUR)      AS [Valeur Portefeuille (EUR)],
+    Num#(FluxNets_EUR)                AS [Flux Nets (EUR)],
+    Num#(RendementCumule_pct)         AS [Rendement Cumule (%)],
+    If(Num#(Alpha_pct) >= 0, 'Alpha Positif', 'Alpha Negatif') AS [Signe Alpha],
+    If(Num#(Rendement_pct) >= Num#(Benchmark_pct), 'Surperforme', 'Sous-performe') AS [Vs Benchmark]
+FROM [$(vDataPath)fact_performances.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : FACT_COURS_HISTORIQUES ────────────────────────────
+[Fact_Cours]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')        AS [Date Cours],
+    Date#(Date, 'YYYY-MM-DD')        AS [Date],
+    InstrumentID,
+    Num#(PrixOuverture)              AS [Prix Ouverture],
+    Num#(PrixHaut)                   AS [Prix Haut],
+    Num#(PrixBas)                    AS [Prix Bas],
+    Num#(PrixCloture)                AS [Prix Cloture],
+    Num#(Volume)                     AS [Volume],
+    Devise                           AS [Devise Cours],
+    Num#(PrixHaut) - Num#(PrixBas)   AS [Amplitude Journaliere]
+FROM [$(vDataPath)fact_cours_historiques.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+// ── TABLE : FACT_ALERTES ──────────────────────────────────────
+[Fact_Alertes]:
+LOAD
+    AlerteID,
+    PortefeuilleID,
+    ClientID,
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date Alerte],
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date],
+    TypeAlerte                           AS [Type Alerte],
+    Severite,
+    Statut                               AS [Statut Alerte],
+    Description                          AS [Description Alerte],
+    Num#(ValeurMesure)                   AS [Valeur Mesuree],
+    Num#(SeuilAlerte)                    AS [Seuil Alerte],
+    Date#(DateResolution, 'YYYY-MM-DD')  AS [Date Resolution],
+    If(Statut='Resolue',
+        Date#(DateResolution,'YYYY-MM-DD') - Date#(DateAlerte,'YYYY-MM-DD'),
+        Null()) AS [Delai Resolution (jours)]
+FROM [$(vDataPath)fact_alertes_risque.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 3 : TABLES DE MAPPAGE & HIERARCHIES
+// ============================================================
+
+// ── Mapping Classe d'Actif vers Macro-Classe ─────────────────
+Map_MacroClasse:
+MAPPING LOAD * INLINE [
+Classe Actif, Macro Classe Actif
+Actions, Risque
+Obligations HY, Risque
+Private Equity, Risque
+Taux, Defensif
+Monetaire, Defensif
+Epargne, Defensif
+Immobilier, Diversifie
+Matieres Premieres, Diversifie
+Obligations Convertibles, Diversifie
+];
+
+// ── Enrichissement Dim_Instruments avec Macro-Classe ─────────
+[Dim_Instruments_Tmp]:
+LOAD *,
+    ApplyMap('Map_MacroClasse', [Classe d'Actif], 'Non classifie') AS [Macro Classe Actif]
+Resident [Dim_Instruments];
+
+Drop Table [Dim_Instruments];
+
+RENAME Table [Dim_Instruments_Tmp] TO [Dim_Instruments];
+
+// ── Mapping Severite Alerte -> Priorite Numerique ────────────
+Map_SeveritePrio:
+MAPPING LOAD * INLINE [
+Severite, Priorite Numerique
+Critique, 1
+Haute, 2
+Moderee, 3
+Faible, 4
+];
+
+
+// ============================================================
+// SECTION 4 : TABLE MAITRE DE DATES (Master Calendar)
+// ============================================================
+
+[TempDates]:
+LOAD DISTINCT [Date Transaction] AS TmpDate
+Resident [Fact_Transactions];
+
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Snapshot] AS TmpDate
+Resident [Fact_Positions];
+
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Performance] AS TmpDate
+Resident [Fact_Performances];
+
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Alerte] AS TmpDate
+Resident [Fact_Alertes];
+
+LET vMinDate = Num(Peek('TmpDate', 0, 'TempDates'));
+LET vMaxDate = Num(Today());
+
+[MasterCalendar]:
+LOAD
+    Date(TmpDate)                        AS [Date],
+    Year(TmpDate)                        AS [Annee],
+    Month(TmpDate)                       AS [Mois Num],
+    MonthName(TmpDate)                   AS [Mois],
+    'T' & Ceil(Month(TmpDate)/3)         AS [Trimestre Label],
+    Week(TmpDate)                        AS [Semaine ISO],
+    WeekDay(TmpDate)                     AS [Jour Semaine Num],
+    DayName(TmpDate)                     AS [Jour Semaine Nom],
+    'S' & If(Month(TmpDate) <= 6, 1, 2)  AS [Semestre Label],
+    Year(TmpDate) & '-' & Right('0' & Month(TmpDate), 2) AS [AAAA-MM]
+Resident [TempDates];
+
+Drop Table TempDates;
+
+
+// ============================================================
+// SECTION 5 : METRIQUES PRE-CALCULEES (KPIs applicatifs)
+// ============================================================
+
+// ── Table Agregee : KPIs Portefeuille ────────────────────────
+[KPI_Portefeuilles]:
+LOAD
+    PortefeuilleID,
+    Sum([Montant Achat EUR])            AS [Total Investi (EUR)],
+    Sum([Montant Vente EUR])            AS [Total Cede (EUR)],
+    Sum([Dividendes EUR])               AS [Total Dividendes (EUR)],
+    Sum([Total Frais EUR])              AS [Total Frais (EUR)],
+    Count(DISTINCT TransactionID)       AS [Nb Transactions],
+    Count(DISTINCT InstrumentID)        AS [Nb Instruments Trades],
+    Min([Date Transaction])             AS [Premiere Transaction],
+    Max([Date Transaction])             AS [Derniere Transaction]
+Resident [Fact_Transactions]
+Group By PortefeuilleID;
+
+// ── Table Agregee : KPIs Clients ─────────────────────────────
+// Step 1 : join KPI_Portefeuilles with Dim_Portefeuilles to get ClientID
+
+
+
+// ── Table Agrégée : KPIs Clients ─────────────────────────────
+// Step 1 : enrich KPI_Portefeuilles with ClientID from Dim_Portefeuilles
+[KPI_Port_Client]:
+LOAD
+    PortefeuilleID,
+    [Total Investi (EUR)],
+    [Total Dividendes (EUR)]
+Resident [KPI_Portefeuilles];
+
+JOIN ([KPI_Port_Client])
+LOAD
+    PortefeuilleID,
+    ClientID
+Resident [Dim_Portefeuilles];
+
+// Step 2 : aggregate by ClientID
+[KPI_Clients]:
+LOAD
+    ClientID,
+    Sum([Total Investi (EUR)])          AS [Total Investi Client (EUR)],
+    Sum([Total Dividendes (EUR)])       AS [Total Dividendes Client (EUR)],
+    Count(DISTINCT PortefeuilleID)      AS [Nb Portefeuilles]
+Resident [KPI_Port_Client]
+Group By ClientID;
+
+Drop Table [KPI_Port_Client];
+
+// ============================================================
+// SECTION 6 : NETTOYAGE TABLES TEMPORAIRES
+// ============================================================
+Drop Table [KPI_Portefeuilles];
+Drop Table [KPI_Clients];
+
+// ============================================================
+// FIN DU SCRIPT - Investment Tracking v1.0
+// ============================================================
+exit script;
+///$tab Section
+// ============================================================
+// QLIK SENSE - INVESTMENT TRACKING - SCRIPT DE CHARGEMENT
+// Version : 1.0 | Date : 2025
+// Architecture : Modèle en étoile (Star Schema)
+// ============================================================
+
+// ── VARIABLES GLOBALES ────────────────────────────────────────
+SET ThousandSep='.';
+SET DecimalSep=',';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='# ##0,00 €;-# ##0,00 €';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='YYYY-MM-DD';
+SET TimestampFormat='YYYY-MM-DD hh:mm:ss[.fff]';
+SET FirstWeekDay=0;
+SET BrokenWeeks=1;
+SET ReferenceDay=4;
+SET FirstMonthOfYear=1;
+SET CollationLocale='fr-FR';
+SET CreateSearchIndexOnReload=1;
+
+LET vDataPath = 'lib://InvestmentData/';
+LET vCurrentYear = Year(Today());
+LET vCurrentMonth = Month(Today());
+LET vReportDate = Date(Today(), 'YYYY-MM-DD');
+
+
+
+// ============================================================
+// SECTION 1 : DIMENSIONS (Tables de référence)
+// ============================================================
+
+// ── TABLE : DIM_CALENDRIER ────────────────────────────────────
+[Dim_Calendrier]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')       AS [Date],
+    Annee                            AS [Année],
+    Num#(Trimestre)                  AS [Trimestre],
+    Num#(Mois)                       AS [Mois],
+    NomMois                          AS [Nom Mois],
+    Semaine                          AS [Semaine],
+    JourSemaine                      AS [Jour Semaine],
+    NomJour                          AS [Nom Jour],
+    Num#(EstWeekend)                 AS [Est Weekend],
+    AnneeMois                        AS [Année-Mois],
+    AnneeTrimestreTxt                AS [Année-Trimestre],
+    Semestre                         AS [Semestre],
+    If(Num#(EstWeekend)=0, 'Jour Ouvré', 'Weekend') AS [Type Jour]
+FROM [$(vDataPath)dim_calendrier.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : DIM_CLIENTS ───────────────────────────────────────
+[Dim_Clients]:
+LOAD
+    ClientID,
+    Nom                              AS [Nom Client],
+    Prenom                           AS [Prénom Client],
+    Nom & ' ' & Prenom               AS [Nom Complet Client],
+    Email                            AS [Email Client],
+    Telephone                        AS [Téléphone],
+    Date#(DateNaissance, 'YYYY-MM-DD') AS [Date Naissance],
+    Year(Today()) - Year(Date#(DateNaissance,'YYYY-MM-DD')) AS [Age Client],
+    Segment                          AS [Segment Client],
+    Pays                             AS [Pays Client],
+    Ville                            AS [Ville Client],
+    Date#(DateEntreeRelation, 'YYYY-MM-DD') AS [Date Entrée Relation],
+    Year(Today()) - Year(Date#(DateEntreeRelation,'YYYY-MM-DD')) AS [Ancienneté (ans)],
+    Conseiller                       AS ConseillerID,
+    ProfilRisque                     AS [Profil Risque],
+    StatutKYC                        AS [Statut KYC]
+FROM [$(vDataPath)dim_clients.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : DIM_INSTRUMENTS ───────────────────────────────────
+[Dim_Instruments]:
+LOAD
+    InstrumentID,
+    NomInstrument                    AS [Nom Instrument],
+    TypeInstrument                   AS [Type Instrument],
+    [Classe Actif]                   AS [Classe d'Actif],
+    Devise                           AS [Devise Instrument],
+    Pays                             AS [Pays Instrument],
+    ISIN,
+    Emetteur,
+    NiveauRisque                     AS [Niveau Risque],
+    Num#(FraisGestion_pct)           AS [Frais Gestion (%)]
+FROM [$(vDataPath)dim_instruments.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : DIM_CONSEILLERS ───────────────────────────────────
+[Dim_Conseillers]:
+LOAD
+    ConseillerID,
+    Nom                              AS [Nom Conseiller],
+    Prenom                           AS [Prénom Conseiller],
+    Nom & ' ' & Prenom               AS [Nom Complet Conseiller],
+    Email                            AS [Email Conseiller],
+    Bureau                           AS [Bureau],
+    Equipe                           AS [Équipe],
+    Num#(AnneeExperience)            AS [Années Expérience],
+    Certification,
+    Num#(NbClients)                  AS [Nb Clients],
+    Num#(AuM_EUR)                    AS [AuM EUR]
+FROM [$(vDataPath)dim_conseillers.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : DIM_PORTEFEUILLES ─────────────────────────────────
+[Dim_Portefeuilles]:
+LOAD
+    PortefeuilleID,
+    ClientID,
+    TypePortefeuille                 AS [Type Portefeuille],
+    Date#(DateOuverture, 'YYYY-MM-DD') AS [Date Ouverture],
+    Devise                           AS [Devise Portefeuille],
+    Statut                           AS [Statut Portefeuille],
+    ObjectifInvestissement           AS [Objectif Investissement],
+    HorizonInvestissement            AS [Horizon Investissement],
+    BenchmarkRef                     AS [Benchmark Référence]
+FROM [$(vDataPath)dim_portefeuilles.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 2 : FAITS (Tables de faits)
+// ============================================================
+
+// ── TABLE : FACT_TRANSACTIONS ─────────────────────────────────
+[Fact_Transactions]:
+LOAD
+    TransactionID,
+    PortefeuilleID,
+    InstrumentID,
+    Date#(DateTransaction, 'YYYY-MM-DD') AS [Date Transaction],
+    Date#(DateTransaction, 'YYYY-MM-DD') AS [Date],
+    TypeTransaction                   AS [Type Transaction],
+    Num#(Quantite)                    AS [Quantité],
+    Num#(PrixUnitaire)                AS [Prix Unitaire EUR],
+    Num#(MontantBrut)                 AS [Montant Brut EUR],
+    Num#(Frais)                       AS [Frais EUR],
+    Num#(MontantNet)                  AS [Montant Net],
+    Devise                            AS [Devise Transaction],
+    Num#(TauxChange_EUR)              AS [Taux Change EUR],
+    Num#(MontantNet_EUR)              AS [Montant Net EUR],
+    Statut                            AS [Statut Transaction],
+    Courtier,
+    Operateur,
+    If(TypeTransaction='Achat', Num#(MontantNet_EUR), 0)   AS [Montant Achat EUR],
+    If(TypeTransaction='Vente', Num#(MontantNet_EUR), 0)   AS [Montant Vente EUR],
+    If(TypeTransaction='Dividende', Num#(MontantNet_EUR), 0) AS [Dividendes EUR],
+    If(TypeTransaction='Frais', Num#(MontantNet_EUR), 0)   AS [Total Frais EUR]
+FROM [$(vDataPath)fact_transactions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq)
+WHERE Statut = 'Exécuté';
+
+
+// ── TABLE : FACT_POSITIONS ────────────────────────────────────
+[Fact_Positions]:
+LOAD
+    Date#(SnapshotDate, 'YYYY-MM-DD') AS [Date Snapshot],
+    Date#(SnapshotDate, 'YYYY-MM-DD') AS [Date],
+    PortefeuilleID,
+    InstrumentID,
+    Num#(Quantite)                    AS [Quantité Position],
+    Num#(PrixRevientUnitaire)         AS [Prix Revient Unitaire],
+    Num#(PrixMarcheUnitaire)          AS [Prix Marché Unitaire],
+    Num#(ValeurAchat_EUR)             AS [Valeur Achat EUR],
+    Num#(ValeurMarche_EUR)            AS [Valeur Marché EUR],
+    Num#(PnL_EUR)                     AS [PnL EUR],
+    Num#(PnL_pct)                     AS [PnL (%)],
+    Num#(PoidsPortefeuille_pct)       AS [Poids Portefeuille (%)],
+    If(Num#(PnL_EUR) >= 0, 'Positif', 'Négatif') AS [Signe PnL]
+FROM [$(vDataPath)fact_positions.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : FACT_PERFORMANCES ─────────────────────────────────
+[Fact_Performances]:
+LOAD
+    Date#(PeriodeDate, 'YYYY-MM-DD')  AS [Date Performance],
+    Date#(PeriodeDate, 'YYYY-MM-DD')  AS [Date],
+    PortefeuilleID,
+    Num#(Rendement_pct)               AS [Rendement (%)],
+    Num#(Benchmark_pct)               AS [Benchmark (%)],
+    Num#(Alpha_pct)                   AS [Alpha (%)],
+    Num#(Volatilite_pct)              AS [Volatilité (%)],
+    Num#(RatioSharpe)                 AS [Ratio Sharpe],
+    Num#(MaxDrawdown_pct)             AS [Max Drawdown (%)],
+    Num#(ValeurPortefeuille_EUR)      AS [Valeur Portefeuille EUR],
+    Num#(FluxNets_EUR)                AS [Flux Nets EUR],
+    Num#(RendementCumule_pct)         AS [Rendement Cumulé (%)],
+    If(Num#(Alpha_pct) >= 0, 'Alpha Positif', 'Alpha Négatif') AS [Signe Alpha],
+    If(Num#(Rendement_pct) >= Num#(Benchmark_pct), 'Surperforme', 'Sous-performe') AS [Vs Benchmark]
+FROM [$(vDataPath)fact_performances.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : FACT_COURS_HISTORIQUES ───────────────────────────
+[Fact_Cours]:
+LOAD
+    Date#(Date, 'YYYY-MM-DD')        AS [Date Cours],
+    Date#(Date, 'YYYY-MM-DD')        AS [Date],
+    InstrumentID,
+    Num#(PrixOuverture)              AS [Prix Ouverture],
+    Num#(PrixHaut)                   AS [Prix Haut],
+    Num#(PrixBas)                    AS [Prix Bas],
+    Num#(PrixCloture)                AS [Prix Clôture],
+    Num#(Volume)                     AS [Volume],
+    Devise                           AS [Devise Cours],
+    Num#(PrixHaut) - Num#(PrixBas)   AS [Amplitude Journalière]
+FROM [$(vDataPath)fact_cours_historiques.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ── TABLE : FACT_ALERTES ──────────────────────────────────────
+[Fact_Alertes]:
+LOAD
+    AlerteID,
+    PortefeuilleID,
+    ClientID,
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date Alerte],
+    Date#(DateAlerte, 'YYYY-MM-DD')     AS [Date],
+    TypeAlerte                           AS [Type Alerte],
+    Severite,
+    Statut                               AS [Statut Alerte],
+    Description                          AS [Description Alerte],
+    Num#(ValeurMesure)                   AS [Valeur Mesurée],
+    Num#(SeuilAlerte)                    AS [Seuil Alerte],
+    Date#(DateResolution, 'YYYY-MM-DD')  AS [Date Résolution],
+    If(Statut='Résolue',
+        Date#(DateResolution,'YYYY-MM-DD') - Date#(DateAlerte,'YYYY-MM-DD'),
+        Null()) AS [Délai Résolution (jours)]
+FROM [$(vDataPath)fact_alertes_risque.csv]
+(txt, codepage is 28591, embedded labels, delimiter is ',', msq);
+
+
+// ============================================================
+// SECTION 3 : TABLES DE MAPPAGE & HIÉRARCHIES
+// ============================================================
+
+// ── Mapping Classe d'Actif vers Macro-Classe ─────────────────
+Map_MacroClasse:
+MAPPING LOAD * INLINE [
+Classe Actif, Macro Classe Actif
+Actions, Risqué
+Obligations HY, Risqué
+Private Equity, Risqué
+Taux, Défensif
+Monétaire, Défensif
+Épargne, Défensif
+Immobilier, Diversifié
+Matières Premières, Diversifié
+Obligations Convertibles, Diversifié
+];
+
+// ── Enrichissement Dim_Instruments avec Macro-Classe ─────────
+[Dim_Instruments]:
+LOAD *,
+    ApplyMap('Map_MacroClasse', [Classe d'Actif], 'Non classifié') AS [Macro Classe Actif]
+Resident [Dim_Instruments];
+Drop Table [Dim_Instruments];
+
+// Renommer après enrichissement (Qlik gère via Load Resident)
+
+// ── Mapping Sévérité Alerte → Priorité Numérique ─────────────
+Map_SeveritePrio:
+MAPPING LOAD * INLINE [
+Severite, Priorité Numérique
+Critique, 1
+Haute, 2
+Modérée, 3
+Faible, 4
+];
+
+
+// ============================================================
+// SECTION 4 : TABLE MAÎTRE DE DATES (Master Calendar)
+// ============================================================
+// Consolidation de toutes les dates des tables de faits
+
+[TempDates]:
+LOAD DISTINCT [Date Transaction] AS TmpDate  Resident [Fact_Transactions] ;
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Snapshot] AS TmpDate Resident [Fact_Positions] ;
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Performance] AS TmpDate Resident [Fact_Performances] ;
+CONCATENATE([TempDates])
+LOAD DISTINCT [Date Alerte] AS TmpDate  Resident [Fact_Alertes] ;
+
+LET vMinDate = Num(Peek('TmpDate', 0, 'TempDates'));
+LET vMaxDate = Num(Today());
+
+[MasterCalendar]:
+LOAD
+    Date(TmpDate)               AS [Date],
+    Year(TmpDate)               AS [Année],
+    Month(TmpDate)              AS [Mois Num],
+    MonthName(TmpDate)          AS [Mois],
+    'T' & Ceil(Month(TmpDate)/3) AS [Trimestre Label],
+    Week(TmpDate)               AS [Semaine ISO],
+    WeekDay(TmpDate)            AS [Jour Semaine Num],
+    DayName(TmpDate)            AS [Jour Semaine Nom],
+    'S' & If(Month(TmpDate) <= 6, 1, 2) AS [Semestre Label],
+    Year(TmpDate) & '-' & Right('0' & Month(TmpDate), 2) AS [AAAA-MM]
+Resident [TempDates];
+
+Drop Table TempDates;
+
+
+// ============================================================
+// SECTION 5 : MÉTRIQUES PRÉ-CALCULÉES (KPIs applicatifs)
+// ============================================================
+
+// ── Table Agrégée : KPIs Portefeuille ────────────────────────
+[KPI_Portefeuilles]:
+LOAD
+    PortefeuilleID,
+    Sum([Montant Achat EUR])            AS [Total Investi EUR],
+    Sum([Montant Vente EUR])            AS [Total Cédé EUR],
+    Sum([Dividendes EUR])               AS [Total Dividendes EUR],
+    Sum([Total Frais EUR])              AS [Total Frais EUR],
+    Count(DISTINCT TransactionID)       AS [Nb Transactions],
+    Count(DISTINCT InstrumentID)        AS [Nb Instruments Tradés],
+    Min([Date Transaction])             AS [Première Transaction],
+    Max([Date Transaction])             AS [Dernière Transaction]
+Resident [Fact_Transactions]
+Group By PortefeuilleID;
+
+
+// // ── Table Agrégée : KPIs Clients ─────────────────────────────
+// [KPI_Clients]:
+// LOAD
+//     c.ClientID,
+//     Sum(k.[Total_Investi_EUR])          AS [Total Investi Client EUR],
+//     Count(DISTINCT p.PortefeuilleID)    AS [Nb Portefeuilles],
+//     Sum(k.[Total_Dividendes_EUR])       AS [Total Dividendes Client EUR]
+// resident [Dim_Portefeuilles];
+// Inner Join (KPI_Clients)
+//     LOAD PortefeuilleID,
+//          [Total Investi EUR],
+//          [Total Dividendes EUR]
+//     Resident [KPI_Portefeuilles];
+
+// Inner Join (KPI_Clients)
+//     LOAD ClientID Resident [Dim_Clients] 
+// 	Group By c.ClientID;
+
+
+// ============================================================
+// SECTION 6 : NETTOYAGE TABLES TEMPORAIRES
+// ============================================================
+Drop Table [KPI_Portefeuilles];
+//Drop Table [KPI_Clients];
+
+// ============================================================
+// FIN DU SCRIPT - Investment Tracking v1.0
+// ============================================================
