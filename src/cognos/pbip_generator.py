@@ -958,7 +958,7 @@ def _make_header_textbox(
         "textStyle": {
             "fontWeight": "bold",
             "fontSize": "20pt",
-            "color": {"value": text_color},
+            "color": text_color,
         },
     }]
     if header_subtitle:
@@ -966,7 +966,7 @@ def _make_header_textbox(
             "value": f"  —  {header_subtitle}",
             "textStyle": {
                 "fontSize": "11pt",
-                "color": {"value": text_color},
+                "color": text_color,
             },
         })
 
@@ -1077,9 +1077,7 @@ def apply_layout_to_report(
                         "show": _lit("true"),
                         "text": _lit(f"'{title_text}'"),
                         "fontColor": _solid("#252525"),
-                        "fontSize": _lit("11"),
-                        "fontFamily": _lit("'Segoe UI'"),
-                        "bold": _lit("false"),
+                        "fontSize": _lit("12"),
                     }}]
                     cfg["singleVisual"] = sv
 
