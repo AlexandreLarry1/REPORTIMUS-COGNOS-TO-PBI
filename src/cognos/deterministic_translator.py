@@ -24,22 +24,122 @@ from cognos.expression_parser import (
 # A. Column reference stripping
 # ---------------------------------------------------------------------------
 
-def strip_column_reference(expression: str) -> str:
+def _resolve_to_csv(cognos_table: str, cognos_col: str, csv_schema: dict) -> tuple[str, str]:
+    """Map a Cognos (table, column) to the nearest (csv_table, csv_column).
+
+    Table matching: strip known prefixes (dim_, fact_) and trailing plural 's',
+    then check if the entity name appears as a substring of any CSV table name
+    or vice versa. Picks the longest overlap.
+
+    Column matching: if Cognos column is an ATTR_S_Caption_Default_N pattern,
+    map to the Nth text column of the matched table (Cognos caption attributes).
+    Otherwise, find the CSV column with the highest normalized character overlap.
+
+    Returns the original (cognos_table, cognos_col) unchanged if no confident match.
+    """
+    if not csv_schema:
+        return cognos_table, cognos_col
+
+    def _entity(s: str) -> str:
+        s = re.sub(r'[_\s]', '', s).lower()
+        for prefix in ('dim', 'fact', 'param'):
+            if s.startswith(prefix):
+                s = s[len(prefix):]
+                break
+        return s.rstrip('s')
+
+    ct_entity = _entity(cognos_table)
+
+    # Find CSV table whose entity contains ct_entity or is contained by it
+    best_table, best_score = None, 0
+    for csv_table in csv_schema:
+        csv_entity = _entity(csv_table)
+        if ct_entity in csv_entity:
+            score = len(ct_entity)
+        elif csv_entity in ct_entity:
+            score = len(csv_entity)
+        else:
+            score = 0
+        if score > best_score:
+            best_score, best_table = score, csv_table
+
+    if not best_table or best_score < 2:
+        # Fallback: find any CSV table that contains the exact column name.
+        # Handles Cognos source tables with completely different names (e.g.
+        # "Income_Statement_withdatekey_csv" → "fact_data" via column "Value").
+        col_norm = re.sub(r'[_\s]', '', cognos_col).lower().rstrip('s')
+        for csv_table, cols in csv_schema.items():
+            for col in cols:
+                if re.sub(r'[_\s]', '', col).lower().rstrip('s') == col_norm:
+                    return csv_table, col
+        return cognos_table, cognos_col.rstrip("_")
+
+    # Column mapping
+    # Pattern: ATTR_S_Caption_Default, ATTR_S_Caption_Default_1, _2, ...
+    attr_match = re.match(r'ATTR_S_Caption_Default(?:_(\d+))?$', cognos_col, re.IGNORECASE)
+    if attr_match:
+        n = int(attr_match.group(1) or 0)
+        # Keep only descriptive label columns: exclude sort/id/key/num columns
+        # AND exclude the primary key column (entity name matches table entity)
+        table_entity = _entity(best_table)
+        text_cols = [
+            c for c in csv_schema[best_table]
+            if not re.search(r'(sort|order|id|key|num)$', c, re.IGNORECASE)
+            and _entity(c) != table_entity  # exclude the key column itself
+        ]
+        if n < len(text_cols):
+            return best_table, text_cols[n]
+        return best_table, cognos_col.rstrip("_")
+
+    # Generic column match: highest normalized overlap
+    def _col_norm(s: str) -> str:
+        return re.sub(r'[_\s]', '', s).lower().rstrip('s')
+
+    cc_norm = _col_norm(cognos_col)
+    best_col, best_col_score = None, 0
+    for csv_col in csv_schema[best_table]:
+        n = _col_norm(csv_col)
+        if cc_norm in n or n in cc_norm:
+            score = min(len(cc_norm), len(n))
+        else:
+            score = sum(1 for a, b in zip(cc_norm, n) if a == b)
+        if score > best_col_score:
+            best_col_score, best_col = score, csv_col
+
+    if not best_col or best_col_score < 2:
+        return best_table, cognos_col.rstrip("_")
+
+    return best_table, best_col
+
+
+# csv_schema injected at translate time via module-level variable
+_current_csv_schema: dict = {}
+
+
+def strip_column_reference(expression: str, csv_schema: dict | None = None) -> str:
     """Strip a Cognos fully-qualified column ref to DAX.
 
-    [C].[Module].[Table].[Column] → 'Table'[Column]
+    4-level:  [C].[Module].[Table].[Column]    → 'CsvTable'[csv_column]
+    5-level:  [C].[Module].[Table].[Col].[Mbr] → [Mbr]
+              (the member name maps to a DAX measure of the same name)
 
-    Handles the dotted namespace path by taking the last two segments.
-    Also strips trailing underscores from member-style names (e.g. [Value_]).
+    Uses csv_schema to map Cognos table/column names to actual CSV names.
+    Falls back to raw Cognos names if no match found.
     """
+    schema = csv_schema if csv_schema is not None else _current_csv_schema
+
     def _replace(match: re.Match) -> str:
         full = match.group(0)
-        # Segments: [C] . [Module] . [Table] . [Column]
+        member = match.group(1)  # 5th-level member captured by optional group
+
         segments = re.findall(r'\[([^\]]+)\]', full)
+        if member:
+            return f"[{member}]"
         if len(segments) >= 2:
-            table = segments[-2]
-            col = segments[-1].rstrip("_")
-            return f"'{table}'[{col}]"
+            cognos_table = segments[-2]
+            cognos_col = segments[-1].rstrip("_")
+            csv_table, csv_col = _resolve_to_csv(cognos_table, cognos_col, schema)
+            return f"'{csv_table}'[{csv_col}]"
         return full
 
     return COLUMN_REF_PATTERN.sub(_replace, expression)
@@ -74,11 +174,15 @@ def _branch_to_switch_pair(condition: str, value: str, param_name: str) -> tuple
     return ("__COMPOUND__", f"/* COMPOUND: {condition} */ {value}")
 
 
+_BARE_COL_RE = re.compile(r"^'[^']+'\[[^\]]+\]$")
+
+
 def _value_to_dax(value: str, param_name: str) -> str:
     """Normalize a branch value to DAX syntax (strip column refs, quotes)."""
-    # Strip fully-qualified column refs
     value = strip_column_reference(value)
-    # 'literal string' stays quoted; [Measure] stays bracketed
+    # A bare 'Table'[Col] in a SWITCH branch needs SUM() to be a valid measure value.
+    if _BARE_COL_RE.match(value.strip()):
+        value = f"SUM({value})"
     return value
 
 
@@ -183,12 +287,34 @@ _SIMPLE_EQ_COND = re.compile(
 _HEX_COLOR = re.compile(r'#([0-9A-Fa-f]{6})\b')
 
 
-def extract_hex_colors(named_styles: dict) -> list[dict]:
+def _find_table_for_field(field: str, csv_schema: dict | None) -> str:
+    """Return the CSV table name that contains a column matching `field`.
+
+    Normalises both sides (lowercase, spaces→underscores) before comparing.
+    Returns "" if no match found — callers fall back to MAX([field]).
+    """
+    if not csv_schema:
+        return ""
+    field_norm = field.lower().replace(" ", "_")
+    for table_name, cols in csv_schema.items():
+        for col in cols:
+            if col.lower().replace(" ", "_") == field_norm:
+                return table_name
+    return ""
+
+
+def extract_hex_colors(named_styles: dict, csv_schema: dict | None = None) -> list[dict]:
     """Extract simple-equality conditional color measures from namedStyles.
 
     Only handles cases where the condition is a single equality
     ([Field] = 'Value') and the style has an explicit background-color HEX.
     Complex multi-condition cases are left for the LLM.
+
+    Args:
+        named_styles: xml_data['namedStyles']
+        csv_schema: {table: [columns]} — used to anchor SELECTEDVALUE to the
+            correct table. If not provided or column not found, falls back to
+            MAX([field]) which works in matrix row context.
 
     Returns list of {name, expression, type:"color", target_field}.
     """
@@ -219,13 +345,20 @@ def extract_hex_colors(named_styles: dict) -> list[dict]:
         if not simple_pairs:
             continue
 
-        # Build a SWITCH measure: SWITCH([Field], "v1", "#hex1", "v2", "#hex2", "#default")
         field = simple_pairs[0][0]
-        lines = [f"SWITCH("]
-        lines.append(f"    VALUES('{field}'),")
+
+        # Anchor to the correct table so SELECTEDVALUE is valid DAX.
+        # Fall back to MAX([field]) if table unknown — works in row context.
+        table_name = _find_table_for_field(field, csv_schema)
+        if table_name:
+            switch_selector = f"SELECTEDVALUE('{table_name}'[{field}])"
+        else:
+            switch_selector = f"MAX([{field}])"
+
+        lines = ["SWITCH("]
+        lines.append(f"    {switch_selector},")
         for _, value, hex_val in simple_pairs:
             lines.append(f'    "{value}", "{hex_val}",')
-        # Default color from styleDefault or white
         default_bg = named_styles.get(style_name, {}).get("default", {}).get("backgroundColor", "#FFFFFF")
         default_hex = _HEX_COLOR.search(default_bg)
         default_color = f"#{default_hex.group(1)}" if default_hex else "#FFFFFF"
@@ -300,8 +433,38 @@ def conditional_time_intel(
     if _csv_has_ti_columns(all_columns):
         return []
 
-    date_ref = f"'{date_table}'[{date_column}]"
-    base = f"SUM(fact_data[{value_column}])"
+    # Resolve fact table and value column from csv_schema instead of hardcoding.
+    # Priority: table starting with "fact_", then largest table, fallback to first.
+    fact_table = next(
+        (t for t in csv_schema if t.lower().startswith("fact_")),
+        None,
+    )
+    if not fact_table:
+        # Pick the table with the most columns as a proxy for the fact table
+        fact_table = max(csv_schema, key=lambda t: len(csv_schema[t]), default=None)
+    if not fact_table:
+        return []
+
+    # Resolve value column: first numeric-looking column (not a key/id/date column)
+    _SKIP = re.compile(r'(id|key|date|month|year|quarter|order|num|code)$', re.IGNORECASE)
+    resolved_value = value_column  # fallback
+    for col in csv_schema[fact_table]:
+        if not _SKIP.search(col):
+            resolved_value = col
+            break
+
+    # Resolve date table: prefer dim_time, then any table with a Date column
+    resolved_date_table = date_table
+    resolved_date_col = date_column
+    for tbl, cols in csv_schema.items():
+        for col in cols:
+            if col.lower() in ("date", "period_date", "transaction_date"):
+                resolved_date_table = tbl
+                resolved_date_col = col
+                break
+
+    date_ref = f"'{resolved_date_table}'[{resolved_date_col}]"
+    base = f"SUM('{fact_table}'[{resolved_value}])"
 
     return [
         {
@@ -368,6 +531,10 @@ def translate_deterministic(
           "parameter_tables": [...],  # disconnected table specs for the generator
         }
     """
+    # Inject csv_schema globally so strip_column_reference can resolve Cognos→CSV names
+    global _current_csv_schema
+    _current_csv_schema = csv_schema or {}
+
     measures: list[dict] = []
     deferred: list[dict] = []
 
@@ -388,6 +555,8 @@ def translate_deterministic(
         })
 
     # A. Column references → base measures (one per unique stripped ref)
+    # Bare 'Table'[Col] is invalid as a DAX measure — wrap in SELECTEDVALUE()
+    # so it returns the single value in filter context (row in table/matrix).
     seen_refs: set[str] = set()
     for item in classified.get("column_ref", []):
         expr = item.get("expression", "")
@@ -395,9 +564,10 @@ def translate_deterministic(
         if stripped in seen_refs:
             continue
         seen_refs.add(stripped)
+        dax_expr = f"SELECTEDVALUE({stripped})" if _BARE_COL_RE.match(stripped.strip()) else stripped
         measures.append({
             "name": item.get("name", stripped),
-            "expression": stripped,
+            "expression": dax_expr,
             "type": "base_measure",
             "source_expression": expr,
         })
@@ -415,7 +585,7 @@ def translate_deterministic(
         measures.append(variance_to_dax(item))
 
     # F. HEX colors from simple-equality namedStyles
-    measures.extend(extract_hex_colors(named_styles))
+    measures.extend(extract_hex_colors(named_styles, csv_schema))
 
     # G. Row context / zebra striping
     if classified.get("row_context"):
@@ -436,10 +606,7 @@ def translate_deterministic(
 # ---------------------------------------------------------------------------
 
 def read_csv_schema(input_dir) -> dict[str, list[str]]:
-    """Read CSV headers from a directory → {table_name: [columns]}.
-
-    Table name is derived from the filename without extension.
-    """
+    """Read CSV headers from a directory → {table_name: [columns]}."""
     import csv
     import pathlib
 
@@ -459,22 +626,70 @@ def read_csv_schema(input_dir) -> dict[str, list[str]]:
     return schema
 
 
+def read_csv_schema_with_samples(
+    input_dir, max_distinct: int = 20
+) -> dict[str, dict[str, list[str]]]:
+    """Read CSV schema + distinct values for low-cardinality columns.
+
+    Returns {table: {col: [distinct_values]}} for string columns with
+    <= max_distinct unique values. Used to give the LLM concrete value
+    examples so it can map Cognos labels (e.g. "Version 1") to CSV
+    values (e.g. "Budget").
+    """
+    import csv
+    import pathlib
+
+    schema: dict[str, dict[str, list[str]]] = {}
+    input_path = pathlib.Path(input_dir)
+
+    for csv_file in input_path.glob("*.csv"):
+        table_name = csv_file.stem
+        try:
+            with open(csv_file, encoding="utf-8-sig") as f:
+                rows = list(csv.DictReader(f))
+            if not rows:
+                schema[table_name] = {}
+                continue
+            cols: dict[str, list[str]] = {}
+            for col in rows[0].keys():
+                vals = list(dict.fromkeys(
+                    r[col] for r in rows if r.get(col) not in (None, "")
+                ))
+                # Only include if low-cardinality (useful for LLM value mapping)
+                if len(vals) <= max_distinct:
+                    cols[col] = vals
+                else:
+                    cols[col] = []  # high-cardinality: no sample values
+            schema[table_name] = cols
+        except Exception:
+            schema[table_name] = {}
+
+    return schema
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
 def _test() -> None:
-    # A. Column reference stripping
+    # A. Column reference stripping — 4-level
     assert strip_column_reference(
         "[C].[C_Data_Module_PA].[Income_Statement_withdatekey_csv].[Value_]"
     ) == "'Income_Statement_withdatekey_csv'[Value]"
+
+    # A. Column reference stripping — 5-level member ref maps to measure
+    assert strip_column_reference(
+        "[C].[C_Data_Module_PA].[Income_Statement_withdatekey_csv].[Value_].[MTD]"
+    ) == "[MTD]", strip_column_reference(
+        "[C].[C_Data_Module_PA].[Income_Statement_withdatekey_csv].[Value_].[MTD]"
+    )
 
     # E. Variance → DIVIDE
     item = {"name": "Var", "expression": "[Variance] / [Budget]"}
     res = variance_to_dax(item)
     assert "DIVIDE([Variance], [Budget], 0)" in res["expression"], res["expression"]
 
-    # F. HEX extraction (simple equality)
+    # F. HEX extraction (simple equality) — with csv_schema lookup
     styles = {
         "AcctColor": {
             "type": "advanced",
@@ -485,9 +700,16 @@ def _test() -> None:
             "default": {"backgroundColor": "#FFFFFF"},
         }
     }
-    colors = extract_hex_colors(styles)
+    schema = {"fact_data": ["Date", "Account", "Value"]}
+    colors = extract_hex_colors(styles, schema)
     assert len(colors) == 1
-    assert '"6599", "#25CAC8"' in colors[0]["expression"]
+    expr = colors[0]["expression"]
+    assert '"6599", "#25CAC8"' in expr
+    assert "SELECTEDVALUE('fact_data'[Account])" in expr, expr
+
+    # Without csv_schema → falls back to MAX([field])
+    colors_no_schema = extract_hex_colors(styles)
+    assert "MAX([Account])" in colors_no_schema[0]["expression"]
 
     # Conditional TI — CSV with MTD column → no template
     assert conditional_time_intel({"fact": ["Date", "Value", "MTD"]}) == []

@@ -12,11 +12,13 @@ XML parameters or CSV date tables.
 """
 import json
 import pathlib
-import uuid
+import sys
 from typing import Any
 
-# Import des modules existants pour réutilisation
 ROOT = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from utils import _uid, _hex20  # noqa: E402
 
 # Constants
 REPORT_NAME = "MigrationCognosPBI"
@@ -24,19 +26,30 @@ CANVAS_W = 1280.0
 CANVAS_H = 720.0
 
 
-def _uid() -> str:
-    """Génère un UUID unique."""
-    return str(uuid.uuid4())
-
-
-def _hex20() -> str:
-    """Génère un identifiant hex court."""
-    return uuid.uuid4().hex[:20]
-
-
 # ---------------------------------------------------------------------------
 # 1. Parameter tables — derived from XML, NOT hardcoded
 # ---------------------------------------------------------------------------
+
+def _extract_param_values_from_expressions(param_name: str, xml_data: dict) -> list[str]:
+    """Scan all CASE expressions to find the values compared to ?param_name?.
+
+    e.g. CASE WHEN ?p_timeview? contains 'MTD' → extracts 'MTD'
+    Preserves order of first appearance, deduplicates.
+    """
+    import re as _re
+    pattern = _re.compile(
+        rf"\?{_re.escape(param_name)}\?\s*(?:contains|=)\s*'([^']*)'",
+        _re.IGNORECASE,
+    )
+    seen: list[str] = []
+    for query in xml_data.get("queries", {}).values():
+        for item in list(query.get("dataItems", [])) + list(query.get("expressions", [])):
+            expr = item.get("expression", "")
+            for val in pattern.findall(expr):
+                if val and val not in seen:
+                    seen.append(val)
+    return seen
+
 
 def create_parameter_tables(xml_data: dict, csv_schema: dict | None = None) -> list[dict]:
     """Crée les tables de paramètres déconnectées pour remplacer ?param?.
@@ -64,12 +77,18 @@ def create_parameter_tables(xml_data: dict, csv_schema: dict | None = None) -> l
             continue
         existing_param_names.add(name.lower())
 
-        # Build rows from XML options (or default value)
+        # Build rows from XML options
         rows: list[dict] = []
         for opt in options:
             value = opt.get("value", "")
             label = opt.get("label", value)
             rows.append({name: value, f"{name}_Label": label})
+
+        # If no options defined in XML, scan CASE expressions to extract values
+        if not rows:
+            extracted = _extract_param_values_from_expressions(name, xml_data)
+            for val in extracted:
+                rows.append({name: val, f"{name}_Label": val})
 
         if not rows:
             default_val = param.get("defaultValue", "All")
@@ -211,11 +230,12 @@ def create_bookmarks(xml_data: dict, visual_data: dict | None = None) -> list[di
     Implements real dual-matrix visibility toggle per spec §6.2:
     - For each conditionalRender variable, create bookmarks that show/hide
       the corresponding visual(s) based on the variable value.
-    - Each bookmark includes visual visibility states for proper toggling.
+    - Visibility is derived from visual_data[].conditionalRender.refVariable
+      and renderFor — not from string-matching on visual names.
 
     Args:
         xml_data: Dict produit par xml_parser.parse_cognos_xml()
-        visual_data: Layout data with visual IDs (for dual-matrix linking)
+        visual_data: Layout data with visual IDs and conditionalRender metadata
 
     Returns:
         Liste de bookmarks avec visibility states
@@ -223,44 +243,55 @@ def create_bookmarks(xml_data: dict, visual_data: dict | None = None) -> list[di
     bookmarks: list[dict] = []
     variables = xml_data.get("variables", [])
 
-    # Build a map of visual_name → visual_id from visual_data (if available)
+    # Build maps from visual_data:
+    #   visual_id_map:    name → id
+    #   cond_render_map:  name → {refVariable, renderFor}
     visual_id_map: dict[str, str] = {}
+    cond_render_map: dict[str, dict] = {}
     if visual_data:
         for sheet in visual_data.get("sheets", []):
             for vis in sheet.get("visuals", []):
-                vname = vis.get("name", "")
+                vname = vis.get("name", "") or vis.get("id", "")
                 vid = vis.get("id", _hex20())
                 if vname:
                     visual_id_map[vname] = vid
+                cr = vis.get("conditionalRender")
+                if cr and vname:
+                    cond_render_map[vname] = cr
 
     for var in variables:
-        name = var.get("name", "")
+        var_name = var.get("name", "")
         values = var.get("values", [])
 
-        if not name or not values:
+        if not var_name or not values:
             continue
 
         for val in values:
-            # Build visibility states: show visuals matching this value, hide others
             visibility_states: list[dict] = []
             for v_name, v_id in visual_id_map.items():
-                # If the visual name contains the variable value, show it
-                should_show = val.lower() in v_name.lower()
-                visibility_states.append({
-                    "id": v_id,
-                    "visible": should_show,
-                })
+                cr = cond_render_map.get(v_name)
+                if cr and cr.get("refVariable") == var_name:
+                    # This visual is controlled by this variable:
+                    # show it only when renderFor matches the bookmark value.
+                    should_show = cr.get("renderFor") == val
+                else:
+                    # Visual not controlled by this variable — keep visible.
+                    should_show = True
+                visibility_states.append({"id": v_id, "visible": should_show})
 
             bookmark = {
-                "name": f"{name}_{val}",
-                "displayName": name.replace("_", " ").title() + f" - {val}",
+                "name": f"{var_name}_{val}",
+                "displayName": var_name.replace("_", " ").title() + f" - {val}",
                 "enabled": True,
-                # Real bookmark with visibility states for dual-matrix toggle
                 "explorationState": {
                     "visuals": {
-                        v_id: {"singleVisual": {"display": {"mode": "visible" if s["visible"] else "hidden"}}}
-                        for v_id, s in [(s["id"], s) for s in visibility_states]
-                    } if visibility_states else {}
+                        s["id"]: {
+                            "singleVisual": {
+                                "display": {"mode": "visible" if s["visible"] else "hidden"}
+                            }
+                        }
+                        for s in visibility_states
+                    }
                 },
             }
             bookmarks.append(bookmark)
@@ -284,17 +315,64 @@ def merge_measures_to_bim(bim_path: pathlib.Path, all_measures: list[dict]) -> N
     """
     bim = json.loads(bim_path.read_text(encoding="utf-8"))
 
+    # Find target table first so we can check for column name conflicts
+    target_table = None
+    for table in bim["model"]["tables"]:
+        if table["name"].startswith("fact_"):
+            target_table = table
+            break
+
+    existing_col_names: set[str] = set()
+    if target_table is not None:
+        existing_col_names = {c["name"] for c in target_table.get("columns", [])}
+
     formatted_measures: list[dict] = []
+    seen_measure_names: set[str] = set()
     for measure in all_measures:
         name = measure.get("name", "Unnamed")
         expr = measure.get("expression", "")
         mtype = measure.get("type", "base_measure")
+
+        # Skip if a column with this name already exists in the target table
+        # (PBI forbids a measure and column with the same name in the same table)
+        if name in existing_col_names:
+            print(f"  [skip] mesure '{name}' masquée par colonne existante")
+            continue
+
+        # Skip duplicate measure names (keep first occurrence)
+        if name in seen_measure_names:
+            print(f"  [skip] mesure '{name}' dupliquée — déjà générée")
+            continue
+        seen_measure_names.add(name)
 
         m: dict[str, Any] = {
             "name": name,
             "expression": expr,
             "lineageTag": _uid(),
         }
+
+        # Upgrade SELECTEDVALUE('t'[col]) → SUM/AVERAGE for numeric columns.
+        # SELECTEDVALUE returns BLANK when multiple rows exist in context (scatter/line charts).
+        import re as _re2
+        _sv_pat = _re2.compile(
+            r"^SELECTEDVALUE\(\s*'?([^'\[\]\s]+)'?\s*\[([^\]]+)\]\s*\)$", _re2.IGNORECASE
+        )
+        sv_m = _sv_pat.match(expr.strip()) if expr else None
+        if sv_m:
+            sv_table, sv_col = sv_m.group(1), sv_m.group(2)
+            # Look up column dtype in the BIM tables already built
+            for _t in bim["model"]["tables"]:
+                if _t["name"] == sv_table:
+                    for _c in _t.get("columns", []):
+                        if _c["name"] == sv_col:
+                            _dtype = _c.get("dataType", "string")
+                            if _dtype in ("int64", "double", "decimal", "currency", "int32"):
+                                if "average" in name.lower() or "avg" in name.lower():
+                                    m["expression"] = f"AVERAGE('{sv_table}'[{sv_col}])"
+                                else:
+                                    m["expression"] = f"SUM('{sv_table}'[{sv_col}])"
+                            break
+                    break
 
         # Format string based on type/name
         if mtype == "color":
@@ -307,26 +385,30 @@ def merge_measures_to_bim(bim_path: pathlib.Path, all_measures: list[dict]) -> N
 
         formatted_measures.append(m)
 
-    # Find fact table for measures, or create a Measures table
-    for table in bim["model"]["tables"]:
-        if table["name"].startswith("fact_"):
-            table.setdefault("measures", []).extend(formatted_measures)
-            print(f"  {len(formatted_measures)} mesures ajoutées à {table['name']}")
-            break
+    # Place measures into the fact table (already found above), or create Measures table
+    if target_table is not None:
+        target_table.setdefault("measures", []).extend(formatted_measures)
+        print(f"  {len(formatted_measures)} mesures ajoutées à {target_table['name']}")
     else:
         measures_table = {
-            "name": "Measures",
+            "name": "_Measures",
             "lineageTag": _uid(),
-            "columns": [],
+            "columns": [{
+                "name": "_dummy",
+                "dataType": "string",
+                "isHidden": True,
+                "lineageTag": _uid(),
+                "sourceColumn": "_dummy",
+            }],
             "measures": formatted_measures,
             "partitions": [{
                 "name": "Partition",
-                "mode": "calculated",
-                "source": {"type": "none"}
+                "mode": "import",
+                "source": {"type": "calculated", "expression": "DATATABLE(\"_dummy\", STRING, {{\"\"}})"}
             }]
         }
         bim["model"]["tables"].append(measures_table)
-        print(f"  Table Measures créée avec {len(formatted_measures)} mesures")
+        print(f"  Table _Measures créée avec {len(formatted_measures)} mesures")
 
     bim_path.write_text(json.dumps(bim, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -368,14 +450,6 @@ def apply_conditional_formatting_to_report(
 
     report = json.loads(report_path.read_text(encoding="utf-8"))
 
-    # Navigate to the visual containers in the report
-    config = report.get("config", "{}")
-    if isinstance(config, str):
-        config = json.loads(config)
-        config_was_str = True
-    else:
-        config_was_str = False
-
     # Build a lookup: target_field → color_measure_name
     color_map: dict[str, str] = {}
     for cm in color_measures:
@@ -383,64 +457,58 @@ def apply_conditional_formatting_to_report(
         if target and target != "__row__":
             color_map[target] = cm["name"]
 
-    # Walk through pages and visuals, attach conditional formatting
+    has_zebra = any(cm.get("target_field") == "__row__" for cm in color_measures)
+
+    def _pbi_cf_entry(measure_name: str) -> dict:
+        """Build a PBI conditionalFormatting entry for a background color measure."""
+        return {
+            "conditions": [{
+                "target": {"property": "background"},
+                "measureReference": measure_name,
+            }]
+        }
+
+    # Walk through pages and visuals
     attached_count = 0
     for page in report.get("pages", []):
         for visual in page.get("visuals", []):
-            # Check if this visual has a field that matches a color target
             visual_config_str = visual.get("config", "{}")
             try:
                 vconfig = json.loads(visual_config_str) if isinstance(visual_config_str, str) else visual_config_str
             except json.JSONDecodeError:
                 continue
 
-            # Check singleVisual/singleVisualGroup for field references
             single_visual = vconfig.get("singleVisual", {})
             projections = single_visual.get("projections", {})
+            config_was_str = isinstance(visual_config_str, str)
+            modified = False
 
-            for role_name, role_data in projections.items():
-                if not isinstance(role_data, dict):
+            # projections: {role: [{queryRef: "Table.Column", active: true}, ...]}
+            for _role, role_items in projections.items():
+                if not isinstance(role_items, list):
                     continue
-                for field_ref in role_data.get("query", []):
-                    field_name = ""
-                    if isinstance(field_ref, dict):
-                        field_name = field_ref.get("name", "")
-                        # Try to extract from active or any
-                        if not field_name:
-                            active = field_ref.get("Active", "")
-                            if isinstance(active, str):
-                                field_name = active
-
+                for field_ref in role_items:
+                    if not isinstance(field_ref, dict):
+                        continue
+                    query_ref = field_ref.get("queryRef", "")
+                    # queryRef format: "TableName.ColumnName" or just "ColumnName"
+                    field_name = query_ref.split(".")[-1] if "." in query_ref else query_ref
                     if field_name in color_map:
-                        # Attach conditional formatting to this visual
                         cf = single_visual.setdefault("conditionalFormatting", [])
-                        cf.append({
-                            "name": f"CF_{color_map[field_name]}",
-                            "expression": {
-                                "measure": color_map[field_name]
-                            },
-                            "target": {
-                                "property": "background"
-                            }
-                        })
+                        cf.append(_pbi_cf_entry(color_map[field_name]))
                         attached_count += 1
+                        modified = True
 
-    # Attach zebra striping to table/matrix visuals if present
-    has_zebra = any(cm.get("target_field") == "__row__" for cm in color_measures)
-    if has_zebra:
-        for page in report.get("pages", []):
-            for visual in page.get("visuals", []):
-                vtype = visual.get("visualType", "")
-                if vtype in ("tableEx", "pivotTable"):
-                    visual.setdefault("conditionalFormatting", []).append({
-                        "name": "ZebraStriping",
-                        "expression": {"measure": "ZebraStripeColor"},
-                        "target": {"property": "background"}
-                    })
-                    attached_count += 1
+            # Zebra striping on table/matrix visuals
+            vtype = single_visual.get("visualType", visual.get("visualType", ""))
+            if has_zebra and vtype in ("tableEx", "pivotTable"):
+                cf = single_visual.setdefault("conditionalFormatting", [])
+                cf.append(_pbi_cf_entry("ZebraStripeColor"))
+                attached_count += 1
+                modified = True
 
-    if config_was_str:
-        report["config"] = json.dumps(config)
+            if modified:
+                visual["config"] = json.dumps(vconfig) if config_was_str else vconfig
 
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  Conditional formatting attaché à {attached_count} visuel(s)")
@@ -473,6 +541,401 @@ def apply_bookmarks_to_report(report_path: pathlib.Path, bookmarks: list[dict]) 
 
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  {len(bookmarks)} bookmarks appliqués au rapport")
+
+
+# ---------------------------------------------------------------------------
+# 6. Visual field wiring — prototypeQuery + projections
+# ---------------------------------------------------------------------------
+
+# (dim_well, meas_well, max_dims, max_meas)  -1 = unlimited
+_PBI_WELLS: dict[str, tuple[str | None, str | None, int, int]] = {
+    "barChart":      ("Category", "Y",      -1, -1),
+    "columnChart":   ("Category", "Y",      -1, -1),
+    "lineChart":     ("Category", "Y",      -1, -1),
+    "lineClusteredColumnComboChart": ("Category", "Y", -1, -1),
+    "pivotTable":    ("Rows",     "Values", -1, -1),
+    "card":          (None,       "Values",  0,  1),  # PBI card: exactly 1 measure
+    "multiRowCard":  (None,       "Values",  0, -1),
+    "tableEx":       ("Rows",     "Values", -1, -1),
+    "slicer":        ("Field",    None,      1,  0),
+    "textbox":       (None,       None,      0,  0),
+}
+
+
+def _build_visual_query(
+    measure_names: list[str],
+    dim_fields: list[str],
+    visual_type: str,
+    fact_table: str,
+) -> tuple[dict, dict]:
+    """Build projections + prototypeQuery for a PBI visual."""
+    import re as _re
+
+    dim_well, meas_well, max_dims, max_meas = _PBI_WELLS.get(visual_type, ("Category", "Values", -1, -1))
+
+    selects: list[dict] = []
+    projections: dict[str, list] = {}
+    tables_used: dict[str, str] = {}
+
+    def _alias(tbl: str) -> str:
+        if tbl not in tables_used:
+            tables_used[tbl] = chr(ord("a") + len(tables_used))
+        return tables_used[tbl]
+
+    def _add_measure(name: str, well: str) -> None:
+        a = _alias(fact_table)
+        ref = f"{fact_table}.{name}"
+        if not any(s.get("Name") == ref for s in selects):
+            selects.append({
+                "Measure": {"Expression": {"SourceRef": {"Source": a}}, "Property": name},
+                "Name": ref,
+                "NativeReferenceName": name,
+            })
+        projections.setdefault(well, []).append({"queryRef": ref})
+
+    def _add_column(tbl: str, col: str, well: str) -> None:
+        a = _alias(tbl)
+        ref = f"{tbl}.{col}"
+        if not any(s.get("Name") == ref for s in selects):
+            selects.append({
+                "Column": {"Expression": {"SourceRef": {"Source": a}}, "Property": col},
+                "Name": ref,
+                "NativeReferenceName": col,
+            })
+        projections.setdefault(well, []).append({"queryRef": ref})
+
+    if meas_well:
+        capped = measure_names[:max_meas] if max_meas > 0 else measure_names
+        for name in capped:
+            _add_measure(name, meas_well)
+
+    if dim_well:
+        capped_dims = dim_fields[:max_dims] if max_dims > 0 else dim_fields
+        for field in capped_dims:
+            # dim_fields may be "Table.Column" or just "ColumnName"
+            if "." in field:
+                tbl, col = field.split(".", 1)
+            else:
+                tbl, col = fact_table, field
+            _add_column(tbl, col, dim_well)
+
+    froms = [{"Name": a, "Entity": entity, "Type": 0} for entity, a in tables_used.items()]
+    proto = {"Version": 2, "From": froms, "Select": selects}
+    return projections, proto
+
+
+def wire_visual_fields(
+    report_path: pathlib.Path,
+    visual_extraction_path: pathlib.Path,
+    bim_path: pathlib.Path,
+) -> None:
+    """Wire prototypeQuery + projections into each visual after measures are in BIM.
+
+    Reads visual_extraction.json (obj.measures / obj.dimensions) and maps
+    measure names to the fact table that holds them in the BIM.
+    """
+    import re as _re
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    ve = json.loads(visual_extraction_path.read_text(encoding="utf-8"))
+    bim = json.loads(bim_path.read_text(encoding="utf-8"))
+
+    # Find fact table (the one with measures injected)
+    fact_table = None
+    known_measures: set[str] = set()
+    for t in bim["model"]["tables"]:
+        if t.get("measures"):
+            fact_table = t["name"]
+            known_measures = {m["name"] for m in t["measures"]}
+            break
+
+    if not fact_table:
+        print("  Visual wiring: no fact table with measures found — skipped")
+        return
+
+    # Build obj_id → obj map from visual_extraction
+    obj_map: dict[str, dict] = {}
+    for sheet in ve.get("sheets", []):
+        for obj in sheet.get("objects", []):
+            obj_map[obj.get("id", "")] = obj
+
+    _MEAS_REF = _re.compile(r'\[([^\]]+)\]')
+
+    def _extract_names(expr: str) -> list[str]:
+        return _MEAS_REF.findall(expr)
+
+    modified = 0
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg = json.loads(vc.get("config", "{}"))
+            sv = cfg.get("singleVisual", {})
+            v_name = cfg.get("name", "")
+            visual_type = sv.get("visualType", "card")
+            obj = obj_map.get(v_name, {})
+
+            # Collect measure names from obj.measures expressions
+            measure_names: list[str] = []
+            for me in obj.get("measures", []):
+                for name in _extract_names(me.get("expression", "")):
+                    if name in known_measures and name not in measure_names:
+                        measure_names.append(name)
+
+            # Collect dimension fields from obj.dimensions
+            dim_fields: list[str] = []
+            for d in obj.get("dimensions", []):
+                f = d.get("field") or d.get("column", "")
+                if f:
+                    dim_fields.append(f)
+
+            if not measure_names and not dim_fields:
+                continue
+
+            # card only supports 1 measure — upgrade to multiRowCard for multi-measure singletons
+            if visual_type == "card" and len(measure_names) > 1:
+                visual_type = "multiRowCard"
+                sv["visualType"] = visual_type
+
+            projections, proto = _build_visual_query(
+                measure_names, dim_fields, visual_type, fact_table
+            )
+            if proto.get("Select"):
+                sv["projections"] = projections
+                sv["prototypeQuery"] = proto
+                cfg["singleVisual"] = sv
+                vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+                modified += 1
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  Visual wiring: {modified} visuals wired")
+
+
+# ---------------------------------------------------------------------------
+# wire_from_spec — apply LLM viz wiring spec to report.json
+# ---------------------------------------------------------------------------
+
+def wire_from_spec(
+    report_path: pathlib.Path,
+    visual_wiring: list[dict],
+    bim_path: pathlib.Path,
+) -> None:
+    """Apply explicit well assignments from viz_translation LLM output.
+
+    Each spec entry: {visual_id, pbi_type, wells: {WellName: ["table[field]"]}}
+    Field syntax: "table_name[Field Name]" for both measures and columns.
+
+    Looks up the field in BIM to determine if it's a Measure or Column select.
+    """
+    import re as _re
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    bim = json.loads(bim_path.read_text(encoding="utf-8"))
+
+    # Build BIM lookup: {table: {field_name: "measure"|"column"}}
+    # Also track column data types to avoid SUM on string columns
+    bim_fields: dict[str, dict[str, str]] = {}
+    _col_dtype: dict[str, dict[str, str]] = {}  # {table: {col: dataType}}
+    for t in bim["model"]["tables"]:
+        tname = t["name"]
+        bim_fields[tname] = {}
+        _col_dtype[tname] = {}
+        for col in t.get("columns", []):
+            bim_fields[tname][col["name"]] = "column"
+            _col_dtype[tname][col["name"]] = col.get("dataType", "string")
+        for meas in t.get("measures", []):
+            bim_fields[tname][meas["name"]] = "measure"
+
+    _NUMERIC_TYPES = {"int64", "double", "decimal", "currency", "int32", "int16", "int8"}
+
+    # Cross-table column index for categorical fallback: lowercase field name → real table
+    # Used when LLM puts a _Measures ref in a categorical well but a real column exists
+    _col_name_to_table: dict[str, str] = {}
+    for tname, fields in bim_fields.items():
+        if tname.startswith("_") or tname.startswith("Param_"):
+            continue
+        for fname, ftype in fields.items():
+            if ftype == "column":
+                _col_name_to_table.setdefault(fname.lower(), tname)
+
+    # Index wiring specs by visual_id
+    spec_map: dict[str, dict] = {s["visual_id"]: s for s in visual_wiring}
+
+    # Wells that require aggregated values (not raw column references)
+    _VALUE_WELLS = {"Y", "Y2", "Values", "Value", "X", "Size", "TargetValue", "MinValue", "MaxValue"}
+    # Wells that require raw categorical columns (NOT DAX measures)
+    _CATEGORY_WELLS = {"Category", "Details", "Group", "Rows", "Columns", "Series", "Location", "Field", "Breakdown"}
+
+    _FIELD_RE = _re.compile(r"^([^\[]+)\[([^\]]+)\]$")
+    # Matches SELECTEDVALUE('table'[col]) or SELECTEDVALUE(table[col])
+    _SELVAL_RE = _re.compile(r"SELECTEDVALUE\(\s*'?([^'\[\]\s]+)'?\s*\[([^\]]+)\]\s*\)", _re.IGNORECASE)
+
+    # Build measure expression index for SELECTEDVALUE unwrapping
+    _measure_expr: dict[str, dict[str, str]] = {}  # {table: {measure_name: expression}}
+    for _t in bim["model"]["tables"]:
+        _measure_expr[_t["name"]] = {m["name"]: m.get("expression", "") for m in _t.get("measures", [])}
+
+    def _parse_field(ref: str) -> tuple[str, str] | None:
+        """Parse 'table[Field]' → (table, field)."""
+        m = _FIELD_RE.match(ref.strip())
+        return (m.group(1), m.group(2)) if m else None
+
+    def _unwrap_selectedvalue(table: str, field: str) -> tuple[str, str] | None:
+        """If measure is SELECTEDVALUE('t'[col]), return (t, col) for direct column use."""
+        expr = _measure_expr.get(table, {}).get(field, "")
+        if not expr:
+            return None
+        m = _SELVAL_RE.match(expr.strip())
+        return (m.group(1), m.group(2)) if m else None
+
+    # Visual types that accept raw Column refs in value wells (no aggregation needed)
+    _TABLE_VISUALS = {"tableEx", "matrix", "multiRowCard"}
+
+    def _build_select(table: str, field: str, well_name: str, pbi_type: str = "") -> dict | None:
+        field_type = bim_fields.get(table, {}).get(field)
+        if not field_type:
+            return None  # unknown field — skip
+        ref_name = f"{table}.{field}"
+
+        if field_type == "measure" and well_name in _VALUE_WELLS and pbi_type not in _TABLE_VISUALS:
+            # Unwrap SELECTEDVALUE measures in value wells → direct column aggregation
+            unwrapped = _unwrap_selectedvalue(table, field)
+            if unwrapped:
+                real_table, real_col = unwrapped
+                if real_col in bim_fields.get(real_table, {}):
+                    col_dtype = _col_dtype.get(real_table, {}).get(real_col, "string")
+                    if col_dtype in _NUMERIC_TYPES:
+                        ref_name = f"{real_table}.{real_col}"
+                        return {
+                            "Aggregation": {
+                                "Expression": {
+                                    "Column": {"Expression": {"SourceRef": {"Source": real_table}}, "Property": real_col}
+                                },
+                                "Function": 0,  # Sum
+                            },
+                            "Name": ref_name,
+                            "NativeReferenceName": real_col,
+                        }
+            # Non-unwrappable or non-numeric → keep as measure reference
+            return {
+                "Measure": {"Expression": {"SourceRef": {"Source": table}}, "Property": field},
+                "Name": ref_name,
+                "NativeReferenceName": field,
+            }
+
+        if field_type == "measure":
+            return {
+                "Measure": {"Expression": {"SourceRef": {"Source": table}}, "Property": field},
+                "Name": ref_name,
+                "NativeReferenceName": field,
+            }
+
+        col_dtype = _col_dtype.get(table, {}).get(field, "string")
+        is_numeric = col_dtype in _NUMERIC_TYPES
+        if well_name in _VALUE_WELLS and is_numeric and pbi_type not in _TABLE_VISUALS:
+            return {
+                "Aggregation": {
+                    "Expression": {
+                        "Column": {"Expression": {"SourceRef": {"Source": table}}, "Property": field}
+                    },
+                    "Function": 0,  # Sum
+                },
+                "Name": ref_name,
+                "NativeReferenceName": field,
+            }
+        return {
+            "Column": {"Expression": {"SourceRef": {"Source": table}}, "Property": field},
+            "Name": ref_name,
+            "NativeReferenceName": field,
+        }
+
+    modified = 0
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg = json.loads(vc.get("config", "{}"))
+            v_name = cfg.get("name", "")
+            spec = spec_map.get(v_name)
+            if not spec:
+                continue
+
+            sv = cfg.get("singleVisual", {})
+            pbi_type = spec.get("pbi_type", sv.get("visualType", "card"))
+            sv["visualType"] = pbi_type
+
+            selects: list[dict] = []
+            projections: dict[str, list] = {}
+            tables_used: dict[str, str] = {}
+
+            def _alias(tbl: str) -> str:
+                if tbl not in tables_used:
+                    tables_used[tbl] = chr(ord("a") + len(tables_used))
+                return tables_used[tbl]
+
+            # Pre-pass: find the "anchor" table from categorical wells (Category/Rows/Details)
+            # Use it to redirect value fields that come from unrelated tables
+            _anchor_table: str | None = None
+            for _wn, _refs in spec.get("wells", {}).items():
+                if _wn in _CATEGORY_WELLS:
+                    for _r in _refs:
+                        _p = _parse_field(_r)
+                        if _p:
+                            _t, _f = _p
+                            if bim_fields.get(_t, {}).get(_f) == "column":
+                                _anchor_table = _t
+                                break
+                if _anchor_table:
+                    break
+
+            for well_name, field_refs in spec.get("wells", {}).items():
+                for ref in field_refs:
+                    parsed = _parse_field(ref)
+                    if not parsed:
+                        continue
+                    table, field = parsed
+                    # If LLM put a _Measures measure in a categorical well,
+                    # redirect to the real column in a data table
+                    if well_name in _CATEGORY_WELLS and bim_fields.get(table, {}).get(field) == "measure":
+                        real_table = _col_name_to_table.get(field.lower())
+                        if real_table and field in bim_fields.get(real_table, {}):
+                            table = real_table
+                    # If value well references a different table than anchor and anchor
+                    # has the same column name → use anchor table to avoid cross-table mismatch
+                    elif well_name in _VALUE_WELLS and _anchor_table and table != _anchor_table:
+                        unwrapped = _unwrap_selectedvalue(table, field) if bim_fields.get(table, {}).get(field) == "measure" else None
+                        if unwrapped:
+                            _uw_table, _uw_col = unwrapped
+                            if _uw_table != _anchor_table and _uw_col in bim_fields.get(_anchor_table, {}):
+                                # Anchor table has the same column → use it for consistency
+                                table, field = _anchor_table, _uw_col
+                    sel = _build_select(table, field, well_name, pbi_type)
+                    if not sel:
+                        continue
+                    # Determine which table the select actually points to (may differ after unwrap)
+                    if "Aggregation" in sel:
+                        sel_table = sel["Aggregation"]["Expression"]["Column"]["Expression"]["SourceRef"]["Source"]
+                        alias = _alias(sel_table)
+                        sel["Aggregation"]["Expression"]["Column"]["Expression"]["SourceRef"]["Source"] = alias
+                    elif "Measure" in sel:
+                        alias = _alias(table)
+                        sel["Measure"]["Expression"]["SourceRef"]["Source"] = alias
+                    else:
+                        alias = _alias(table)
+                        sel["Column"]["Expression"]["SourceRef"]["Source"] = alias
+                    query_ref = sel["Name"]
+                    if not any(s.get("Name") == query_ref for s in selects):
+                        selects.append(sel)
+                    projections.setdefault(well_name, []).append({"queryRef": query_ref})
+
+            if not selects:
+                continue
+
+            froms = [{"Name": a, "Entity": entity, "Type": 0} for entity, a in tables_used.items()]
+            sv["prototypeQuery"] = {"Version": 2, "From": froms, "Select": selects}
+            sv["projections"] = projections
+            cfg["singleVisual"] = sv
+            vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+            modified += 1
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  Visual wiring (from spec): {modified} visuals wired")
 
 
 # ---------------------------------------------------------------------------
