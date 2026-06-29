@@ -28,9 +28,7 @@ Field syntax:
   - Slicer fields already resolved in visual_extraction → passed through
 """
 import json
-import os
 import pathlib
-import re
 import sys
 
 from dotenv import load_dotenv
@@ -41,6 +39,7 @@ ROOT = pathlib.Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 import observability as obs
+from utils import call_api_azure, strip_json_fences
 
 
 # ---------------------------------------------------------------------------
@@ -237,41 +236,11 @@ def build_user_prompt(
 
 
 def call_api(system: str, user: str, trace=None) -> str:
-    from openai import AzureOpenAI
-
-    client = AzureOpenAI(
-        api_key=os.environ["AZURE_OPENAI_API_KEY"],
-        azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-        api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-    )
-    model = os.environ["AZURE_OPENAI_DEPLOYMENT"]
-
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": user},
-    ]
-
-    gen = (trace or obs._Noop()).generation(
-        name="viz_translation_llm",
-        model=model,
-        input=messages,
-    )
-
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        max_tokens=4096,
-        temperature=0,
-    )
-    result = response.choices[0].message.content
-    gen.end(output=result)
-    return result
+    return call_api_azure(system, user, trace, "viz_translation_llm")
 
 
 def parse_response(raw: str) -> list[dict]:
-    cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip(), flags=re.MULTILINE)
-    cleaned = re.sub(r"```\s*$", "", cleaned.strip(), flags=re.MULTILINE)
-    return json.loads(cleaned.strip())
+    return json.loads(strip_json_fences(raw))
 
 
 def _write_migration_report(report_path: pathlib.Path, wiring: list[dict]) -> None:

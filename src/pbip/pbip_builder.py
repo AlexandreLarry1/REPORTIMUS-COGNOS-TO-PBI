@@ -1,14 +1,16 @@
 """Generate a Power BI Project (.pbip) from input/ CSVs + intermediate/visual_extraction.json."""
-import argparse
 import csv
 import json
 import os
 import pathlib
-import uuid
+import sys
 from dotenv import load_dotenv
 load_dotenv()
 
 ROOT = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from utils import _uid, _hex20  # noqa: E402
 
 REPORT_NAME = "MigrationQlikPBI"
 CANVAS_W    = 1280.0
@@ -40,12 +42,6 @@ VIZ_MAP = {
     "action-button":      "textbox",
 }
 
-
-def _uid() -> str:
-    return str(uuid.uuid4())
-
-def _hex20() -> str:
-    return uuid.uuid4().hex[:20]
 
 def _read_csv_headers(path: pathlib.Path) -> list[str]:
     for enc in ("utf-8-sig", "utf-8", "latin-1"):
@@ -781,6 +777,7 @@ def build_report(intermediate: pathlib.Path, out_root: pathlib.Path, report_name
 
 
 def main() -> None:
+    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--example", default=os.getenv("EXAMPLE_NAME", ""))
     parser.add_argument("--report-name", default=REPORT_NAME)

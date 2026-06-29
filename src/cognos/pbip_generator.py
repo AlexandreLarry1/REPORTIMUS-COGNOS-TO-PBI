@@ -12,26 +12,18 @@ XML parameters or CSV date tables.
 """
 import json
 import pathlib
-import uuid
+import sys
 from typing import Any
 
-# Import des modules existants pour réutilisation
 ROOT = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from utils import _uid, _hex20  # noqa: E402
 
 # Constants
 REPORT_NAME = "MigrationCognosPBI"
 CANVAS_W = 1280.0
 CANVAS_H = 720.0
-
-
-def _uid() -> str:
-    """Génère un UUID unique."""
-    return str(uuid.uuid4())
-
-
-def _hex20() -> str:
-    """Génère un identifiant hex court."""
-    return uuid.uuid4().hex[:20]
 
 
 # ---------------------------------------------------------------------------

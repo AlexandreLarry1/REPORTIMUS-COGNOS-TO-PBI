@@ -1,46 +1,58 @@
-# REPORTIMUS — Qlik to Power BI Migration
+# REPORTIMUS — Cognos to Power BI Migration
+
+Automated pipeline converting IBM Cognos reports (XML v17.5) to Power BI projects (`.pbip`).
 
 ## Architecture
 
 ```
-REPORTIMUS-QLIK-TO-POWERBI/
+REPORTIMUS-COGNOS-TO-POWERBI/
 │
 ├── examples/
-│   └── <example-name>/
-│       ├── input/                    # CSVs source (exported from Qlik/QVD)
-│       ├── intermediate/
-│       │   ├── extraction.json       # Qlik script + variables (step 0 output)
-│       │   ├── visual_extraction.json
-│       │   ├── visual_response.json
-│       │   └── sql/
-│       │       ├── prompt.txt        # LLM1 prompt (SQL generation)
-│       │       ├── generated.sql     # SQL DuckDB produced by LLM1
-│       │       └── etl_context.json  # Tables + columns post-ETL
-│       └── pbip/                     # Generated Power BI artifacts
-│           ├── MigrationQlikPBI.SemanticModel/model.bim
-│           └── MigrationQlikPBI.Report/report.json
+│   ├── cognos-demo/           # Finance sample
+│   └── cognos-demo-complex/   # Insurance sample
+│       ├── input/             # CSV data files
+│       ├── intermediate/      # Pipeline artifacts (parsers output, LLM traces)
+│       └── pbip/              # Generated Power BI project
 │
 ├── src/
-│   ├── extract/
-│   │   ├── Extract_Data.py           # Step 0a: extract CSVs from Qlik via websocket
-│   │   └── Extract_QLik_Elements.py  # Step 0b: extract script + variables → extraction.json
-│   ├── pipeline/
-│   │   └── run_pipeline.py           # Orchestrator: LLM1 (SQL) + LLM2 (schema)
-│   └── pbip/
-│       ├── schema_builder.py         # LLM2: infer relations + types
-│       ├── pbip_builder.py           # Generate model.bim from CSVs + schema
-│       └── visual_translator.py      # LLM3: DAX measures + report.json
+│   ├── cognos/                # Cognos pipeline (entry point)
+│   │   ├── pipeline.py        # Orchestrator — run this
+│   │   ├── xml_parser.py      # Phase 1: XML → JSON extraction (0 LLM)
+│   │   ├── layout_parser.py   # Phase 1: visuals extraction (0 LLM)
+│   │   ├── expression_parser.py   # Phase 1: expression classification (0 LLM)
+│   │   ├── deterministic_translator.py  # Phase 2: local DAX translation (0 LLM)
+│   │   ├── data_dictionary.py     # Phase 1: DATA_DICTIONARY.md parsing
+│   │   ├── pbip_generator.py      # Phase 3: PBIP assembly (0 LLM)
+│   │   ├── validator.py           # Phase 3: model.bim validation
+│   │   ├── css_parser.py          # CSS style parsing
+│   │   └── llm/
+│   │       ├── unified_translation.py  # Phase 2: 1 LLM call (DAX for D & H types)
+│   │       └── viz_translation.py      # Phase 3: 1 LLM call (visual well wiring)
+│   ├── pbip/
+│   │   └── pbip_builder.py    # BIM + report.json generation from CSVs
+│   ├── utils.py               # Shared utilities (_uid, call_api_azure, …)
+│   └── observability.py       # Langfuse tracing
 │
-├── requirements.txt
-├── .env                              # gitignored — copy from .env.example
+├── scripts/
+│   └── fetch_langfuse_traces.py   # Debug: dump last LLM trace
+│
+├── BRIEF.md                   # 1-prompt architecture design spec
+├── STATUS.md                  # Known issues + fix log
+├── spec.md                    # Functional specifications
 └── .env.example
 ```
 
+### Pipeline stages
+
+| Phase | LLM calls | Output |
+|-------|-----------|--------|
+| 1 — Deterministic parsing | 0 | `cognos_extraction.json`, `visual_extraction.json`, `csv_schema.json` |
+| 2 — Translation | 1 (types D & H only) | `merged_translation.json` |
+| 3 — PBIP generation | 1 (visual wiring) | `.pbip` project folder |
+
 ---
 
-## Getting started
-
-### 1. Setup
+## Setup
 
 ```powershell
 python -m venv .venv
@@ -48,159 +60,56 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env` and fill in your Azure OpenAI credentials:
+Copy `.env.example` to `.env` and fill in your credentials:
 
 ```
 AZURE_OPENAI_API_KEY=...
 AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com
 AZURE_OPENAI_DEPLOYMENT=gpt-4.1
 AZURE_OPENAI_API_VERSION=2025-01-01-preview
+
+COGNOS_EXAMPLE_NAME=cognos-demo
+COGNOS_XML_PATH=examples/cognos-demo/report.xml
 ```
 
 ---
 
-### Option A — Mock data (no Qlik required)
+## Run
 
-The `examples/edr-demo` folder contains preloaded mock data and `extraction.json`.
+```powershell
+# Full pipeline (auto LLM)
+python src/cognos/pipeline.py --example cognos-demo --xml examples/cognos-demo/report.xml
 
+# Manual mode (paste LLM responses yourself)
+python src/cognos/pipeline.py --example cognos-demo --xml examples/cognos-demo/report.xml --mode paste
+
+# Re-run viz wiring only (skip BIM rebuild)
+python src/cognos/pipeline.py --example cognos-demo --xml examples/cognos-demo/report.xml --skip-data
+
+# Skip LLM entirely (reuse existing merged_translation.json)
+python src/cognos/pipeline.py --example cognos-demo --xml examples/cognos-demo/report.xml --skip-llm
 ```
-EXAMPLE_NAME=edr-demo
-```
 
-Then jump directly to step 2 below.
+Output: `examples/<name>/pbip/<ReportName>.pbip` — open in Power BI Desktop.
 
 ---
 
-### Option B — Real Qlik data
+## Adding a new example
 
-Requires Qlik Sense Desktop running locally with your `.qvf` loaded.
-
-```
-EXAMPLE_NAME=<your-example-name>
-QLIK_WS_URL=ws://localhost:4848/app/
-QLIK_QVF_NAME=YourApp.qvf
-```
-
-**Step 0 — Extract from Qlik**
-
-```powershell
-cd src
-python extract/Extract_Data.py          # exports CSVs to examples/<name>/input/
-python extract/Extract_QLik_Elements.py # generates examples/<name>/intermediate/extraction.json
-```
-
-Then continue with step 1 below.
+1. Create `examples/<name>/input/` with your CSV files
+2. Put your Cognos XML anywhere accessible
+3. Optionally add `examples/<name>/DATA_DICTIONARY.md` (table descriptions + relationships)
+4. Run the pipeline with `--example <name> --xml <path-to-xml>`
 
 ---
 
-### Step 1 — ETL + schema inference (LLM1 + LLM2)
-
-```powershell
-cd src
-
-# Auto mode (Azure OpenAI generates SQL automatically)
-python pipeline/run_pipeline.py --mode api
-
-# Manual mode (paste LLM response yourself into generated.sql)
-python pipeline/run_pipeline.py --mode paste
-
-# Skip LLM (re-run ETL with existing generated.sql)
-python pipeline/run_pipeline.py --mode skip-llm
-```
-
-Outputs: `intermediate/sql/etl_context.json`, `intermediate/schema_response.json`, CSVs in `intermediate/final/`
-
-### Step 2 — Generate semantic model (BIM)
-
-```powershell
-python src/pbip/pbip_builder.py
-```
-
-Output: `pbip/MigrationQlikPBI.SemanticModel/model.bim`
-
-### Step 3 — Translate visuals (LLM3)
-
-```powershell
-# Auto mode
-python src/pbip/visual_translator.py --mode api
-
-# Manual mode (paste response into intermediate/visual_response.json)
-python src/pbip/visual_translator.py --mode paste
-
-# Re-apply existing visual_response.json without LLM call
-python src/pbip/visual_translator.py --mode apply
-```
-
-Output: `pbip/MigrationQlikPBI.Report/report.json` + DAX measures in `model.bim`
-
----
-
-## LLM observability & iterative debugging (Langfuse)
+## LLM observability (Langfuse)
 
 Set `LANGFUSE_ENABLED=true` in `.env` (keys in `.env.example`) and `pip install langfuse`.
-**Every pipeline run — `api` or `paste` mode — is fully traced:** each LLM call's prompt + output,
-SQL execution errors, DAX validation errors, and translation warnings are attached to a single trace.
+Every pipeline run is fully traced: prompts, responses, errors.
 
-### Iterative debugging workflow
-
-This is the recommended loop for improving the pipeline:
-
+```powershell
+python scripts/fetch_langfuse_traces.py           # last trace full dump
+python scripts/fetch_langfuse_traces.py --last 5  # summary of last 5 traces
+python scripts/fetch_langfuse_traces.py --id <id> # specific trace
 ```
-1. Run the pipeline          →  python src/pipeline/run_pipeline.py --mode paste|api
-                                python src/pbip/visual_translator.py --mode paste|api
-2. Open the .pbip in PBI     →  copy the error details ("Copy details" in the error dialog)
-3. Paste the error here      →  "PBI says: <error text>"
-4. Pull the trace            →  python scripts/fetch_langfuse_traces.py
-                                  (dumps full prompt + LLM output + attached errors
-                                   to stdout + intermediate/last_trace_dump.json)
-5. Diagnose                  →  the trace shows which LLM call produced the broken artifact
-                                  and whether it's a `prompt` or `code` fix (see CLAUDE.md triage)
-6. Fix in source             →  apply durable fix in the source file, re-run from step 1
-```
-
-**Why this works:** in `paste` mode the pipeline now logs the pasted response to Langfuse just like
-in `api` mode, and all internal errors (`[DAX-ERR]`, `[WARN]`, `[PLACEHOLDER]`, SQL errors) are
-attached to the same trace. So when you paste a PBI error, the full LLM context that produced the
-broken output is one script away.
-
-`scripts/fetch_langfuse_traces.py` options:
-```
-python scripts/fetch_langfuse_traces.py             # full dump of the last trace
-python scripts/fetch_langfuse_traces.py --last 5    # summary of the last 5 traces
-python scripts/fetch_langfuse_traces.py --id <id>   # full dump of a specific trace
-```
-
-
-## Bug fixes reference
-
-### `generated.sql` — `AnneeMois` : month `00` instead of real month
-
-**Cause**: `SUBSTR(LPAD(...), -2)` — negative index returns empty in DuckDB.
-
-**Fix**:
-```sql
--- Before
-GJAHR || '-' || SUBSTR(LPAD(CAST(PERIO AS VARCHAR), 2, '0'), -2) AS AnneeMois
--- After
-GJAHR || '-' || LPAD(CAST(CAST(PERIO AS INTEGER) AS VARCHAR), 2, '0') AS AnneeMois
-```
-
-### `sql_runner.py` — 3 CSV format gaps vs Qlik ground truth
-
-Fixed in `_postprocess()` applied to each final exported table.
-
-#### 1. `Date comptable`: Excel serial → ISO date
-
-**Cause**: `BUDAT` stored as Excel serial (days since 30/12/1899).
-
-**Fix**: `pd.to_datetime(numeric[mask], unit="D", origin=pd.Timestamp("1899-12-30")).dt.strftime("%Y-%m-%d")`
-
-#### 2. Integer columns stored as float (`1.0` → `1`)
-
-**Cause**: DuckDB returns float64 when columns contain NULLs.
-
-**Fix**: auto-detect float columns where all non-null values are integers → cast to int string.
-
-#### 3. Null values: `NaN` → `'-'`
-
-**Fix**: `df.astype(object).fillna("-")`
