@@ -29,7 +29,7 @@ import observability as obs
 # Imports des modules Cognos
 from cognos import xml_parser, layout_parser, expression_parser
 from cognos import deterministic_translator, data_dictionary
-from cognos.llm import unified_translation, viz_translation
+from cognos.llm import unified_translation, viz_translation, layout_translation
 from cognos import pbip_generator, validator, theme_builder
 
 # Imports des modules existants pour réutilisation
@@ -316,10 +316,20 @@ def run_phase3_generator(
     print("   Visual wiring...")
     pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
 
-    # 7b. Visual styling — inject per-visual objects (background, border, grid)
-    print("   Visual styling...")
+    # 7b. LLM layout improvement — positions + titles + header textboxes (1 call/page)
+    print("   Layout LLM...")
     palette = theme_builder.extract_color_palette(xml_data)
     primary_color = palette[0] if palette else "#0078D4"
+    layout_pages = layout_translation.run(
+        visual_extraction=visual_data,
+        output_dir=output_dir,
+        mode=mode,
+        trace=trace,
+    )
+    pbip_generator.apply_layout_to_report(report_path, layout_pages, primary_color)
+
+    # 7c. Visual styling — inject per-visual objects (background, border, grid)
+    print("   Visual styling...")
     pbip_generator.apply_visual_styles_to_report(report_path, primary_color)
 
     # 8. Bookmarks (real dual-matrix + selection-pane toggle)
@@ -430,10 +440,18 @@ def main() -> None:
             )
             pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
 
-            # Reapply theme + visual styles
+            # Reapply theme + layout + visual styles
             theme_builder.apply_theme_to_report(xml_data, pbip_dir, report_path, report_name)
             _palette = theme_builder.extract_color_palette(xml_data)
-            pbip_generator.apply_visual_styles_to_report(report_path, _palette[0] if _palette else "#0078D4")
+            _primary = _palette[0] if _palette else "#0078D4"
+            _layout_pages = layout_translation.run(
+                visual_extraction=visual_data,
+                output_dir=intermediate_dir,
+                mode=args.mode,
+                trace=trace,
+            )
+            pbip_generator.apply_layout_to_report(report_path, _layout_pages, _primary)
+            pbip_generator.apply_visual_styles_to_report(report_path, _primary)
 
             # Reapply bookmarks
             merged_path = intermediate_dir / "merged_translation.json"

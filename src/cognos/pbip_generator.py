@@ -939,7 +939,178 @@ def wire_from_spec(
 
 
 # ---------------------------------------------------------------------------
-# 7. Visual styling — per-visual objects for a modern look
+# 7. Layout application — positions + titles + header textbox
+# ---------------------------------------------------------------------------
+
+def _make_header_textbox(
+    page_id: str,
+    header_text: str,
+    header_subtitle: str | None,
+    primary_color: str,
+    canvas_w: float,
+    header_h: int = 70,
+) -> dict:
+    """Build a full-width header textbox visual container."""
+    text_color = "#FFFFFF"
+
+    text_runs = [{
+        "value": header_text,
+        "textStyle": {
+            "fontWeight": "bold",
+            "fontSize": "20pt",
+            "color": {"value": text_color},
+        },
+    }]
+    if header_subtitle:
+        text_runs.append({
+            "value": f"  —  {header_subtitle}",
+            "textStyle": {
+                "fontSize": "11pt",
+                "color": {"value": text_color},
+            },
+        })
+
+    objects = {
+        "general": [{"properties": {
+            "paragraphs": [{
+                "textRuns": text_runs,
+                "horizontalTextAlignment": "Left",
+            }],
+        }}],
+        "background": [{"properties": {
+            "show": {"expr": {"Literal": {"Value": "true"}}},
+            "color": {"solid": {"color": primary_color}},
+            "transparency": {"expr": {"Literal": {"Value": "0"}}},
+        }}],
+        "border": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}],
+        "shadow": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}],
+    }
+
+    config = json.dumps({
+        "name": f"_header_{page_id}",
+        "layouts": [{"id": 0, "position": {
+            "x": 0.0, "y": 0.0, "z": 100, "width": canvas_w,
+            "height": float(header_h), "tabOrder": 100,
+        }}],
+        "singleVisual": {
+            "visualType": "textbox",
+            "drillFilterOtherVisuals": False,
+            "objects": objects,
+        },
+    }, ensure_ascii=False, separators=(",", ":"))
+
+    return {
+        "config": config,
+        "filters": "[]",
+        "height": float(header_h),
+        "width": canvas_w,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 100,
+    }
+
+
+def apply_layout_to_report(
+    report_path: pathlib.Path,
+    layout_pages: list[dict],
+    primary_color: str = "#0078D4",
+) -> None:
+    """Apply LLM layout specs to report.json: positions, titles, header textboxes.
+
+    Args:
+        report_path: path to report.json
+        layout_pages: list of page specs from layout_translation.run()
+        primary_color: hex color for the header band background
+    """
+    def _lit(v: str) -> dict:
+        return {"expr": {"Literal": {"Value": v}}}
+
+    def _solid(color: str) -> dict:
+        return {"solid": {"color": color}}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    # Index layout specs by page_name for O(1) lookup
+    layout_by_page: dict[str, dict] = {p["page_name"]: p for p in layout_pages}
+
+    for section in report.get("sections", []):
+        page_name = section.get("displayName", "")
+        spec = layout_by_page.get(page_name)
+        if not spec:
+            continue
+
+        # Index visual specs by visual_id
+        vis_spec: dict[str, dict] = {v["visual_id"]: v for v in spec.get("visuals", [])}
+        canvas_w = float(section.get("width", 1280.0))
+        header_h = 70
+
+        repositioned = 0
+        for vc in section.get("visualContainers", []):
+            cfg_str = vc.get("config", "{}")
+            try:
+                cfg = json.loads(cfg_str) if isinstance(cfg_str, str) else cfg_str
+            except json.JSONDecodeError:
+                continue
+
+            v_name = cfg.get("name", "")
+            vs = vis_spec.get(v_name)
+            if not vs:
+                continue
+
+            # Apply new position
+            x, y = float(vs["x"]), float(vs["y"])
+            w, h = float(vs["width"]), float(vs["height"])
+            layouts = cfg.get("layouts", [{}])
+            if layouts:
+                layouts[0].setdefault("position", {}).update({
+                    "x": x, "y": y, "width": w, "height": h,
+                })
+            cfg["layouts"] = layouts
+            vc.update({"x": x, "y": y, "width": w, "height": h})
+
+            # Inject visual title
+            title_text = vs.get("title", "")
+            if title_text:
+                sv = cfg.get("singleVisual", {})
+                if sv.get("visualType") not in ("textbox", "slicer"):
+                    sv.setdefault("objects", {})["title"] = [{"properties": {
+                        "show": _lit("true"),
+                        "text": _lit(f"'{title_text}'"),
+                        "fontColor": _solid("#252525"),
+                        "fontSize": _lit("11"),
+                        "fontFamily": _lit("'Segoe UI'"),
+                        "bold": _lit("false"),
+                    }}]
+                    cfg["singleVisual"] = sv
+
+            vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+            repositioned += 1
+
+        # Add header textbox at the top of the section
+        header_text = spec.get("header_text", page_name)
+        header_subtitle = spec.get("header_subtitle")
+        header_vc = _make_header_textbox(
+            page_id=section.get("name", page_name),
+            header_text=header_text,
+            header_subtitle=header_subtitle,
+            primary_color=primary_color,
+            canvas_w=canvas_w,
+            header_h=header_h,
+        )
+        # Prepend header (appears first in tab order)
+        section["visualContainers"] = [header_vc] + section["visualContainers"]
+
+        # Update canvas height
+        canvas_h = float(spec.get("canvas_height", section.get("height", 720.0)))
+        section["height"] = max(canvas_h, float(section.get("height", 720.0)))
+
+        print(f"   Layout '{page_name}': {repositioned} repositioned, header added")
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# 8. Visual styling — per-visual objects for a modern look
 # ---------------------------------------------------------------------------
 
 def apply_visual_styles_to_report(
