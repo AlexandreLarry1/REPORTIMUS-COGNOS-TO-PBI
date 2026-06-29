@@ -1114,25 +1114,22 @@ def _make_header_textbox(
         "singleVisual": {
             "visualType": "textbox",
             "drillFilterOtherVisuals": False,
+            # For textbox, ALL styling lives in singleVisual.objects (not vcObjects)
             "objects": {
-                # Text content stays in singleVisual.objects for textbox
                 "general": [{"properties": {
                     "paragraphs": [{
                         "textRuns": text_runs,
                         "horizontalTextAlignment": "Left",
                     }],
                 }}],
+                "background": [{"properties": {
+                    "show": _lit("true"),
+                    "color": _solid(primary_color),
+                    "transparency": _lit("0"),
+                }}],
+                "border": [{"properties": {"show": _lit("false")}}],
+                "shadow": [{"properties": {"show": _lit("false")}}],
             },
-        },
-        # Container-level styling in vcObjects (correct PBI PBIP location)
-        "vcObjects": {
-            "background": [{"properties": {
-                "show": _lit("true"),
-                "color": _solid(primary_color),
-                "transparency": _lit("0"),
-            }}],
-            "border": [{"properties": {"show": _lit("false")}}],
-            "shadow": [{"properties": {"show": _lit("false")}}],
         },
     }, ensure_ascii=False, separators=(",", ":"))
 
@@ -1197,6 +1194,14 @@ def apply_layout_to_report(
             # Apply new position
             x, y = float(vs["x"]), float(vs["y"])
             w, h = float(vs["width"]), float(vs["height"])
+
+            # Force full-width + min-height for table/matrix visuals
+            sv_type = cfg.get("singleVisual", {}).get("visualType", "")
+            if sv_type in ("matrix", "tableEx", "pivotTable"):
+                w = canvas_w
+                x = 0.0
+                h = max(h, 320.0)
+
             layouts = cfg.get("layouts", [{}])
             if layouts:
                 layouts[0].setdefault("position", {}).update({
@@ -1276,27 +1281,20 @@ def apply_visual_styles_to_report(
             "gridVertical": _lit("false"),
             "rowPadding": _lit("8"),
             "outlineColor": _solid("#E0E0E0"),
-            "outlineWeight": _lit("1"),
         }}],
         "columnHeaders": [{"properties": {
             "fontColor": _solid("#FFFFFF"),
             "backColor": _solid(primary_color),
-            "outline": _lit("'Frame'"),
-            "fontWeight": _lit("'Bold'"),
         }}],
         "rowHeaders": [{"properties": {
             "fontColor": _solid("#252525"),
-            "outline": _lit("'LeftRight'"),
         }}],
         "subTotals": [{"properties": {
             "fontColor": _solid(primary_color),
             "backColor": _solid("#EBF3FB"),
-            "outline": _lit("'TopBottom'"),
-            "fontWeight": _lit("'Bold'"),
         }}],
         "values": [{"properties": {
             "fontColor": _solid("#252525"),
-            "fontSize": _lit("11"),
         }}],
     }
 
@@ -1319,7 +1317,11 @@ def apply_visual_styles_to_report(
 
             vtype = sv.get("visualType", "")
 
-            # Container-level props → vcObjects (title from apply_layout_to_report wins)
+            # Textbox: already fully styled by _make_header_textbox — skip
+            if vtype == "textbox":
+                continue
+
+            # Container-level props → vcObjects (preserves title from apply_layout_to_report)
             cfg["vcObjects"] = {**CONTAINER_VC, **cfg.get("vcObjects", {})}
 
             # Visual-type-specific content styling → singleVisual.objects
