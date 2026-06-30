@@ -144,7 +144,8 @@ that exist in the BIM inventory.
 1. Match IBM available_fields/slot field names to BIM fields by label similarity.
 2. Only use fields that exist in the BIM inventory. Drop unknowns silently.
 3. Slicers: slicer_field is already resolved — copy it unchanged into Field well.
-4. If a visual has a migration_note, copy it unchanged into your output.
+4. If a visual has a migration_note, copy it unchanged into your output AND still wire \
+   all wells using available slots — migration_note is informational only, never skip wiring.
 5. tableEx fallback: put all available_fields that exist in BIM into Values.
 6. For measures: check if a "_Measures" table exists in the BIM inventory — \
    calculated measures live there, not in data tables.
@@ -153,6 +154,8 @@ that exist in the BIM inventory.
    _Measures[...]. _Measures contains only numeric DAX measures — using them as \
    categories produces empty visuals. For example: Category → "customer_analysis[Month]", \
    Details → "customer_analysis[Employment Status]".
+8. heatmap → matrix slot mapping: categories → Rows, series → Columns, \
+   color → Values (color is the scalar measurement in a heatmap, NOT a grouping/Series).
 
 Return ONLY a valid JSON array (no markdown, no comments):
 [

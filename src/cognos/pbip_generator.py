@@ -939,6 +939,447 @@ def wire_from_spec(
 
 
 # ---------------------------------------------------------------------------
+# wire_slots_fallback — deterministic fallback for visuals missed by viz_translation LLM
+# ---------------------------------------------------------------------------
+
+# IBM slot name → PBI well name, per visual type
+_SLOT_WELL_MAP: dict[str, dict[str, str]] = {
+    "matrix":                  {"categories": "Rows", "series": "Columns", "color": "Values", "values": "Values"},
+    "tableEx":                 {"categories": "Values", "series": "Values", "color": "Values", "values": "Values"},
+    "pivotTable":              {"categories": "Rows", "series": "Columns", "color": "Values", "values": "Values"},
+    "clusteredBarChart":       {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "clusteredColumnChart":    {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "stackedBarChart":         {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "stackedColumnChart":      {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "lineChart":               {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "areaChart":               {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"},
+    "pieChart":                {"categories": "Category", "values": "Y", "series": "Series"},
+    "donutChart":              {"categories": "Category", "values": "Y", "series": "Series"},
+    "waterfallChart":          {"categories": "Category", "values": "Y", "series": "Breakdown"},
+    "scatterChart":            {"categories": "Details", "values": "Y", "series": "Series", "x": "X", "y": "Y", "size": "Size", "color": "Series"},
+    "treemap":                 {"categories": "Group", "values": "Values", "color": "Group"},
+    "gauge":                   {"values": "Value", "target": "TargetValue"},
+    "card":                    {"values": "Values", "color": "Values"},
+    "multiRowCard":            {"values": "Values", "color": "Values"},
+    "slicer":                  {"categories": "Field", "series": "Field"},
+}
+_SLOT_WELL_DEFAULT: dict[str, str] = {"categories": "Category", "values": "Y", "series": "Series", "color": "Series"}
+
+_VALUE_WELLS_SET = {"Y", "Y2", "Values", "Value", "X", "Size", "TargetValue", "MinValue", "MaxValue"}
+_CAT_WELLS_SET   = {"Category", "Details", "Group", "Rows", "Columns", "Series", "Location", "Field", "Breakdown"}
+
+
+def wire_slots_fallback(
+    report_path: pathlib.Path,
+    visual_data: dict,
+    bim_path: pathlib.Path,
+) -> None:
+    """Deterministic fallback: wire visuals still missing prototypeQuery using IBM slots.
+
+    Called after wire_from_spec to catch visuals the viz_translation LLM left empty
+    (e.g., heatmap → matrix where migration_note caused the LLM to skip wiring).
+    """
+    import re as _re
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    bim   = json.loads(bim_path.read_text(encoding="utf-8"))
+
+    # Build BIM lookup: {field_name_lower: [(table, field, kind)]}
+    # kind = "column" | "measure"
+    field_index: dict[str, list[tuple[str, str, str]]] = {}
+    for t in bim["model"]["tables"]:
+        for col in t.get("columns", []):
+            key = col["name"].lower()
+            field_index.setdefault(key, []).append((t["name"], col["name"], "column"))
+        for meas in t.get("measures", []):
+            key = meas["name"].lower()
+            field_index.setdefault(key, []).append((t["name"], meas["name"], "measure"))
+
+    def _resolve(field_name: str, well_name: str) -> str | None:
+        """Return 'table[field]' for a slot field name, preferring column for
+        categorical wells and measure/_Measures for value wells."""
+        candidates = field_index.get(field_name.lower(), [])
+        if not candidates:
+            return None
+        if well_name in _VALUE_WELLS_SET:
+            # Prefer _Measures measure, then any measure, then column (will aggregate)
+            for t, f, k in candidates:
+                if k == "measure" and t == "_Measures":
+                    return f"{t}[{f}]"
+            for t, f, k in candidates:
+                if k == "measure":
+                    return f"{t}[{f}]"
+        else:
+            # Prefer column from non-_Measures table
+            for t, f, k in candidates:
+                if k == "column" and not t.startswith("_") and not t.startswith("Param_"):
+                    return f"{t}[{f}]"
+        return f"{candidates[0][0]}[{candidates[0][1]}]"
+
+    # Build obj_map from visual_extraction
+    obj_map: dict[str, dict] = {}
+    for sheet in visual_data.get("sheets", []):
+        for obj in sheet.get("objects", []):
+            obj_map[obj.get("id", "")] = obj
+
+    # Find unwired visuals
+    fallback_specs: list[dict] = []
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg = json.loads(vc.get("config", "{}"))
+            sv = cfg.get("singleVisual", {})
+            if sv.get("prototypeQuery"):
+                continue  # already wired by wire_from_spec
+
+            v_name = cfg.get("name", "")
+            vtype  = sv.get("visualType", "")
+            if vtype in ("textbox", "slicer"):
+                continue
+
+            obj  = obj_map.get(v_name, {})
+            slots = obj.get("slots", {})
+            if not slots:
+                continue
+
+            well_map = _SLOT_WELL_MAP.get(vtype, _SLOT_WELL_DEFAULT)
+            wells: dict[str, list[str]] = {}
+            for slot_name, fields in slots.items():
+                well_name = well_map.get(slot_name, _SLOT_WELL_DEFAULT.get(slot_name, "Y"))
+                for field in fields:
+                    ref = _resolve(field, well_name)
+                    if ref:
+                        wells.setdefault(well_name, []).append(ref)
+
+            if wells:
+                fallback_specs.append({
+                    "visual_id": v_name,
+                    "pbi_type": vtype,
+                    "wells": wells,
+                    "migration_note": obj.get("migration_note"),
+                })
+
+    if fallback_specs:
+        print(f"  Slots fallback: câblage de {len(fallback_specs)} visual(s) non câblé(s) par le LLM")
+        wire_from_spec(report_path, fallback_specs, bim_path)
+    else:
+        print("  Slots fallback: rien à câbler (tous déjà wired)")
+
+
+# ---------------------------------------------------------------------------
+# 7. Layout application — positions + titles + header textbox
+# ---------------------------------------------------------------------------
+
+def _make_header_textbox(
+    page_id: str,
+    header_text: str,
+    header_subtitle: str | None,
+    primary_color: str,
+    canvas_w: float,
+    header_h: int = 70,
+) -> dict:
+    """Build a full-width header textbox visual container."""
+    text_color = "#FFFFFF"
+
+    text_runs = [{
+        "value": header_text,
+        "textStyle": {
+            "fontWeight": "bold",
+            "fontSize": "20pt",
+            "fontFamily": "Segoe UI",
+            "color": {"value": text_color},  # PBI textbox textRuns use {"value": "#hex"}
+        },
+    }]
+    if header_subtitle:
+        text_runs.append({
+            "value": f"  —  {header_subtitle}",
+            "textStyle": {
+                "fontSize": "11pt",
+                "fontFamily": "Segoe UI",
+                "color": {"value": text_color},
+            },
+        })
+
+    def _lit(v: str) -> dict:
+        return {"expr": {"Literal": {"Value": v}}}
+
+    def _solid(color: str) -> dict:
+        return {"solid": {"color": color}}
+
+    # textbox: ALL properties (paragraphs + background) in singleVisual.objects
+    # vcObjects.background is ignored by PBI Desktop for textbox visuals.
+    config = json.dumps({
+        "name": f"_header_{page_id}",
+        "layouts": [{"id": 0, "position": {
+            "x": 0.0, "y": 0.0, "z": 100, "width": canvas_w,
+            "height": float(header_h), "tabOrder": 100,
+        }}],
+        "singleVisual": {
+            "visualType": "textbox",
+            "drillFilterOtherVisuals": False,
+            "objects": {
+                "general": [{"properties": {
+                    "paragraphs": [{
+                        "textRuns": text_runs,
+                        "horizontalTextAlignment": "Left",
+                    }],
+                }}],
+                "background": [{"properties": {
+                    "show": _lit("true"),
+                    "color": _solid(primary_color),
+                    "transparency": _lit("0"),
+                }}],
+                "border": [{"properties": {"show": _lit("false")}}],
+                "shadow": [{"properties": {"show": _lit("false")}}],
+            },
+        },
+    }, ensure_ascii=False, separators=(",", ":"))
+
+    return {
+        "config": config,
+        "filters": "[]",
+        "height": float(header_h),
+        "width": canvas_w,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 100,
+    }
+
+
+def apply_layout_to_report(
+    report_path: pathlib.Path,
+    layout_pages: list[dict],
+    primary_color: str = "#0078D4",
+) -> None:
+    """Apply LLM layout specs to report.json: positions, titles, header textboxes.
+
+    Args:
+        report_path: path to report.json
+        layout_pages: list of page specs from layout_translation.run()
+        primary_color: hex color for the header band background
+    """
+    def _lit(v: str) -> dict:
+        return {"expr": {"Literal": {"Value": v}}}
+
+    def _solid(color: str) -> dict:
+        return {"solid": {"color": color}}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    # Index layout specs by page_name for O(1) lookup
+    layout_by_page: dict[str, dict] = {p["page_name"]: p for p in layout_pages}
+
+    for section in report.get("sections", []):
+        page_name = section.get("displayName", "")
+        spec = layout_by_page.get(page_name)
+        if not spec:
+            continue
+
+        # Index visual specs by visual_id
+        vis_spec: dict[str, dict] = {v["visual_id"]: v for v in spec.get("visuals", [])}
+        canvas_w = float(section.get("width", 1280.0))
+        header_h = 70
+
+        repositioned = 0
+        for vc in section.get("visualContainers", []):
+            cfg_str = vc.get("config", "{}")
+            try:
+                cfg = json.loads(cfg_str) if isinstance(cfg_str, str) else cfg_str
+            except json.JSONDecodeError:
+                continue
+
+            v_name = cfg.get("name", "")
+            vs = vis_spec.get(v_name)
+            if not vs:
+                continue
+
+            # Apply new position
+            x, y = float(vs["x"]), float(vs["y"])
+            w, h = float(vs["width"]), float(vs["height"])
+
+            sv_type = cfg.get("singleVisual", {}).get("visualType", "")
+
+            # Force full-width + min-height for table/matrix visuals
+            if sv_type in ("matrix", "tableEx", "pivotTable"):
+                w = canvas_w
+                x = 0.0
+                h = max(h, 320.0)
+
+            # Enforce per-type minimum heights to avoid invisible visuals
+            _MIN_H: dict[str, float] = {
+                "map": 300.0, "shapeMap": 300.0, "filledMap": 300.0,
+                "pieChart": 280.0, "donutChart": 280.0,
+                "scatterChart": 280.0, "gauge": 180.0,
+            }
+            h = max(h, _MIN_H.get(sv_type, 0.0))
+
+            layouts = cfg.get("layouts", [{}])
+            if layouts:
+                layouts[0].setdefault("position", {}).update({
+                    "x": x, "y": y, "width": w, "height": h,
+                })
+            cfg["layouts"] = layouts
+            vc.update({"x": x, "y": y, "width": w, "height": h})
+
+            # Inject visual title into vcObjects (correct PBI PBIP container location)
+            title_text = vs.get("title", "")
+            if title_text:
+                sv = cfg.get("singleVisual", {})
+                if sv.get("visualType") not in ("textbox", "slicer"):
+                    cfg.setdefault("vcObjects", {})["title"] = [{"properties": {
+                        "show": _lit("true"),
+                        "text": _lit(f"'{title_text}'"),
+                        "fontColor": _solid(primary_color),
+                        "fontSize": _lit("14"),
+                    }}]
+
+            vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+            repositioned += 1
+
+        # Add header textbox at the top of the section
+        header_text = spec.get("header_text", page_name)
+        header_subtitle = spec.get("header_subtitle")
+        header_vc = _make_header_textbox(
+            page_id=section.get("name", page_name),
+            header_text=header_text,
+            header_subtitle=header_subtitle,
+            primary_color=primary_color,
+            canvas_w=canvas_w,
+            header_h=header_h,
+        )
+        # Prepend header (appears first in tab order)
+        section["visualContainers"] = [header_vc] + section["visualContainers"]
+
+        # Update canvas height — at least as tall as the lowest visual bottom edge
+        canvas_h = float(spec.get("canvas_height", section.get("height", 720.0)))
+        max_bottom = max(
+            (float(vc["y"]) + float(vc["height"]) for vc in section["visualContainers"]),
+            default=canvas_h,
+        )
+        section["height"] = max(canvas_h, max_bottom + 20.0)
+
+        print(f"   Layout '{page_name}': {repositioned} repositioned, header added")
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# 8. Visual styling — per-visual objects for a modern look
+# ---------------------------------------------------------------------------
+
+def apply_visual_styles_to_report(
+    report_path: pathlib.Path,
+    primary_color: str = "#0078D4",
+) -> None:
+    """Inject styling objects into each visual for a clean, modern appearance.
+
+    Container-level props (background, border, shadow, title) go in vcObjects
+    at the config root (correct PBI PBIP location).
+    Visual-type-specific props (grid, columnHeaders, etc.) stay in singleVisual.objects.
+    """
+    def _lit(v: str) -> dict:
+        return {"expr": {"Literal": {"Value": v}}}
+
+    def _solid(color: str) -> dict:
+        return {"solid": {"color": color}}
+
+    def _solid_lit(color: str) -> dict:
+        # Color as literal expression — required for backColorPrimary/Secondary
+        return {"solid": {"color": {"expr": {"Literal": {"Value": f"'{color}'"}}}}}
+
+    # Container-level: goes into vcObjects at config root
+    CONTAINER_VC: dict = {
+        "background": [{"properties": {"show": _lit("false")}}],
+        "border": [{"properties": {"show": _lit("false")}}],
+        "shadow": [{"properties": {"show": _lit("false")}}],
+    }
+
+    # Shared header style for both matrix (columnHeaders) and tableEx (header)
+    _header_style = [{"properties": {
+        "fontColor": _solid("#FFFFFF"),
+        "backColor": _solid(primary_color),
+        "fontBold": _lit("true"),
+        "fontSize": _lit("11"),
+        "fontFamily": _lit("'Segoe UI'"),
+        "alignment": _lit("'Left'"),
+        "wordWrap": _lit("false"),
+        "outline": _lit("'TopBottom'"),
+    }}]
+    # Totals: bold brand-color text, very light tinted background
+    _totals_style = [{"properties": {
+        "fontColor": _solid(primary_color),
+        "backColor": _solid("#F0F5FB"),
+        "fontBold": _lit("true"),
+        "fontFamily": _lit("'Segoe UI'"),
+        "fontSize": _lit("11"),
+    }}]
+    # Cells: dark-gray text, zebra via backColorPrimary/Secondary
+    _cell_style = [{"properties": {
+        "fontColor": _solid("#333333"),
+        "fontFamily": _lit("'Segoe UI'"),
+        "fontSize": _lit("11"),
+        "backColorPrimary": _solid_lit("#F9F9F9"),  # odd rows — subtle zebra
+        "backColorSecondary": _solid_lit("#FFFFFF"), # even rows — white
+    }}]
+
+    # Table visual content styling: goes into singleVisual.objects
+    TABLE_CONTENT: dict = {
+        "grid": [{"properties": {
+            "gridVertical": _lit("false"),       # no vertical lines
+            "gridHorizontal": _lit("true"),      # show row separators
+            "rowPadding": _lit("5D"),            # breathing room (D suffix = decimal)
+            "outlineColor": _solid("#E0E0E0"),   # soft gray separator
+            "outlineWeight": _lit("1D"),
+        }}],
+        "columnHeaders": _header_style,  # matrix column headers
+        "header": _header_style,          # tableEx column headers (different key name)
+        "rowHeaders": _cell_style,
+        "subTotals": _totals_style,  # matrix totals
+        "totals": _totals_style,      # tableEx totals (different key name)
+        "values": _cell_style,
+        "general": [{"properties": {
+            "autoSizeColumnWidth": _lit("true"),  # size columns to content
+        }}],
+    }
+
+    TABLE_VISUAL_TYPES = {"matrix", "tableEx", "pivotTable"}
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    styled = 0
+
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg_str = vc.get("config", "{}")
+            try:
+                cfg = json.loads(cfg_str) if isinstance(cfg_str, str) else cfg_str
+            except json.JSONDecodeError:
+                continue
+
+            sv = cfg.get("singleVisual", {})
+            if not sv:
+                continue
+
+            vtype = sv.get("visualType", "")
+
+            # Textbox: already fully styled by _make_header_textbox — skip
+            if vtype == "textbox":
+                continue
+
+            # Container-level props → vcObjects (preserves title from apply_layout_to_report)
+            cfg["vcObjects"] = {**CONTAINER_VC, **cfg.get("vcObjects", {})}
+
+            # Visual-type-specific content styling → singleVisual.objects
+            if vtype in TABLE_VISUAL_TYPES:
+                sv["objects"] = {**sv.get("objects", {}), **TABLE_CONTENT}
+                cfg["singleVisual"] = sv
+
+            vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+            styled += 1
+
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  Visual styles injectés: {styled} visual(s)")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
