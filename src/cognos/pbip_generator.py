@@ -1083,19 +1083,19 @@ def _make_header_textbox(
     text_runs = [{
         "value": header_text,
         "textStyle": {
-            "fontWeight": "bold",  # PBI textbox uses CSS-style fontWeight string
-            "fontSize": "20pt",    # PBI textbox paragraphs require "pt" suffix
+            "fontWeight": "bold",
+            "fontSize": "20pt",
             "fontFamily": "Segoe UI",
-            "color": text_color,
+            "color": {"value": text_color},  # PBI textbox textRuns use {"value": "#hex"}
         },
     }]
     if header_subtitle:
         text_runs.append({
-            "value": f"  |  {header_subtitle}",
+            "value": f"  —  {header_subtitle}",
             "textStyle": {
                 "fontSize": "11pt",
                 "fontFamily": "Segoe UI",
-                "color": text_color,
+                "color": {"value": text_color},
             },
         })
 
@@ -1105,6 +1105,8 @@ def _make_header_textbox(
     def _solid(color: str) -> dict:
         return {"solid": {"color": color}}
 
+    # textbox: ALL properties (paragraphs + background) in singleVisual.objects
+    # vcObjects.background is ignored by PBI Desktop for textbox visuals.
     config = json.dumps({
         "name": f"_header_{page_id}",
         "layouts": [{"id": 0, "position": {
@@ -1114,7 +1116,6 @@ def _make_header_textbox(
         "singleVisual": {
             "visualType": "textbox",
             "drillFilterOtherVisuals": False,
-            # Paragraphs (text content) live in singleVisual.objects.general
             "objects": {
                 "general": [{"properties": {
                     "paragraphs": [{
@@ -1122,18 +1123,14 @@ def _make_header_textbox(
                         "horizontalTextAlignment": "Left",
                     }],
                 }}],
+                "background": [{"properties": {
+                    "show": _lit("true"),
+                    "color": _solid(primary_color),
+                    "transparency": _lit("0"),
+                }}],
+                "border": [{"properties": {"show": _lit("false")}}],
+                "shadow": [{"properties": {"show": _lit("false")}}],
             },
-        },
-        # Background/border/shadow are CONTAINER properties → vcObjects (not singleVisual.objects)
-        # PBI Desktop stores textbox container formatting here, same as all other visual types.
-        "vcObjects": {
-            "background": [{"properties": {
-                "show": _lit("true"),
-                "color": _solid(primary_color),
-                "transparency": _lit("0"),
-            }}],
-            "border": [{"properties": {"show": _lit("false")}}],
-            "shadow": [{"properties": {"show": _lit("false")}}],
         },
     }, ensure_ascii=False, separators=(",", ":"))
 
