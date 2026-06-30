@@ -1282,6 +1282,10 @@ def apply_visual_styles_to_report(
     def _solid(color: str) -> dict:
         return {"solid": {"color": color}}
 
+    def _solid_lit(color: str) -> dict:
+        # Color as literal expression — required for backColorPrimary/Secondary
+        return {"solid": {"color": {"expr": {"Literal": {"Value": f"'{color}'"}}}}}
+
     # Container-level: goes into vcObjects at config root
     CONTAINER_VC: dict = {
         "background": [{"properties": {"show": _lit("false")}}],
@@ -1296,26 +1300,35 @@ def apply_visual_styles_to_report(
         "fontBold": _lit("true"),
         "fontSize": _lit("11"),
         "fontFamily": _lit("'Segoe UI'"),
+        "alignment": _lit("'Left'"),
+        "wordWrap": _lit("false"),
+        "outline": _lit("'TopBottom'"),
     }}]
+    # Totals: bold brand-color text, very light tinted background
     _totals_style = [{"properties": {
         "fontColor": _solid(primary_color),
-        "backColor": _solid("#EBF3FB"),
+        "backColor": _solid("#F0F5FB"),
         "fontBold": _lit("true"),
         "fontFamily": _lit("'Segoe UI'"),
+        "fontSize": _lit("11"),
     }}]
+    # Cells: dark-gray text, zebra via backColorPrimary/Secondary
     _cell_style = [{"properties": {
-        "fontColor": _solid("#252525"),
+        "fontColor": _solid("#333333"),
         "fontFamily": _lit("'Segoe UI'"),
         "fontSize": _lit("11"),
+        "backColorPrimary": _solid_lit("#F9F9F9"),  # odd rows — subtle zebra
+        "backColorSecondary": _solid_lit("#FFFFFF"), # even rows — white
     }}]
 
     # Table visual content styling: goes into singleVisual.objects
     TABLE_CONTENT: dict = {
         "grid": [{"properties": {
-            "gridVertical": _lit("false"),
-            "rowPadding": _lit("6"),
-            "outlineColor": _solid("#D0D0D0"),
-            "outlineWeight": _lit("1"),
+            "gridVertical": _lit("false"),       # no vertical lines
+            "gridHorizontal": _lit("true"),      # show row separators
+            "rowPadding": _lit("5D"),            # breathing room (D suffix = decimal)
+            "outlineColor": _solid("#E0E0E0"),   # soft gray separator
+            "outlineWeight": _lit("1D"),
         }}],
         "columnHeaders": _header_style,  # matrix column headers
         "header": _header_style,          # tableEx column headers (different key name)
@@ -1323,6 +1336,9 @@ def apply_visual_styles_to_report(
         "subTotals": _totals_style,  # matrix totals
         "totals": _totals_style,      # tableEx totals (different key name)
         "values": _cell_style,
+        "general": [{"properties": {
+            "autoSizeColumnWidth": _lit("true"),  # size columns to content
+        }}],
     }
 
     TABLE_VISUAL_TYPES = {"matrix", "tableEx", "pivotTable"}
@@ -1353,7 +1369,7 @@ def apply_visual_styles_to_report(
 
             # Visual-type-specific content styling → singleVisual.objects
             if vtype in TABLE_VISUAL_TYPES:
-                sv["objects"] = {**TABLE_CONTENT, **sv.get("objects", {})}
+                sv["objects"] = {**sv.get("objects", {}), **TABLE_CONTENT}
                 cfg["singleVisual"] = sv
 
             vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
