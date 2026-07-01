@@ -186,6 +186,7 @@ def classify_expressions_from_queries(xml_data: dict) -> dict:
         "column_ref": [],
         "row_context": [],
         "simple": [],
+        "filter_refs": [],   # detail/summary filters that reference ?params? — not DAX
     }
 
     bucket_for_type = {
@@ -224,6 +225,22 @@ def classify_expressions_from_queries(xml_data: dict) -> dict:
                 entry["branches"] = extract_case_branches(expr_text)
 
             result[bucket].append(entry)
+
+        # Classify filter expressions separately — these map to PBI slicer→visual
+        # relationships, not to DAX measures, so they go in their own bucket.
+        for flt in query.get("filters", []):
+            expr_text = flt.get("expression", "")
+            if not expr_text or expr_text in seen_exprs:
+                continue
+            seen_exprs.add(expr_text)
+            result["filter_refs"].append({
+                "name": f"filter_{query_name}",
+                "query": query_name,
+                "type": "filter_ref",
+                "filter_type": flt.get("type", "detail"),
+                "expression": expr_text,
+                "parameters": extract_param_references(expr_text),
+            })
 
     return result
 
