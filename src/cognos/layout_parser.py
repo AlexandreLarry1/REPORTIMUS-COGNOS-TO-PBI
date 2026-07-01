@@ -179,11 +179,14 @@ def _parse_viz_control(vc: dict, data_stores: dict) -> dict | None:
         "id": name,
         "type": pbi_type,
         "ibm_type": ibm_type,
-        "title": name,
+        "title": vc.get("title", name),
         "layout": {"col": 0, "row": 0, "colspan": 6, "rowspan": 8},
         "query": ref_query,
         "slots": vc["slots"],
         "available_fields": available_fields,
+        "baselines": vc.get("baselines", []),
+        "text_labels": vc.get("text_labels", []),
+        "properties": vc.get("properties", {}),
     }
     if migration_note:
         obj["migration_note"] = migration_note
@@ -195,29 +198,38 @@ def _parse_select_value(sv: dict, data_stores: dict, queries: dict | None = None
     """Parse un selectValue Cognos → slicer PBI."""
     name = sv["name"]
     ref_query = sv["ref_query"]
+    param_name = sv.get("param_name", "")
 
-    # Resolve field: dataStore first, then direct query data items
-    slicer_field = ""
-    for store in data_stores.values():
-        if store.get("refQuery") == ref_query and store.get("fields"):
-            first_field = store["fields"][0]
-            slicer_field = f"{ref_query}[{first_field}]"
-            break
-    if not slicer_field and queries and ref_query in queries:
-        items = queries[ref_query].get("dataItems", [])
-        if items:
-            first_field = items[0].get("name", "")
-            if first_field:
-                slicer_field = f"{ref_query}[{first_field}]"
+    # Resolve field: use direct field_ref first (P1 fix), then dataStore fallback
+    field_ref = sv.get("field_ref", "")
+    if field_ref:
+        slicer_field = f"{ref_query}[{field_ref}]"
+    else:
+        slicer_field = ""
+        for store in data_stores.values():
+            if store.get("refQuery") == ref_query and store.get("fields"):
+                slicer_field = f"{ref_query}[{store['fields'][0]}]"
+                break
+        if not slicer_field and queries and ref_query in queries:
+            items = queries[ref_query].get("dataItems", [])
+            if items:
+                first_field = items[0].get("name", "")
+                if first_field:
+                    slicer_field = f"{ref_query}[{first_field}]"
+
+    header_text = sv.get("header_text", "") or name.replace("_", " ").title()
+    default_value = sv.get("default_value", "")
 
     return {
         "id": name,
         "type": "slicer",
-        "title": name.replace("_", " ").title(),
+        "title": header_text,
         "layout": {"col": 0, "row": 0, "colspan": 3, "rowspan": 1},
         "slicer_field": slicer_field,
         "slicer_type": "string",
         "query": ref_query,
+        "param_name": param_name,
+        "default_value": default_value,
     }
 
 

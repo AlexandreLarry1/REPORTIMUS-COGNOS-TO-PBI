@@ -51,6 +51,12 @@ def extract_color_palette(xml_data: dict) -> list[str]:
             if isinstance(val, dict):
                 _scan_style(val)
 
+    # Scan vizControl properties (vizPropertyCSSColorValue, vizPropertyPaletteValue)
+    for vc in xml_data.get("viz_controls", []):
+        for pvalue in vc.get("properties", {}).values():
+            if pvalue and isinstance(pvalue, str) and pvalue.startswith("#"):
+                _add(pvalue)
+
     return colors if colors else list(_FALLBACK_COLORS)
 
 

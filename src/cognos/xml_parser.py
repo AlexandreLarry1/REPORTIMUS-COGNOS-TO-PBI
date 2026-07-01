@@ -99,11 +99,20 @@ def parse_queries(xml_root: etree._Element) -> dict:
             expr_node = item.find("c:expression", NS)
             expression = expr_node.text if expr_node is not None else ""
 
+            # P2: data format (number/currency/date formatting)
+            fmt: dict = {}
+            df = item.find("c:dataFormat", NS)
+            if df is not None:
+                for fmt_child in df:
+                    fmt_tag = fmt_child.tag.split("}")[-1] if "}" in fmt_child.tag else fmt_child.tag
+                    fmt[fmt_tag] = dict(fmt_child.attrib)
+
             data_items.append({
                 "name": item_name,
                 "label": item_label,
                 "aggregate": agg,
-                "expression": expression
+                "expression": expression,
+                "format": fmt,
             })
             if expression and "CASE" in expression.upper():
                 expressions.append({
@@ -124,9 +133,21 @@ def parse_queries(xml_root: etree._Element) -> dict:
                         "expression": expr_text
                     })
 
+        # P1: detail/summary filters on this query
+        filters_list: list[dict] = []
+        for flt in query.findall("./c:detailFilters/c:detailFilter", NS):
+            fexpr = flt.find("c:filterExpression", NS)
+            if fexpr is not None and fexpr.text:
+                filters_list.append({"type": "detail", "expression": fexpr.text})
+        for flt in query.findall("./c:summaryFilters/c:summaryFilter", NS):
+            fexpr = flt.find("c:filterExpression", NS)
+            if fexpr is not None and fexpr.text:
+                filters_list.append({"type": "summary", "expression": fexpr.text})
+
         queries[name] = {
             "dataItems": data_items,
-            "expressions": expressions
+            "expressions": expressions,
+            "filters": filters_list,
         }
     return queries
 
@@ -443,6 +464,45 @@ def parse_data_stores(xml_root: etree._Element) -> dict:
     return stores
 
 
+def _is_chart_title_candidate(text: str) -> bool:
+    """True if a staticValue text looks like a chart title vs. a description fragment.
+
+    IBM type-name fragments ("floating bar", "smooth line") are always lowercase;
+    real chart titles always start with an uppercase letter.
+    """
+    t = text.strip()
+    if len(t) < 10 or " " not in t:
+        return False
+    if not t[0].isupper():
+        return False
+    if t.startswith(("This ", "This is", "http", "More ", "Creating ", "Visualization")):
+        return False
+    if t.startswith(". ") or t.endswith("."):
+        return False
+    return True
+
+
+def _build_viz_title_map(xml_root: etree._Element) -> dict[str, str]:
+    """Map vizControl name → nearest preceding chart title in document order."""
+    titles: dict[str, str] = {}
+    for page in xml_root.findall(".//c:reportPages/c:page", NS):
+        last_title = ""
+        for el in page.iter():
+            tag = el.tag
+            if not isinstance(tag, str):
+                continue
+            local = tag.split("}")[-1] if "}" in tag else tag
+            if local == "staticValue":
+                text = (el.text or "").strip()
+                if _is_chart_title_candidate(text):
+                    last_title = text
+            elif local == "vizControl":
+                name = el.get("name", "")
+                if name and last_title:
+                    titles[name] = last_title
+    return titles
+
+
 def parse_viz_controls(xml_root: etree._Element) -> list[dict]:
     """Extrait les vizControl IBM avec page d'appartenance et slots de données.
 
@@ -450,6 +510,7 @@ def parse_viz_controls(xml_root: etree._Element) -> list[dict]:
       name, ibm_type (ex: "floatingBar"), page, ref_data_store,
       slots: {idSlot: [refDsColumn, ...]}, height, width
     """
+    viz_titles = _build_viz_title_map(xml_root)
     result: list[dict] = []
     seen: set[str] = set()
 
@@ -478,12 +539,35 @@ def parse_viz_controls(xml_root: etree._Element) -> list[dict]:
                     slots[slot_id] = fields
 
             height = width = ""
-            for prop in vc.findall(".//c:vizPropertyLengthValue", NS):
-                pname = prop.get("name", "")
-                if pname == "vcHeight":
-                    height = prop.text or ""
-                elif pname == "vcWidth":
-                    width = prop.text or ""
+            # P2: capture ALL viz properties (not just height/width)
+            properties: dict[str, str] = {}
+            props_container = vc.find(".//c:vizPropertyValues", NS)
+            if props_container is not None:
+                for prop in props_container:
+                    pname_attr = prop.get("name", "")
+                    if pname_attr:
+                        pvalue = prop.text or ""
+                        properties[pname_attr] = pvalue
+                        if pname_attr == "vcHeight":
+                            height = pvalue
+                        elif pname_attr == "vcWidth":
+                            width = pvalue
+
+            # P1: reference lines (baselines)
+            baselines: list[dict] = []
+            for bl in vc.findall(".//c:vcBaseline", NS):
+                baselines.append({
+                    "ref_query": bl.get("refQuery", ""),
+                    "line_color": bl.get("lineColor", ""),
+                    "line_style": bl.get("lineStyle", ""),
+                })
+
+            # vcTextItem labels (e.g. baseline label "Average")
+            text_labels: list[str] = []
+            for vt in vc.findall(".//c:vcTextItem", NS):
+                si = vt.find(".//c:staticValue", NS)
+                if si is not None and si.text:
+                    text_labels.append(si.text.strip())
 
             result.append({
                 "name": name,
@@ -493,6 +577,10 @@ def parse_viz_controls(xml_root: etree._Element) -> list[dict]:
                 "slots": slots,
                 "height": height,
                 "width": width,
+                "title": viz_titles.get(name, name),  # P1: real chart title
+                "properties": properties,              # P2: all viz properties
+                "baselines": baselines,                # P1: reference lines
+                "text_labels": text_labels,            # P1: text overlays
             })
 
     return result
@@ -512,8 +600,18 @@ def parse_select_values(xml_root: etree._Element) -> list[dict]:
         for sv in page.findall(".//c:selectValue", NS):
             name = sv.get("name", "")
             ref_query = sv.get("refQuery", "")
-            param_ref = sv.find(".//c:parameterReference", NS)
-            param_name = param_ref.get("name", "") if param_ref is not None else ""
+            # P1 fix: param name is a direct attribute, not a child element
+            param_name = sv.get("parameter", "")
+
+            # P1: field being sliced, from useItem
+            use_item = sv.find("c:useItem", NS)
+            field_ref = use_item.get("refDataItem", "") if use_item is not None else ""
+
+            # P2: slicer label and default selection
+            header = sv.find("c:headerText/c:defaultText", NS)
+            header_text = header.text if header is not None else ""
+            default_sel = sv.find("c:defaultSelections/c:defaultSimpleSelection", NS)
+            default_value = default_sel.text if default_sel is not None else ""
 
             key = name or ref_query
             if key in seen:
@@ -525,6 +623,9 @@ def parse_select_values(xml_root: etree._Element) -> list[dict]:
                 "page": page_name,
                 "ref_query": ref_query,
                 "param_name": param_name,
+                "field_ref": field_ref,
+                "header_text": header_text,
+                "default_value": default_value,
             })
 
     return result
@@ -573,7 +674,11 @@ def parse_cognos_xml(xml_path: pathlib.Path) -> dict:
     tree = etree.parse(str(xml_path))
     root = tree.getroot()
 
+    rname_node = root.find(".//c:reportName", NS)
+    report_name = rname_node.text if rname_node is not None else ""
+
     return {
+        "report_name": report_name,
         "parameters": parse_parameters(root),
         "variables": parse_variables(root),
         "queries": parse_queries(root),

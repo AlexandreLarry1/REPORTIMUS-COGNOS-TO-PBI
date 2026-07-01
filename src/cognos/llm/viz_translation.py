@@ -29,6 +29,7 @@ Field syntax:
 """
 import json
 import pathlib
+import re
 import sys
 
 from dotenv import load_dotenv
@@ -187,9 +188,48 @@ def _build_bim_inventory(bim_path: pathlib.Path) -> dict:
     return inventory
 
 
+def _build_slicer_filter_map(visual_extraction: dict, xml_data: dict) -> dict[str, list[str]]:
+    """Map visual_id → list of slicer_ids that filter it, derived from query detailFilters.
+
+    A visual is filtered by a slicer when its query has a detailFilter referencing
+    the slicer's param_name via ?param?.
+    """
+    # param_name → slicer visual_id
+    param_to_slicer: dict[str, str] = {}
+    for sheet in visual_extraction.get("sheets", []):
+        for obj in sheet.get("objects", []):
+            if obj.get("type") == "slicer" and obj.get("param_name"):
+                param_to_slicer[obj["param_name"]] = obj["id"]
+
+    if not param_to_slicer:
+        return {}
+
+    _PARAM_RE = re.compile(r'\?(\w+)\?')
+    queries = xml_data.get("queries", {})
+    visual_filter_map: dict[str, list[str]] = {}
+
+    for sheet in visual_extraction.get("sheets", []):
+        for obj in sheet.get("objects", []):
+            if obj.get("type") == "slicer":
+                continue
+            q_name = obj.get("query", "")
+            if not q_name:
+                continue
+            for flt in queries.get(q_name, {}).get("filters", []):
+                params_in_filter = _PARAM_RE.findall(flt.get("expression", ""))
+                for p in params_in_filter:
+                    if p in param_to_slicer:
+                        visual_filter_map.setdefault(obj["id"], []).append(
+                            param_to_slicer[p]
+                        )
+
+    return visual_filter_map
+
+
 def build_user_prompt(
     visual_extraction: dict,
     bim_inventory: dict,
+    xml_data: dict | None = None,
 ) -> str:
     lines: list[str] = []
 
@@ -200,6 +240,21 @@ def build_user_prompt(
             lines.append(f"  {f}")
     lines.append("")
 
+    # Slicer → visual filter connections (from detailFilters on queries)
+    if xml_data:
+        filter_map = _build_slicer_filter_map(visual_extraction, xml_data)
+        if filter_map:
+            lines.append("## Slicer → visual filter connections:\n")
+            lines.append(
+                "These visuals are filtered by the listed slicer(s) via Cognos detailFilter. "
+                "In PBI the slicer field MUST come from the same table as the visual's data "
+                "so that cross-filter context is applied automatically. "
+                "Resolve the slicer Field well to the matching BIM column in the data table.\n"
+            )
+            for visual_id, slicer_ids in filter_map.items():
+                lines.append(f"  Visual '{visual_id}' filtered by slicer(s): {slicer_ids}")
+            lines.append("")
+
     lines.append("## Cognos visuals to wire:\n")
     for sheet in visual_extraction.get("sheets", []):
         sheet_title = sheet.get("title", "")
@@ -209,7 +264,11 @@ def build_user_prompt(
             lines.append(f"Visual id={obj['id']}  pbi_type={pbi_type}  ibm_type={ibm_type}  page={sheet_title}")
 
             if pbi_type == "slicer":
-                lines.append(f"  slicer_field (already resolved): {obj.get('slicer_field', '')}")
+                lines.append(f"  slicer_field (Cognos ref, resolve to BIM column): {obj.get('slicer_field', '')}")
+                if obj.get("param_name"):
+                    lines.append(f"  param_name: {obj['param_name']} — find matching column in BIM for Field well")
+                if obj.get("default_value"):
+                    lines.append(f"  default_value: {obj['default_value']}")
 
             elif pbi_type == "matrix":
                 lines.append(f"  row_dimensions: {obj.get('row_dimensions', [])}")
@@ -228,6 +287,16 @@ def build_user_prompt(
                 available = obj.get("available_fields") or obj.get("columns", [])
                 if available:
                     lines.append(f"  available_fields: {available}")
+
+            # Reference lines / baselines
+            if obj.get("baselines"):
+                for bl in obj["baselines"]:
+                    label = (obj.get("text_labels") or [""])[0]
+                    lines.append(
+                        f"  baseline: color={bl['line_color']} style={bl['line_style']} "
+                        f"ref_query={bl['ref_query']}"
+                        + (f" label={label}" if label else "")
+                    )
 
             if obj.get("migration_note"):
                 lines.append(f"  migration_note: {obj['migration_note']}")
@@ -286,6 +355,7 @@ def run(
     output_path: pathlib.Path,
     mode: str = "api",
     trace=None,
+    xml_data: dict | None = None,
 ) -> list[dict]:
     """Run the viz LLM call.
 
@@ -295,13 +365,14 @@ def run(
         output_path: where to write visual_wiring.json
         mode: "api" or "paste"
         trace: observability trace
+        xml_data: full Cognos extraction (for filter connections)
 
     Returns:
         List of visual wiring specs
     """
     bim_inventory = _build_bim_inventory(bim_path)
     system = _SYSTEM_PROMPT
-    user = build_user_prompt(visual_extraction, bim_inventory)
+    user = build_user_prompt(visual_extraction, bim_inventory, xml_data=xml_data)
 
     if mode == "paste":
         prompt_path = output_path.parent / "viz_wiring_prompt.txt"

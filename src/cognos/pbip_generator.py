@@ -515,7 +515,77 @@ def apply_conditional_formatting_to_report(
 
 
 # ---------------------------------------------------------------------------
-# 5. Apply bookmarks to report (with selection pane toggle)
+# 5. Slicer default values
+# ---------------------------------------------------------------------------
+
+def apply_slicer_defaults_to_report(
+    report_path: pathlib.Path,
+    visual_data: dict,
+    visual_wiring: list[dict],
+) -> None:
+    """Set default selection filters on slicers that have a default_value.
+
+    Runs AFTER wire_from_spec so the slicer's Field well is already resolved.
+    Reads resolved table[column] from visual_wiring to build a valid PBI filter.
+    """
+    import re as _re
+
+    # visual_id → default_value
+    defaults: dict[str, str] = {}
+    for sheet in visual_data.get("sheets", []):
+        for obj in sheet.get("objects", []):
+            if obj.get("type") == "slicer" and obj.get("default_value"):
+                defaults[obj["id"]] = obj["default_value"]
+    if not defaults:
+        return
+
+    # visual_id → (table, column) from resolved Field well in visual_wiring
+    field_map: dict[str, tuple[str, str]] = {}
+    for wired in visual_wiring:
+        vid = wired.get("visual_id", "")
+        if vid not in defaults:
+            continue
+        field_refs = wired.get("wells", {}).get("Field", [])
+        if field_refs:
+            m = _re.match(r"(.+)\[(.+)\]", field_refs[0])
+            if m:
+                field_map[vid] = (m.group(1), m.group(2))
+    if not field_map:
+        return
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    patched = 0
+
+    for page in report.get("pages", []):
+        for visual in page.get("visuals", []):
+            config_str = visual.get("config", "{}")
+            vconfig = json.loads(config_str) if isinstance(config_str, str) else config_str
+            sv = vconfig.get("singleVisual", {})
+            if sv.get("visualType") != "slicer":
+                continue
+            v_name = vconfig.get("name", "")
+            if v_name not in field_map:
+                continue
+            table, column = field_map[v_name]
+            default_val = defaults[v_name]
+            visual["filters"] = json.dumps([{
+                "$schema": "https://powerbi.com/product/schema#basic",
+                "filterType": 1,
+                "howCreated": 2,
+                "target": {"table": table, "column": column},
+                "operator": "In",
+                "values": [default_val],
+                "requireSingleSelection": False,
+            }])
+            patched += 1
+
+    if patched:
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  {patched} slicer(s) valeur par défaut appliquée(s)")
+
+
+# ---------------------------------------------------------------------------
+# 6. Apply bookmarks to report (with selection pane toggle)
 # ---------------------------------------------------------------------------
 
 def apply_bookmarks_to_report(report_path: pathlib.Path, bookmarks: list[dict]) -> None:
@@ -1220,17 +1290,15 @@ def apply_layout_to_report(
             cfg["layouts"] = layouts
             vc.update({"x": x, "y": y, "width": w, "height": h})
 
-            # Inject visual title into vcObjects (correct PBI PBIP container location)
+            # Inject visual title — vcObjects goes INSIDE singleVisual (PBI requirement)
             title_text = vs.get("title", "")
             if title_text:
                 sv = cfg.get("singleVisual", {})
                 if sv.get("visualType") not in ("textbox", "slicer"):
-                    cfg.setdefault("vcObjects", {})["title"] = [{"properties": {
-                        "show": _lit("true"),
+                    sv.setdefault("vcObjects", {})["title"] = [{"properties": {
                         "text": _lit(f"'{title_text}'"),
-                        "fontColor": _solid(primary_color),
-                        "fontSize": _lit("14"),
                     }}]
+                    cfg["singleVisual"] = sv
 
             vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
             repositioned += 1
@@ -1364,19 +1432,92 @@ def apply_visual_styles_to_report(
             if vtype == "textbox":
                 continue
 
-            # Container-level props → vcObjects (preserves title from apply_layout_to_report)
-            cfg["vcObjects"] = {**CONTAINER_VC, **cfg.get("vcObjects", {})}
+            # Container-level props → singleVisual.vcObjects (PBI requirement)
+            # Preserves title already set by apply_layout_to_report
+            sv["vcObjects"] = {**CONTAINER_VC, **sv.get("vcObjects", {})}
 
             # Visual-type-specific content styling → singleVisual.objects
             if vtype in TABLE_VISUAL_TYPES:
                 sv["objects"] = {**sv.get("objects", {}), **TABLE_CONTENT}
-                cfg["singleVisual"] = sv
+
+            cfg["singleVisual"] = sv
 
             vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
             styled += 1
 
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"  Visual styles injectés: {styled} visual(s)")
+
+
+# ---------------------------------------------------------------------------
+# 9. Display names — rename cfg.name from Cognos ID to human-readable title
+# ---------------------------------------------------------------------------
+
+def _css_safe_name(name: str) -> str:
+    """Sanitize a title for use as PBI cfg.name (used as CSS class suffix by PBI Desktop).
+
+    PBI constructs selectors like `.resizeHandleGroup-{cfg.name}`, so the name
+    must not contain CSS special chars: . & ( ) / ' " % # @ ! , ; : ?
+    """
+    import re as _re
+    name = name.replace("&", "and").replace(".", "").replace("'", "").replace('"', "")
+    name = name.replace("(", "").replace(")", "").replace("/", " ").replace("\\", " ")
+    name = name.replace("%", "pct").replace("#", "").replace("@", "").replace("!", "")
+    name = name.replace(",", "").replace(";", "").replace(":", "").replace("?", "")
+    name = _re.sub(r"\s+", " ", name).strip()
+    if name and not (name[0].isalpha() or name[0] == "_"):
+        name = "V " + name
+    return name
+
+
+def apply_display_names_to_report(
+    report_path: pathlib.Path,
+    layout_pages: list[dict],
+) -> None:
+    """Rename cfg.name from internal Cognos ID to human-readable title.
+
+    Must run AFTER wire_from_spec, wire_slots_fallback, apply_slicer_defaults,
+    and apply_layout_to_report — all of which match visuals by cfg.name.
+    Skips textbox and slicer visuals (no canvas title / internal IDs reused).
+    Names are sanitized to be valid CSS identifiers (PBI uses cfg.name as a
+    CSS class suffix for resize handles).
+    """
+    id_to_title: dict[str, str] = {}
+    for page in layout_pages:
+        for v in page.get("visuals", []):
+            vid = v.get("visual_id", "")
+            title = v.get("title", "")
+            if vid and title:
+                id_to_title[vid] = _css_safe_name(title)
+
+    if not id_to_title:
+        return
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    renamed = 0
+
+    for section in report.get("sections", []):
+        for vc in section.get("visualContainers", []):
+            cfg_str = vc.get("config", "{}")
+            try:
+                cfg = json.loads(cfg_str) if isinstance(cfg_str, str) else cfg_str
+            except json.JSONDecodeError:
+                continue
+
+            vtype = cfg.get("singleVisual", {}).get("visualType", "")
+            if vtype in ("textbox", "slicer"):
+                continue
+
+            v_name = cfg.get("name", "")
+            new_name = id_to_title.get(v_name)
+            if new_name and new_name != v_name:
+                cfg["name"] = new_name
+                vc["config"] = json.dumps(cfg, ensure_ascii=False, separators=(",", ":"))
+                renamed += 1
+
+    if renamed:
+        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  Display names: {renamed} visual(s) renamed")
 
 
 # ---------------------------------------------------------------------------
