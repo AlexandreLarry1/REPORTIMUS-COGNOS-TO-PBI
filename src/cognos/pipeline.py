@@ -227,6 +227,7 @@ def run_phase2b_visual_llm(
         output_path=viz_wiring_path,
         mode=mode,
         trace=trace,
+        xml_data=xml_data,
     )
 
     # Layout LLM — positions + titles + header text (1 call/page)
@@ -299,12 +300,18 @@ def run_phase3_generator(
     pbip_generator.apply_layout_to_report(report_path, layout_pages, primary_color)
     pbip_generator.apply_visual_styles_to_report(report_path, primary_color)
 
-    # 9. Bookmarks
+    # 9. Slicer defaults (runs after wire_from_spec so Field well is resolved)
+    pbip_generator.apply_slicer_defaults_to_report(report_path, visual_data, visual_wiring)
+
+    # 10. Bookmarks
     print("   Bookmarks...")
     bookmarks = pbip_generator.create_bookmarks(xml_data, visual_data)
     pbip_generator.apply_bookmarks_to_report(report_path, bookmarks)
 
-    # 10. Entry point
+    # 11. Rename cfg.name → human-readable title (PBI Selection pane)
+    pbip_generator.apply_display_names_to_report(report_path, layout_pages)
+
+    # 12. Entry point
     entry_point = pbip_dir / f"{report_name}.pbip"
     entry_point.write_text(json.dumps({
         "version": "1.0",
@@ -312,7 +319,7 @@ def run_phase3_generator(
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n   -> {entry_point}")
 
-    # 11. Validate
+    # 13. Validate
     print("   Validation model.bim...")
     validation_errors = validator.validate_model(bim_path)
     exit_code = validator.print_validation_report(validation_errors)
