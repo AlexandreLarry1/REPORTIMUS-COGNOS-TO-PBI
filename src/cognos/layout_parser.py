@@ -334,7 +334,8 @@ def _parse_crosstab(crosstab_data: dict, xml_data: dict) -> dict | None:
 
     dim_names = seen_row | seen_col
     measures: list[dict] = [
-        {"name": item_name, "label": item.get("label", item_name)}
+        {"name": item_name, "label": item.get("label", item_name),
+         "aggregate": item.get("aggregate", "none")}
         for item_name, item in query_items.items()
         if item_name and item_name not in dim_names
     ]
@@ -369,7 +370,8 @@ def _parse_singleton(singleton_data: dict, xml_data: dict) -> dict | None:
     query_name = singleton_data.get("refQuery", "")
     query = xml_data.get("queries", {}).get(query_name, {})
     measures = [
-        {"expression": f"FIRST([{item.get('name','')}])", "label": item.get("label", item.get("name",""))}
+        {"expression": f"FIRST([{item.get('name','')}])", "label": item.get("label", item.get("name","")),
+         "aggregate": item.get("aggregate", "none")}
         for item in query.get("dataItems", [])
         if item.get("name")
     ]

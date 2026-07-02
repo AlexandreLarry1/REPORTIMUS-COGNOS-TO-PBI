@@ -177,7 +177,7 @@ def classify_expressions_from_queries(xml_data: dict) -> dict:
           "row_context":    [...],   # type G      → deterministic
           "simple":         [...],   # trivial
         }
-    Each item: {name, query, type, expression, branches?, parameters, measures}
+    Each item: {name, query, type, expression, branches?, parameters, measures, aggregate}
     """
     result: dict[str, list[dict]] = {
         "unresolved": [],
@@ -219,6 +219,7 @@ def classify_expressions_from_queries(xml_data: dict) -> dict:
                 "expression": expr_text,
                 "parameters": extract_param_references(expr_text),
                 "measures": extract_measure_names(expr_text),
+                "aggregate": item.get("aggregate", "none"),
             }
             # Attach parsed branches for CASE expressions (used by deterministic translator)
             if expr_type in ("param_switch", "unresolved") and re.search(r'\bcase\b', expr_text, re.IGNORECASE):
