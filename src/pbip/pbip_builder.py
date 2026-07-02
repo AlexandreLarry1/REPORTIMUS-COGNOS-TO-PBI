@@ -143,39 +143,71 @@ def _m_expression(csv_path: pathlib.Path, n_cols: int, col_types: dict[str, str]
         lines.append('    #"Promoted Headers"')
     return lines
 
+
+def _m_expression_sql(table_name: str, server: str, database: str, schema: str = "dbo") -> list[str]:
+    return [
+        "let",
+        f'    Source = Sql.Database("{server}", "{database}"),',
+        f'    schema_table = Source{{[Schema="{schema}",Item="{table_name}"]}}[Data]',
+        "in",
+        "    schema_table",
+    ]
+
 _NUMERIC_SUMMARIZE = {"int64": "sum", "double": "sum"}
 
 def _clean_col_name(h: str) -> str:
     """Strip TABLE. prefix (SAP/Qlik convention) so DAX names don't contain dots."""
     return h.split(".", 1)[1] if "." in h else h
 
-def _bim_column(name: str, data_type: str = "string", source_col: str | None = None) -> dict:
-    summarize = _NUMERIC_SUMMARIZE.get(data_type, "none")
+def _bim_column(name: str, data_type: str = "string", source_col: str | None = None, aggregate: str = "none") -> dict:
+    if aggregate != "none":
+        from pbip.aggregation import summarize_by
+        summarize = summarize_by(aggregate, default=_NUMERIC_SUMMARIZE.get(data_type, "none"))
+    else:
+        summarize = _NUMERIC_SUMMARIZE.get(data_type, "none")
     col: dict = {"name": name, "lineageTag": _uid(), "dataType": data_type,
                  "sourceColumn": source_col or name, "summarizeBy": summarize}
     if data_type == "dateTime":
         col["formatString"] = "General Date"
     return col
 
-def _bim_table(csv_path: pathlib.Path) -> dict | None:
+def _bim_table(csv_path: pathlib.Path, sql_config: dict | None = None, column_aggregates: dict | None = None) -> dict | None:
     headers = _read_csv_headers(csv_path)
     if not headers:
         return None
     types = _infer_col_types(csv_path)
-    cols  = [_bim_column(_clean_col_name(h), types.get(h, "string"), source_col=h) for h in headers]
+    cols  = [
+        _bim_column(
+            _clean_col_name(h), types.get(h, "string"), source_col=h,
+            aggregate=(column_aggregates or {}).get(_clean_col_name(h), "none"),
+        )
+        for h in headers
+    ]
     type_summary = {}
     for c in cols:
         type_summary.setdefault(c["dataType"], 0)
         type_summary[c["dataType"]] += 1
     print(f"    types: {type_summary}")
+    table_name = csv_path.stem
+    if sql_config:
+        partition = {"name": "Partition", "mode": "directQuery", "source": {
+            "type": "m", "expression": _m_expression_sql(
+                table_name,
+                sql_config["server"],
+                sql_config["database"],
+                sql_config.get("schema", "dbo"),
+            )
+        }}
+    else:
+        partition = {"name": "Partition", "mode": "import", "source": {
+            "type": "m", "expression": _m_expression(csv_path, len(headers), types)
+        }}
     return {
-        "name":       csv_path.stem,
+        "name":       table_name,
         "lineageTag": _uid(),
         "columns":    cols,
         "measures":   [],
-        "partitions": [{"name": "Partition", "mode": "import", "source": {
-            "type": "m", "expression": _m_expression(csv_path, len(headers), types)
-        }}],
+        "partitions": [partition],
     }
 
 
@@ -527,12 +559,17 @@ def build_semantic_model(
     out_root: pathlib.Path,
     report_name: str = REPORT_NAME,
     explicit_relationships: list | None = None,
+    sql_config: dict | None = None,
+    column_aggregates: dict | None = None,
 ) -> list[str]:
     sm_dir  = out_root / f"{report_name}.SemanticModel"
     tables  = []
     csv_path_map: dict[str, pathlib.Path] = {}
     for csv_path in sorted(csv_dir.glob("*.csv")):
-        t = _bim_table(csv_path)
+        t = _bim_table(
+            csv_path, sql_config=sql_config,
+            column_aggregates=(column_aggregates or {}).get(csv_path.stem, {}),
+        )
         if t:
             tables.append(t)
             csv_path_map[t["name"]] = csv_path

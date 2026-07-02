@@ -303,7 +303,11 @@ def create_bookmarks(xml_data: dict, visual_data: dict | None = None) -> list[di
 # 3. Merge measures — flat contract (deterministic + unified LLM)
 # ---------------------------------------------------------------------------
 
-def merge_measures_to_bim(bim_path: pathlib.Path, all_measures: list[dict]) -> None:
+def merge_measures_to_bim(
+    bim_path: pathlib.Path,
+    all_measures: list[dict],
+    aggregate_by_name: dict | None = None,
+) -> None:
     """Fusionne les mesures (déterministes + LLM unifié) dans le modèle.
 
     New flat contract: a single list of {name, expression, type, ...} dicts.
@@ -312,6 +316,10 @@ def merge_measures_to_bim(bim_path: pathlib.Path, all_measures: list[dict]) -> N
     Args:
         bim_path: Chemin vers model.bim existant
         all_measures: Flat list of measure dicts from deterministic + LLM
+        aggregate_by_name: {cognos_item_name: aggregate} from
+            deterministic_translator.build_aggregate_map()["by_name"], used to
+            resolve the correct DAX aggregation function instead of guessing
+            from the measure name.
     """
     bim = json.loads(bim_path.read_text(encoding="utf-8"))
 
@@ -367,10 +375,11 @@ def merge_measures_to_bim(bim_path: pathlib.Path, all_measures: list[dict]) -> N
                         if _c["name"] == sv_col:
                             _dtype = _c.get("dataType", "string")
                             if _dtype in ("int64", "double", "decimal", "currency", "int32"):
-                                if "average" in name.lower() or "avg" in name.lower():
-                                    m["expression"] = f"AVERAGE('{sv_table}'[{sv_col}])"
-                                else:
-                                    m["expression"] = f"SUM('{sv_table}'[{sv_col}])"
+                                from pbip.aggregation import dax_func
+                                _name_default = "AVERAGE" if ("average" in name.lower() or "avg" in name.lower()) else "SUM"
+                                _agg = (aggregate_by_name or {}).get(name, "none")
+                                _func = dax_func(_agg, default=_name_default)
+                                m["expression"] = f"{_func}('{sv_table}'[{sv_col}])"
                             break
                     break
 
@@ -787,6 +796,7 @@ def wire_from_spec(
     report_path: pathlib.Path,
     visual_wiring: list[dict],
     bim_path: pathlib.Path,
+    column_aggregates: dict | None = None,
 ) -> None:
     """Apply explicit well assignments from viz_translation LLM output.
 
@@ -794,6 +804,11 @@ def wire_from_spec(
     Field syntax: "table_name[Field Name]" for both measures and columns.
 
     Looks up the field in BIM to determine if it's a Measure or Column select.
+
+    Args:
+        column_aggregates: {csv_table: {csv_column: aggregate}} from
+            deterministic_translator.build_aggregate_map()["by_column"], used
+            to pick the correct Aggregation.Function instead of hardcoding Sum.
     """
     import re as _re
 
@@ -859,6 +874,8 @@ def wire_from_spec(
     # Visual types that accept raw Column refs in value wells (no aggregation needed)
     _TABLE_VISUALS = {"tableEx", "matrix", "multiRowCard"}
 
+    from pbip.aggregation import pbi_function
+
     def _build_select(table: str, field: str, well_name: str, pbi_type: str = "") -> dict | None:
         field_type = bim_fields.get(table, {}).get(field)
         if not field_type:
@@ -874,12 +891,13 @@ def wire_from_spec(
                     col_dtype = _col_dtype.get(real_table, {}).get(real_col, "string")
                     if col_dtype in _NUMERIC_TYPES:
                         ref_name = f"{real_table}.{real_col}"
+                        agg = (column_aggregates or {}).get(real_table, {}).get(real_col, "none")
                         return {
                             "Aggregation": {
                                 "Expression": {
                                     "Column": {"Expression": {"SourceRef": {"Source": real_table}}, "Property": real_col}
                                 },
-                                "Function": 0,  # Sum
+                                "Function": pbi_function(agg),
                             },
                             "Name": ref_name,
                             "NativeReferenceName": real_col,
@@ -901,12 +919,13 @@ def wire_from_spec(
         col_dtype = _col_dtype.get(table, {}).get(field, "string")
         is_numeric = col_dtype in _NUMERIC_TYPES
         if well_name in _VALUE_WELLS and is_numeric and pbi_type not in _TABLE_VISUALS:
+            agg = (column_aggregates or {}).get(table, {}).get(field, "none")
             return {
                 "Aggregation": {
                     "Expression": {
                         "Column": {"Expression": {"SourceRef": {"Source": table}}, "Property": field}
                     },
-                    "Function": 0,  # Sum
+                    "Function": pbi_function(agg),
                 },
                 "Name": ref_name,
                 "NativeReferenceName": field,
@@ -1043,6 +1062,7 @@ def wire_slots_fallback(
     report_path: pathlib.Path,
     visual_data: dict,
     bim_path: pathlib.Path,
+    column_aggregates: dict | None = None,
 ) -> None:
     """Deterministic fallback: wire visuals still missing prototypeQuery using IBM slots.
 
@@ -1130,7 +1150,7 @@ def wire_slots_fallback(
 
     if fallback_specs:
         print(f"  Slots fallback: câblage de {len(fallback_specs)} visual(s) non câblé(s) par le LLM")
-        wire_from_spec(report_path, fallback_specs, bim_path)
+        wire_from_spec(report_path, fallback_specs, bim_path, column_aggregates=column_aggregates)
     else:
         print("  Slots fallback: rien à câbler (tous déjà wired)")
 

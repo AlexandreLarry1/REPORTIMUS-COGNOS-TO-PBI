@@ -146,7 +146,14 @@ def run_phase2a_translation(phase1_output: dict, output_dir: pathlib.Path, mode:
         named_styles=phase1_output["xml_data"].get("namedStyles", {}),
         csv_schema=phase1_output["csv_schema"],
         parameters=phase1_output["xml_data"].get("parameters", []),
+        xml_data=phase1_output["xml_data"],
     )
+
+    aggregate_map_path = output_dir / "aggregate_map.json"
+    aggregate_map_path.write_text(
+        json.dumps(det_result.get("aggregate_map", {}), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print(f"   -> {aggregate_map_path}")
 
     print(f"   {len(det_result['measures'])} mesures déterministes générées")
     print(f"   {len(det_result['deferred'])} expressions différées vers le LLM")
@@ -180,6 +187,7 @@ def run_phase2a_translation(phase1_output: dict, output_dir: pathlib.Path, mode:
     merged = {
         "measures": all_measures,
         "parameter_tables": all_param_tables,
+        "aggregate_map": det_result.get("aggregate_map", {}),
     }
 
     # Write merged output for Phase 3
@@ -292,8 +300,9 @@ def run_phase3_generator(
 
     # 7. Apply viz wiring → prototypeQuery + projections
     print("   Visual wiring...")
-    pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path)
-    pbip_generator.wire_slots_fallback(report_path, visual_data, bim_path)
+    column_aggregates = merged_translation.get("aggregate_map", {}).get("by_column", {})
+    pbip_generator.wire_from_spec(report_path, visual_wiring, bim_path, column_aggregates=column_aggregates)
+    pbip_generator.wire_slots_fallback(report_path, visual_data, bim_path, column_aggregates=column_aggregates)
 
     # 8. Layout + styling (all deterministic — LLM results from phase 2b)
     print("   Layout + styling...")
@@ -336,6 +345,7 @@ def _build_bim_and_base_report(
     output_dir: pathlib.Path,
     report_name: str,
     trace=None,
+    sql_config: dict | None = None,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     """Deterministic: build BIM + base report.json from scratch.
 
@@ -355,14 +365,19 @@ def _build_bim_and_base_report(
         shutil.rmtree(pbip_dir, ignore_errors=True)
     pbip_dir.mkdir(parents=True, exist_ok=True)
 
+    aggregate_map = merged_translation.get("aggregate_map", {})
+
     # Semantic model from CSV
     data_dict = phase1_output.get("data_dict", {})
     if input_dir.exists() and list(input_dir.glob("*.csv")):
         table_names = pbip_builder.build_semantic_model(
             input_dir, pbip_dir, report_name,
             explicit_relationships=data_dict.get("relationships"),
+            sql_config=sql_config,
+            column_aggregates=aggregate_map.get("by_column", {}),
         )
-        print(f"   {len(table_names)} tables créées")
+        mode_label = "DirectQuery SQL" if sql_config else "Import CSV"
+        print(f"   {len(table_names)} tables créées ({mode_label})")
     else:
         print("   Pas de CSV — modèle vide")
 
@@ -400,7 +415,10 @@ def _build_bim_and_base_report(
     pbip_generator.merge_parameter_tables_to_bim(bim_path, param_tables, param_rels)
 
     # Measures
-    pbip_generator.merge_measures_to_bim(bim_path, merged_translation.get("measures", []))
+    pbip_generator.merge_measures_to_bim(
+        bim_path, merged_translation.get("measures", []),
+        aggregate_by_name=aggregate_map.get("by_name", {}),
+    )
 
     print(f"   BIM prêt: {bim_path}")
     return bim_path, report_path
@@ -438,6 +456,20 @@ def main() -> None:
     intermediate_dir = example_dir / "intermediate"
     intermediate_dir.mkdir(parents=True, exist_ok=True)
     report_name = "MigrationCognosPBI"
+
+    sql_server = os.environ.get("SQL_SERVER")
+    sql_config = None
+    if sql_server:
+        sql_config = {
+            "server": sql_server,
+            "database": os.environ["SQL_DATABASE"],
+            "user": os.environ.get("SQL_USER"),
+            "password": os.environ.get("SQL_PASSWORD"),
+            "schema": os.environ.get("SQL_SCHEMA", "dbo"),
+        }
+        print(f"SQL Server mode: {sql_config['server']} / {sql_config['database']} (DirectQuery)")
+    else:
+        print("CSV mode (SQL_SERVER absent du .env)")
 
     print(f"Example: {example}")
     print(f"XML: {xml_path}")
@@ -503,11 +535,16 @@ def main() -> None:
                         named_styles=phase1_output["xml_data"].get("namedStyles", {}),
                         csv_schema=phase1_output["csv_schema"],
                         parameters=phase1_output["xml_data"].get("parameters", []),
+                        xml_data=phase1_output["xml_data"],
                     )
-                    merged_translation = {"measures": det_result["measures"], "parameter_tables": det_result["parameter_tables"]}
+                    merged_translation = {
+                        "measures": det_result["measures"],
+                        "parameter_tables": det_result["parameter_tables"],
+                        "aggregate_map": det_result.get("aggregate_map", {}),
+                    }
 
             # BIM build (deterministic — must complete before phase 2b)
-            bim_path, _ = _build_bim_and_base_report(example, phase1_output, merged_translation, intermediate_dir, report_name, trace)
+            bim_path, _ = _build_bim_and_base_report(example, phase1_output, merged_translation, intermediate_dir, report_name, trace, sql_config=sql_config)
 
             # Phase 2b: viz + layout LLM (uses completed BIM)
             phase2b_output = run_phase2b_visual_llm(phase1_output, bim_path, intermediate_dir, args.mode, trace)

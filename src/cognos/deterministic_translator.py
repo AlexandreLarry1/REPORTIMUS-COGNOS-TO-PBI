@@ -155,19 +155,21 @@ _CONTAINS_COND = re.compile(
 )
 
 
-def _branch_to_switch_pair(condition: str, value: str, param_name: str) -> tuple[str, str]:
+def _branch_to_switch_pair(
+    condition: str, value: str, param_name: str, aggregate_map: dict | None = None
+) -> tuple[str, str]:
     """Convert one CASE branch condition+value into a SWITCH (key, value) pair.
 
     Returns (switch_key, dax_value). For ELSE, switch_key is the default marker.
     """
     if condition.strip().upper() == "ELSE":
-        return ("__DEFAULT__", _value_to_dax(value, param_name))
+        return ("__DEFAULT__", _value_to_dax(value, param_name, aggregate_map))
 
     # Extract the comparison value from ?param? contains/= 'X'
     m = _CONTAINS_COND.search(condition)
     if m:
         key = m.group(2)
-        return (key, _value_to_dax(value, param_name))
+        return (key, _value_to_dax(value, param_name, aggregate_map))
 
     # Compound condition (e.g. ?p?='X' AND ?other? > date(...)) — can't template
     # deterministically; leave a marker so the LLM call picks it up.
@@ -177,16 +179,71 @@ def _branch_to_switch_pair(condition: str, value: str, param_name: str) -> tuple
 _BARE_COL_RE = re.compile(r"^'[^']+'\[[^\]]+\]$")
 
 
-def _value_to_dax(value: str, param_name: str) -> str:
+def build_aggregate_map(xml_data: dict, csv_schema: dict) -> dict:
+    """Build Cognos-aggregate lookups for the generator.
+
+    Returns:
+        {
+          "by_column": {csv_table: {csv_column: aggregate}},   # raw-column wells
+          "by_name":   {cognos_item_name: aggregate},          # DAX-measure wells
+        }
+    Only entries with aggregate != "none" are included, so an empty/missing
+    lookup always falls back to each caller's existing default (Sum).
+    """
+    schema = csv_schema or {}
+    by_column: dict[str, dict[str, str]] = {}
+    by_name: dict[str, str] = {}
+
+    for query in xml_data.get("queries", {}).values():
+        for item in query.get("dataItems", []):
+            agg = (item.get("aggregate") or "none").strip().lower()
+            if agg in ("", "none"):
+                continue
+
+            name = item.get("name", "")
+            if name:
+                by_name[name] = agg
+
+            expr = item.get("expression", "")
+            if expr and COLUMN_REF_PATTERN.search(expr) and "case" not in expr.lower():
+                resolved = strip_column_reference(expr, schema).strip()
+                if _BARE_COL_RE.match(resolved):
+                    table_part, col_part = resolved.split("[", 1)
+                    csv_table = table_part.strip().strip("'")
+                    csv_col = col_part.rstrip("]")
+                    by_column.setdefault(csv_table, {})[csv_col] = agg
+
+    return {"by_column": by_column, "by_name": by_name}
+
+
+def _aggregate_for_column(aggregate_map: dict | None, resolved_ref: str) -> str:
+    """Look up the Cognos aggregate for a resolved 'Table'[Col] DAX ref."""
+    if not aggregate_map:
+        return "none"
+    m = _BARE_COL_RE.match(resolved_ref.strip())
+    if not m:
+        return "none"
+    table_part, col_part = resolved_ref.strip().split("[", 1)
+    csv_table = table_part.strip().strip("'")
+    csv_col = col_part.rstrip("]")
+    return aggregate_map.get("by_column", {}).get(csv_table, {}).get(csv_col, "none")
+
+
+def _value_to_dax(value: str, param_name: str, aggregate_map: dict | None = None) -> str:
     """Normalize a branch value to DAX syntax (strip column refs, quotes)."""
     value = strip_column_reference(value)
-    # A bare 'Table'[Col] in a SWITCH branch needs SUM() to be a valid measure value.
+    # A bare 'Table'[Col] in a SWITCH branch needs an aggregation to be a
+    # valid measure value — Sum unless Cognos declared a different aggregate.
     if _BARE_COL_RE.match(value.strip()):
-        value = f"SUM({value})"
+        from pbip.aggregation import dax_func
+        agg = _aggregate_for_column(aggregate_map, value)
+        value = f"{dax_func(agg, default='SUM')}({value})"
     return value
 
 
-def case_to_switch(expr_item: dict, param_table_map: dict[str, str]) -> dict | None:
+def case_to_switch(
+    expr_item: dict, param_table_map: dict[str, str], aggregate_map: dict | None = None
+) -> dict | None:
     """Convert a param_switch expression into a DAX SWITCH measure.
 
     Args:
@@ -213,7 +270,9 @@ def case_to_switch(expr_item: dict, param_table_map: dict[str, str]) -> dict | N
     has_compound = False
 
     for branch in branches:
-        key, dax_val = _branch_to_switch_pair(branch["condition"], branch["value"], param_name)
+        key, dax_val = _branch_to_switch_pair(
+            branch["condition"], branch["value"], param_name, aggregate_map
+        )
         if key == "__DEFAULT__":
             default_val = dax_val
         elif key == "__COMPOUND__":
@@ -412,6 +471,7 @@ def conditional_time_intel(
     date_table: str = "dim_time",
     date_column: str = "Date",
     value_column: str = "Value",
+    aggregate_map: dict | None = None,
 ) -> list[dict]:
     """Generate MTD/QTD/YTD template measures ONLY if absent from the CSV.
 
@@ -471,7 +531,9 @@ def conditional_time_intel(
         return []
 
     date_ref = f"'{resolved_date_table}'[{resolved_date_col}]"
-    base = f"SUM('{fact_table}'[{resolved_value}])"
+    from pbip.aggregation import dax_func
+    value_agg = (aggregate_map or {}).get("by_column", {}).get(fact_table, {}).get(resolved_value, "none")
+    base = f"{dax_func(value_agg, default='SUM')}('{fact_table}'[{resolved_value}])"
 
     return [
         {
@@ -522,6 +584,7 @@ def translate_deterministic(
     named_styles: dict,
     csv_schema: dict,
     parameters: list[dict],
+    xml_data: dict | None = None,
 ) -> dict:
     """Run every deterministic translation and return measures + deferred items.
 
@@ -530,17 +593,22 @@ def translate_deterministic(
         named_styles: xml_data['namedStyles']
         csv_schema: {table_name: [columns]} for TI column check
         parameters: xml_data['parameters'] for param table naming
+        xml_data: full extraction (for Cognos @aggregate lookup); optional —
+            when omitted, aggregation defaults to Sum everywhere (prior behavior)
 
     Returns:
         {
           "measures": [...],          # all deterministic DAX measures
           "deferred": [...],          # param_switches with compound conditions → LLM
           "parameter_tables": [...],  # disconnected table specs for the generator
+          "aggregate_map": {...},     # Cognos aggregate lookups, for downstream generator use
         }
     """
     # Inject csv_schema globally so strip_column_reference can resolve Cognos→CSV names
     global _current_csv_schema
     _current_csv_schema = csv_schema or {}
+
+    aggregate_map = build_aggregate_map(xml_data or {}, csv_schema)
 
     measures: list[dict] = []
     deferred: list[dict] = []
@@ -581,7 +649,7 @@ def translate_deterministic(
 
     # B/C. Param switches → SWITCH measures (defer compound to LLM)
     for item in classified.get("param_switches", []):
-        result = case_to_switch(item, param_table_map)
+        result = case_to_switch(item, param_table_map, aggregate_map)
         if result is not None:
             measures.append(result)
         else:
@@ -599,10 +667,11 @@ def translate_deterministic(
         measures.append(zebra_striping_measure())
 
     # Conditional time intelligence (only if CSV lacks the columns)
-    measures.extend(conditional_time_intel(csv_schema))
+    measures.extend(conditional_time_intel(csv_schema, aggregate_map=aggregate_map))
 
     return {
         "measures": measures,
+        "aggregate_map": aggregate_map,
         "deferred": deferred,
         "parameter_tables": parameter_tables,
     }
