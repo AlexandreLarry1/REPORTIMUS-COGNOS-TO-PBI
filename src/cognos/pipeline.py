@@ -205,6 +205,7 @@ def run_phase2b_visual_llm(
     output_dir: pathlib.Path,
     mode: str = "api",
     trace=None,
+    example_dir: pathlib.Path | None = None,
 ) -> dict:
     """Phase 2b: LLM visuel — câblage des puits + layout/titres (2 appels LLM).
 
@@ -214,17 +215,26 @@ def run_phase2b_visual_llm(
         output_dir: Répertoire de sortie
         mode: "api" ou "paste"
         trace: Observability trace
+        example_dir: dossier de l'exemple (pour theme_override.json, voir theme_builder)
 
     Returns:
-        Dict avec {visual_wiring: [...], layout_pages: [...], primary_color: str}
+        Dict avec {visual_wiring: [...], layout_pages: [...], primary_color: str,
+                   section_header_color: str}
     """
     print("\n=== Phase 2b: LLM Visuel (viz + layout) ===")
 
     xml_data = phase1_output["xml_data"]
     visual_data = phase1_output["visual_data"]
 
-    palette = theme_builder.extract_color_palette(xml_data)
-    primary_color = palette[0] if palette else "#0078D4"
+    override = theme_builder.load_palette_override(example_dir) if example_dir else None
+    if override:
+        palette = override.get("dataColors") or theme_builder.extract_color_palette(xml_data)
+        primary_color = override.get("pageHeader") or (palette[0] if palette else "#0078D4")
+        section_header_color = override.get("sectionHeader") or primary_color
+    else:
+        palette = theme_builder.extract_color_palette(xml_data)
+        primary_color = palette[0] if palette else "#0078D4"
+        section_header_color = primary_color
 
     # VIZ LLM — map Cognos fields → PBI wells
     print("  VIZ wiring (LLM)...")
@@ -251,6 +261,7 @@ def run_phase2b_visual_llm(
         "visual_wiring": visual_wiring,
         "layout_pages": layout_pages,
         "primary_color": primary_color,
+        "section_header_color": section_header_color,
     }
 
 
@@ -289,6 +300,7 @@ def run_phase3_generator(
     visual_data = phase1_output["visual_data"]
     xml_data = phase1_output["xml_data"]
     primary_color = phase2b_output["primary_color"]
+    section_header_color = phase2b_output.get("section_header_color", primary_color)
     visual_wiring = phase2b_output["visual_wiring"]
     layout_pages = phase2b_output["layout_pages"]
 
@@ -306,8 +318,8 @@ def run_phase3_generator(
 
     # 8. Layout + styling (all deterministic — LLM results from phase 2b)
     print("   Layout + styling...")
-    pbip_generator.apply_layout_to_report(report_path, layout_pages, primary_color)
-    pbip_generator.apply_visual_styles_to_report(report_path, primary_color)
+    pbip_generator.apply_layout_to_report(report_path, layout_pages, primary_color, section_header_color)
+    pbip_generator.apply_visual_styles_to_report(report_path, section_header_color)
 
     # 9. Slicer defaults (runs after wire_from_spec so Field well is resolved)
     pbip_generator.apply_slicer_defaults_to_report(report_path, visual_data, visual_wiring)
@@ -391,6 +403,7 @@ def _build_bim_and_base_report(
         pbip_dir=pbip_dir,
         report_path=report_path,
         report_name=report_name,
+        example_dir=example_dir,
     )
 
     bim_path = pbip_dir / f"{report_name}.SemanticModel" / "model.bim"
@@ -502,11 +515,11 @@ def main() -> None:
 
             # Rebuild base report.json
             pbip_builder.build_report(intermediate_dir, pbip_dir, report_name)
-            theme_builder.apply_theme_to_report(xml_data, pbip_dir, report_path, report_name)
+            theme_builder.apply_theme_to_report(xml_data, pbip_dir, report_path, report_name, example_dir=example_dir)
 
             # Phase 2b: viz + layout LLM
             phase1_proxy = {"xml_data": xml_data, "visual_data": visual_data}
-            phase2b = run_phase2b_visual_llm(phase1_proxy, bim_path, intermediate_dir, args.mode, trace)
+            phase2b = run_phase2b_visual_llm(phase1_proxy, bim_path, intermediate_dir, args.mode, trace, example_dir=example_dir)
 
             # Phase 3: deterministic apply
             merged_path = intermediate_dir / "merged_translation.json"
@@ -547,7 +560,7 @@ def main() -> None:
             bim_path, _ = _build_bim_and_base_report(example, phase1_output, merged_translation, intermediate_dir, report_name, trace, sql_config=sql_config)
 
             # Phase 2b: viz + layout LLM (uses completed BIM)
-            phase2b_output = run_phase2b_visual_llm(phase1_output, bim_path, intermediate_dir, args.mode, trace)
+            phase2b_output = run_phase2b_visual_llm(phase1_output, bim_path, intermediate_dir, args.mode, trace, example_dir=example_dir)
 
             # Phase 3: deterministic apply (pure det — no LLM)
             run_phase3_generator(example, phase1_output, merged_translation, phase2b_output, intermediate_dir, report_name, trace)

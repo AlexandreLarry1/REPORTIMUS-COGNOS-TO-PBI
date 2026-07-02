@@ -157,6 +157,30 @@ that exist in the BIM inventory.
    Details → "customer_analysis[Employment Status]".
 8. heatmap → matrix slot mapping: categories → Rows, series → Columns, \
    color → Values (color is the scalar measurement in a heatmap, NOT a grouping/Series).
+9. network → matrix slot mapping: categories → Rows, series → Columns, \
+   values → Values (aggregated measure). NEVER dump categories/series/values flat into \
+   a single Values well like a plain tableEx — that produces one raw row per record \
+   instead of a pivoted summary.
+10. Series/Columns well is MANDATORY, not optional, whenever the IBM slot 'series' \
+    (or 'color'/'group') is populated AND the target visual type's well list includes \
+    Series/Columns — dropping it silently loses the grouping dimension from the \
+    original Cognos chart (e.g. a stacked/area chart becomes a single flat series). \
+    BUT rule 7 always wins: if the only BIM match for that slot field is a \
+    _Measures[...] entry (no real categorical column matches), leave Series unwired \
+    rather than violate rule 7 — a wrong-typed Series breaks the visual worse than a \
+    missing one. Before giving up, try matching the slot field name against column \
+    names in the SAME data table as the visual's other fields (e.g. Cognos "Renewal \
+    Offer" ≈ BIM column "Renew Offer Type" — near-identical labels, different table \
+    only by casing/wording).
+11. SAME-TABLE PREFERENCE — when a visual has multiple slot fields (categories/series/ \
+    values/etc.) and more than one BIM table contains a column matching a given field \
+    name, prefer the table that ALSO contains the visual's OTHER slot fields over a \
+    table that only matches this one field. Cross-table wells only work if a \
+    relationship links them; picking an unrelated table silently breaks filtering \
+    (e.g. a matrix cell repeats the grand total instead of a real per-category value). \
+    Concretely: if fields A, B, C all exist together in table T, wire all three from T \
+    — do not pull B from a different table U just because U also happens to have a \
+    column named B.
 
 Return ONLY a valid JSON array (no markdown, no comments):
 [

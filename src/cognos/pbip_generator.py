@@ -334,10 +334,41 @@ def merge_measures_to_bim(
     if target_table is not None:
         existing_col_names = {c["name"] for c in target_table.get("columns", [])}
 
+    # Cognos exports the same field name (e.g. "Accepted") from multiple unrelated
+    # tables (e.g. offers.Accepted vs renewals.Accepted). Deduping by name alone
+    # would silently keep one and drop the other, and any visual built on the
+    # dropped table's column would then aggregate the WRONG table's data (wrong
+    # numbers, not just an empty visual — see Offers page network→matrix bug).
+    # Disambiguate by source table whenever the same name maps to >1 source table.
+    import re as _re3
+    _sv_disambig_pat = _re3.compile(
+        r"^SELECTEDVALUE\(\s*'?([^'\[\]\s]+)'?\s*\[([^\]]+)\]\s*\)$", _re3.IGNORECASE
+    )
+
+    def _source_table(expr: str) -> str | None:
+        m = _sv_disambig_pat.match(expr.strip()) if expr else None
+        return m.group(1) if m else None
+
+    _by_name: dict[str, list[dict]] = {}
+    for measure in all_measures:
+        _by_name.setdefault(measure.get("name", "Unnamed"), []).append(measure)
+
+    _rename_map: dict[int, str] = {}
+    for _name, _group in _by_name.items():
+        if len(_group) < 2:
+            continue
+        _tables = {_source_table(m.get("expression", "")) for m in _group}
+        _tables.discard(None)
+        if len(_tables) > 1:
+            for m in _group:
+                _t = _source_table(m.get("expression", ""))
+                if _t:
+                    _rename_map[id(m)] = f"{_name} ({_t})"
+
     formatted_measures: list[dict] = []
     seen_measure_names: set[str] = set()
     for measure in all_measures:
-        name = measure.get("name", "Unnamed")
+        name = _rename_map.get(id(measure), measure.get("name", "Unnamed"))
         expr = measure.get("expression", "")
         mtype = measure.get("type", "base_measure")
 
@@ -985,6 +1016,15 @@ def wire_from_spec(
                         real_table = _col_name_to_table.get(field.lower())
                         if real_table and field in bim_fields.get(real_table, {}):
                             table = real_table
+                    # If a categorical well references a different table than the anchor
+                    # but the anchor table has an identically-named column → prefer the
+                    # anchor's column. Cross-table categorical wells only filter correctly
+                    # if a relationship links them; without one the visual silently repeats
+                    # the grand total instead of a real per-category breakdown.
+                    elif (well_name in _CATEGORY_WELLS and _anchor_table and table != _anchor_table
+                          and bim_fields.get(table, {}).get(field) == "column"
+                          and field in bim_fields.get(_anchor_table, {})):
+                        table = _anchor_table
                     # If value well references a different table than anchor and anchor
                     # has the same column name → use anchor table to avoid cross-table mismatch
                     elif well_name in _VALUE_WELLS and _anchor_table and table != _anchor_table:
@@ -1193,7 +1233,11 @@ def _make_header_textbox(
         return {"expr": {"Literal": {"Value": v}}}
 
     def _solid(color: str) -> dict:
-        return {"solid": {"color": color}}
+        # "color" must be an expr-wrapped literal, not a bare hex string, or PBI
+        # Desktop silently ignores the whole property (verified against a real
+        # report.json saved by Desktop itself — it wraps even plain hex picks
+        # as {"expr": {"Literal": ...}} / {"expr": {"ThemeDataColor": ...}}).
+        return {"solid": {"color": {"expr": {"Literal": {"Value": f"'{color}'"}}}}}
 
     # textbox: ALL properties (paragraphs + background) in singleVisual.objects
     # vcObjects.background is ignored by PBI Desktop for textbox visuals.
@@ -1239,19 +1283,26 @@ def apply_layout_to_report(
     report_path: pathlib.Path,
     layout_pages: list[dict],
     primary_color: str = "#0078D4",
+    section_header_color: str | None = None,
 ) -> None:
     """Apply LLM layout specs to report.json: positions, titles, header textboxes.
 
     Args:
         report_path: path to report.json
         layout_pages: list of page specs from layout_translation.run()
-        primary_color: hex color for the header band background
+        primary_color: hex color for the page header band background
+        section_header_color: hex color for each visual's title banner
+            (Cognos-style secondary hierarchy — medium blue under the dark navy
+            page header). Defaults to primary_color when not given.
     """
+    section_header_color = section_header_color or primary_color
     def _lit(v: str) -> dict:
         return {"expr": {"Literal": {"Value": v}}}
 
     def _solid(color: str) -> dict:
-        return {"solid": {"color": color}}
+        # See apply_visual_styles_to_report / _make_header_textbox comment: PBI
+        # Desktop ignores a bare hex string here, it must be expr-wrapped.
+        return {"solid": {"color": {"expr": {"Literal": {"Value": f"'{color}'"}}}}}
 
     report = json.loads(report_path.read_text(encoding="utf-8"))
 
@@ -1311,12 +1362,19 @@ def apply_layout_to_report(
             vc.update({"x": x, "y": y, "width": w, "height": h})
 
             # Inject visual title — vcObjects goes INSIDE singleVisual (PBI requirement)
+            # Styled as a colored banner (Cognos-style secondary section header:
+            # medium blue strip above each chart, white bold text).
             title_text = vs.get("title", "")
             if title_text:
                 sv = cfg.get("singleVisual", {})
                 if sv.get("visualType") not in ("textbox", "slicer"):
                     sv.setdefault("vcObjects", {})["title"] = [{"properties": {
+                        "show": _lit("true"),
                         "text": _lit(f"'{title_text}'"),
+                        "fontColor": _solid("#FFFFFF"),
+                        "background": _solid(section_header_color),
+                        "bold": _lit("true"),
+                        "alignment": _lit("'left'"),
                     }}]
                     cfg["singleVisual"] = sv
 
@@ -1368,11 +1426,11 @@ def apply_visual_styles_to_report(
         return {"expr": {"Literal": {"Value": v}}}
 
     def _solid(color: str) -> dict:
-        return {"solid": {"color": color}}
-
-    def _solid_lit(color: str) -> dict:
-        # Color as literal expression — required for backColorPrimary/Secondary
+        # Color must be expr-wrapped, or PBI Desktop silently ignores the property
+        # (confirmed against a real report.json saved by Desktop itself).
         return {"solid": {"color": {"expr": {"Literal": {"Value": f"'{color}'"}}}}}
+
+    _solid_lit = _solid  # kept for call-site clarity where the wrapping used to differ
 
     # Container-level: goes into vcObjects at config root
     CONTAINER_VC: dict = {

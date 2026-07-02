@@ -62,14 +62,16 @@ _IBM_TO_PBI: dict[str, tuple[str, bool]] = {
     "marimekko":                 ("hundredPercentStackedColumnChart", True),
     "packedBubble":              ("scatterChart", True),
     "hierarchicalPackedBubble":  ("treemap", True),
+    # Categories × series × values shape → matrix pivot (no native PBI network diagram)
+    "network":                   ("matrix", True),
     # No native PBI equivalent → tableEx fallback
     "boxplot":                   ("tableEx", False),
-    "network":                   ("tableEx", False),
 }
 
 _APPROXIMATED = {
     "floatingBar", "floatingColumn", "targetBar", "targetColumn", "bullet",
     "heatmap", "wordcloud", "radar", "river", "marimekko", "packedBubble", "hierarchicalPackedBubble",
+    "network",
 }
 
 _APPROXIMATION_NOTES = {
@@ -80,6 +82,7 @@ _APPROXIMATION_NOTES = {
     "marimekko":                "marimekko → 100% stacked column (proportions preserved, variable width lost)",
     "packedBubble":             "packedBubble → scatterChart (bubbles with size; no circular packing)",
     "hierarchicalPackedBubble": "hierarchicalPackedBubble → treemap (hierarchy + size preserved)",
+    "network":                  "network diagram → matrix (categories × series pivot with aggregated values; node/edge graph not available in Power BI)",
 }
 
 
